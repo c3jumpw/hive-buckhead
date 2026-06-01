@@ -1,1 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hive Buckhead — Reservations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A96E;
+    --gold-light: #E8D4B0;
+    --gold-dark: #8B6E3E;
+    --black: #0E0C0A;
+    --surface: #1A1714;
+    --surface2: #242018;
+    --surface3: #2E2920;
+    --border: rgba(201,169,110,0.18);
+    --border-strong: rgba(201,169,110,0.35);
+    --text: #F5EFE4;
+    --text-muted: #A89B84;
+    --text-dim: #6B5E4A;
+    --green: #4CAF82;
+    --green-bg: rgba(76,175,130,0.12);
+    --amber: #D4A020;
+    --amber-bg: rgba(212,160,32,0.12);
+    --red: #C4524A;
+    --red-bg: rgba(196,82,74,0.12);
+    --blue: #5B96C8;
+    --blue-bg: rgba(91,150,200,0.12);
+    --purple: #9B7EC8;
+    --purple-bg: rgba(155,126,200,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
 
+  /* ── TOP NAV ── */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 58px;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--black);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--gold);
+  }
+  .nav-brand span { color: var(--text-muted); font-weight: 300; }
+  .nav-actions { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    padding: 7px 16px; border-radius: 6px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    border: 0.5px solid var(--border-strong); background: transparent;
+    color: var(--text); transition: all 0.15s;
+  }
+  .btn:hover { background: var(--surface2); border-color: var(--gold); }
+  .btn-primary {
+    background: var(--gold); color: var(--black);
+    border-color: var(--gold);
+  }
+  .btn-primary:hover { background: var(--gold-light); border-color: var(--gold-light); }
+  .nav-date { font-size: 12px; color: var(--text-muted); letter-spacing: 0.04em; }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; height: calc(100vh - 58px); overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    border-right: 0.5px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto; padding: 1.25rem 0;
+  }
+  .sidebar-section { padding: 0 1rem; margin-bottom: 1.5rem; }
+  .sidebar-label {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.1em;
+    color: var(--text-dim); text-transform: uppercase;
+    margin-bottom: 6px; padding: 0 4px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 6px; cursor: pointer;
+    color: var(--text-muted); font-size: 13px; transition: all 0.12s;
+    margin-bottom: 2px;
+  }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active { background: var(--surface3); color: var(--gold); }
+  .sidebar-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .badge-count {
+    margin-left: auto; background: var(--surface3);
+    color: var(--text-muted); font-size: 11px;
+    padding: 2px 7px; border-radius: 10px;
+  }
+  .badge-count.live { background: var(--gold); color: var(--black); font-weight: 500; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex; gap: 0; border-bottom: 0.5px solid var(--border);
+  }
+  .stat-item {
+    flex: 1; padding: 14px 20px;
+    border-right: 0.5px solid var(--border);
+    cursor: pointer; transition: background 0.12s;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-item:hover { background: var(--surface2); }
+  .stat-item.active { background: var(--surface2); }
+  .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-value { font-size: 24px; font-family: 'Cormorant Garamond', serif; font-weight: 500; }
+  .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .c-gold { color: var(--gold); }
+  .c-green { color: var(--green); }
+  .c-amber { color: var(--amber); }
+  .c-red { color: var(--red); }
+  .c-blue { color: var(--blue); }
+
+  /* ── MAIN CONTENT ── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px; border-bottom: 0.5px solid var(--border);
+    background: var(--surface);
+  }
+  .search-wrap { position: relative; flex: 1; max-width: 300px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-dim); }
+  .search-input {
+    width: 100%; padding: 7px 10px 7px 32px;
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.15s;
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus { border-color: var(--gold); }
+  .filter-select {
+    padding: 7px 12px; background: var(--surface2);
+    border: 0.5px solid var(--border); border-radius: 6px;
+    color: var(--text-muted); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--gold); }
+  .ml-auto { margin-left: auto; }
+
+  /* ── TABLE ── */
+  .table-wrap { flex: 1; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { position: sticky; top: 0; z-index: 10; }
+  th {
+    padding: 10px 16px; text-align: left;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.07em;
+    color: var(--text-dim); text-transform: uppercase;
+    background: var(--surface); border-bottom: 0.5px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 13px 16px; border-bottom: 0.5px solid var(--border);
+    font-size: 13px; vertical-align: middle;
+  }
+  tr:hover td { background: var(--surface2); cursor: pointer; }
+  .name-cell { font-weight: 500; color: var(--text); }
+  .sub-text { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── STATUS PILLS ── */
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .s-requested { background: var(--amber-bg); color: var(--amber); }
+  .s-requested .dot { background: var(--amber); }
+  .s-confirmed { background: var(--blue-bg); color: var(--blue); }
+  .s-confirmed .dot { background: var(--blue); }
+  .s-seated { background: var(--purple-bg); color: var(--purple); }
+  .s-seated .dot { background: var(--purple); animation: pulse 1.5s infinite; }
+  .s-completed { background: var(--green-bg); color: var(--green); }
+  .s-completed .dot { background: var(--green); }
+  .s-cancelled { background: var(--red-bg); color: var(--red); }
+  .s-cancelled .dot { background: var(--red); }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    width: 360px; flex-shrink: 0;
+    border-left: 0.5px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto; display: flex; flex-direction: column;
+    transition: width 0.2s;
+  }
+  .detail-panel.hidden { width: 0; overflow: hidden; }
+  .panel-header {
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .panel-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 500; color: var(--gold);
+    line-height: 1.2;
+  }
+  .panel-rsvp { font-size: 11px; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.05em; }
+  .panel-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); padding: 4px;
+  }
+  .panel-close:hover { color: var(--text); }
+  .panel-body { padding: 1rem 1.25rem; flex: 1; }
+  .panel-section { margin-bottom: 1.25rem; }
+  .panel-section-title {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 0.5px solid var(--border);
+    font-size: 13px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: var(--text-muted); }
+  .detail-val { color: var(--text); font-weight: 500; text-align: right; }
+  .notes-box {
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 13px; color: var(--text-muted); line-height: 1.6;
+    font-style: italic;
+  }
+  .status-actions { display: flex; flex-direction: column; gap: 6px; }
+  .action-btn {
+    width: 100%; padding: 9px 14px; border-radius: 6px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    border: 0.5px solid; transition: all 0.15s; text-align: left;
+    display: flex; align-items: center; gap: 8px; background: transparent;
+  }
+  .action-btn:hover { filter: brightness(1.1); transform: translateX(2px); }
+  .action-btn.confirm { color: var(--blue); border-color: rgba(91,150,200,0.4); }
+  .action-btn.confirm:hover { background: var(--blue-bg); }
+  .action-btn.seat { color: var(--purple); border-color: rgba(155,126,200,0.4); }
+  .action-btn.seat:hover { background: var(--purple-bg); }
+  .action-btn.complete { color: var(--green); border-color: rgba(76,175,130,0.4); }
+  .action-btn.complete:hover { background: var(--green-bg); }
+  .action-btn.cancel { color: var(--red); border-color: rgba(196,82,74,0.3); }
+  .action-btn.cancel:hover { background: var(--red-bg); }
+  .action-btn.log { color: var(--gold); border-color: rgba(201,169,110,0.3); }
+  .action-btn.log:hover { background: rgba(201,169,110,0.08); }
+  .server-select {
+    width: 100%; padding: 8px 12px;
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none;
+  }
+  .server-select:focus { border-color: var(--gold); }
+  .automation-log { display: flex; flex-direction: column; gap: 8px; }
+  .auto-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .auto-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); margin-top: 4px; flex-shrink: 0;
+  }
+  .auto-dot.pending { background: var(--amber); }
+  .auto-time { color: var(--text-dim); margin-top: 2px; font-size: 11px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 200; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 0.5px solid var(--border-strong);
+    border-radius: 12px; width: 480px; max-height: 90vh;
+    overflow-y: auto; padding: 1.5rem;
+    transform: translateY(10px); transition: transform 0.15s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 500; color: var(--gold);
+    margin-bottom: 1.25rem;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; letter-spacing: 0.03em; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 9px 12px;
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
+  .form-textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--surface2); border: 0.5px solid var(--border-strong);
+    border-radius: 8px; padding: 12px 18px; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    transform: translateY(60px) scale(0.95); opacity: 0;
+    transition: all 0.2s; pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateY(0) scale(1); opacity: 1; }
+  .toast-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .toast.success .toast-icon { background: var(--green); }
+  .toast.info .toast-icon { background: var(--blue); }
+  .toast.warning .toast-icon { background: var(--amber); }
+
+  /* ── EMPTY STATE ── */
+  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 4rem; color: var(--text-dim); text-align: center; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+
+  /* ── TAB BAR ── */
+  .tab-bar { display: flex; border-bottom: 0.5px solid var(--border); padding: 0 20px; background: var(--surface); }
+  .tab { padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
+  <div class="nav-date" id="nav-date"></div>
+  <div class="nav-actions">
+    <button class="btn" onclick="showSyncModal()">↑ Sync</button>
+    <button class="btn btn-primary" onclick="openNewModal()">+ New Reservation</button>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Views</div>
+      <div class="sidebar-item active" onclick="setView('board', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Board
+      </div>
+      <div class="sidebar-item" onclick="setView('list', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        All Reservations
+      </div>
+      <div class="sidebar-item" onclick="setView('today', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Today
+        <span class="badge-count live" id="today-count">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Status</div>
+      <div class="sidebar-item" onclick="filterStatus('RSVP Requested', this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;display:inline-block"></span>
+        RSVP Requested
+        <span class="badge-count" id="cnt-requested">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterStatus('RSVP Confirmed', this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;display:inline-block"></span>
+        Confirmed
+        <span class="badge-count" id="cnt-confirmed">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterStatus('Seated', this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);flex-shrink:0;display:inline-block"></span>
+        Seated
+        <span class="badge-count live" id="cnt-seated">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterStatus('Completed', this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;display:inline-block"></span>
+        Completed
+        <span class="badge-count" id="cnt-completed">0</span>
+      </div>
+      <div class="sidebar-item" onclick="filterStatus('Cancelled', this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;display:inline-block"></span>
+        Cancelled
+        <span class="badge-count" id="cnt-cancelled">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Automations</div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Zapier Zaps
+      </div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        SendGrid
+      </div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 012 4.18 2 2 0 014 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91A16 16 0 0014.09 15.91l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Twilio SMS
+      </div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Google Sheets
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+
+    <!-- STATS BAR -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-item" onclick="filterStatus(null)">
+        <div class="stat-label">Total Today</div>
+        <div class="stat-value c-gold" id="stat-total">0</div>
+        <div class="stat-sub">all reservations</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Awaiting Confirm</div>
+        <div class="stat-value c-amber" id="stat-pending">0</div>
+        <div class="stat-sub">need action</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Currently Seated</div>
+        <div class="stat-value c-purple" id="stat-seated">0</div>
+        <div class="stat-sub">active tables</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value c-green" id="stat-done">0</div>
+        <div class="stat-sub">logged</div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" placeholder="Search name, phone, RSVP #..." id="search-input" oninput="renderTable()">
+      </div>
+      <select class="filter-select" id="date-filter" onchange="renderTable()">
+        <option value="">All Dates</option>
+        <option value="today">Today</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="past">Past</option>
+      </select>
+      <select class="filter-select" id="server-filter" onchange="renderTable()">
+        <option value="">All Servers</option>
+        <option>Ashley Smith</option>
+        <option>Marcus Rivera</option>
+        <option>Jenna Park</option>
+        <option>Devon Harris</option>
+      </select>
+      <div class="ml-auto" style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)" id="result-count"></span>
+      </div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="main" id="main-view">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Guest</th>
+              <th>Date & Time</th>
+              <th>Party</th>
+              <th>Status</th>
+              <th>Server</th>
+              <th>RSVP #</th>
+              <th>Confirmed</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div class="empty" id="empty-state" style="display:none">
+          <div class="empty-icon">🪑</div>
+          <div class="empty-text">No reservations found.<br>Adjust your filters or create a new one.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel hidden" id="detail-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-name" id="p-name">—</div>
+        <div class="panel-rsvp" id="p-rsvp">RSVP #—</div>
+      </div>
+      <button class="panel-close" onclick="closePanel()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="panel-body">
+
+      <div class="panel-section">
+        <div class="panel-section-title">Reservation Details</div>
+        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val" id="p-date">—</span></div>
+        <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val" id="p-time">—</span></div>
+        <div class="detail-row"><span class="detail-label">Party Size</span><span class="detail-val" id="p-party">—</span></div>
+        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val" id="p-phone">—</span></div>
+        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-val" id="p-email" style="font-size:12px">—</span></div>
+        <div class="detail-row"><span class="detail-label">Requested</span><span class="detail-val" id="p-requested">—</span></div>
+        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val" id="p-status-badge">—</span></div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Notes</div>
+        <div class="notes-box" id="p-notes">—</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Assign Server</div>
+        <select class="server-select" id="p-server" onchange="updateServer()">
+          <option value="">Unassigned</option>
+          <option>Ashley Smith</option>
+          <option>Marcus Rivera</option>
+          <option>Jenna Park</option>
+          <option>Devon Harris</option>
+        </select>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Actions</div>
+        <div class="status-actions" id="p-actions"></div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Automation Log</div>
+        <div class="automation-log" id="p-auto-log"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- NEW RESERVATION MODAL -->
+<div class="modal-overlay" id="new-modal">
+  <div class="modal">
+    <div class="modal-title">New Reservation</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">First Name *</label>
+        <input class="form-input" id="f-first" placeholder="First">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name *</label>
+        <input class="form-input" id="f-last" placeholder="Last">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Phone Number *</label>
+        <input class="form-input" id="f-phone" placeholder="4702226558">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="f-email" placeholder="guest@email.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Reservation Date *</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Arrival Time *</label>
+        <input class="form-input" id="f-time" type="time">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Party Size *</label>
+        <input class="form-input" id="f-party" type="number" min="1" max="30" placeholder="2">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Server</label>
+        <select class="form-select" id="f-server">
+          <option value="">Unassigned</option>
+          <option>Ashley Smith</option>
+          <option>Marcus Rivera</option>
+          <option>Jenna Park</option>
+          <option>Devon Harris</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Additional Notes</label>
+      <textarea class="form-textarea" id="f-notes" placeholder="Allergies, celebrations, special requests..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Initial Status</label>
+      <select class="form-select" id="f-status">
+        <option value="RSVP Requested">RSVP Requested</option>
+        <option value="RSVP Confirmed">RSVP Confirmed</option>
+        <option value="Seated">Seated</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('new-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNew()">Create Reservation</button>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div class="modal-overlay" id="sync-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">Sync Status</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem">
+      <div class="detail-row">
+        <span class="detail-label">ClickUp</span>
+        <span style="color:var(--green);font-size:12px;font-weight:500">● Connected</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Google Sheets</span>
+        <span style="color:var(--green);font-size:12px;font-weight:500">● Connected</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Zapier</span>
+        <span style="color:var(--green);font-size:12px;font-weight:500">● 5 Zaps active</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">SendGrid</span>
+        <span style="color:var(--green);font-size:12px;font-weight:500">● Active</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Twilio SMS</span>
+        <span style="color:var(--green);font-size:12px;font-weight:500">● Active</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Last Sync</span>
+        <span class="detail-val" id="last-sync-time">—</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('sync-modal')">Close</button>
+      <button class="btn btn-primary" onclick="doSync()">Sync Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+const SERVERS = ['Ashley Smith','Marcus Rivera','Jenna Park','Devon Harris'];
+const STATUS_ORDER = ['RSVP Requested','RSVP Confirmed','Seated','Completed','Cancelled'];
+
+function genId() {
+  return Math.random().toString(36).substr(2,8).toUpperCase();
+}
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+function fmtDate(d) {
+  if(!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${m}/${day}/${y}`;
+}
+function fmtTime(t) {
+  if(!t) return '—';
+  const [h,m] = t.split(':');
+  const hr = +h; const ampm = hr>=12?'PM':'AM';
+  return `${hr%12||12}:${m} ${ampm}`;
+}
+
+// Sample data
+let reservations = [
+  { id: genId(), first:'Matest', last:'Now', phone:'4702226558', email:'c1.jumpw@gmail.com',
+    date:'2026-06-12', time:'15:15', party:2, status:'Seated', server:'Ashley Smith',
+    notes:'Bringing confetti', requested:'05/04/2026', confirmed:'6/13/26, 6:15pm',
+    autoLog:[{msg:'RSVP request received via forms.app',time:'May 4, 5:23pm',done:true},
+             {msg:'Confirmation email sent via SendGrid',time:'May 13, 5:28pm',done:true},
+             {msg:'Confirmation SMS sent via Twilio',time:'May 13, 5:28pm',done:true},
+             {msg:'ClickUp task created & synced',time:'May 13, 5:28pm',done:true}]
+  },
+  { id: genId(), first:'Jordan', last:'Baptiste', phone:'4045552341', email:'jbaptiste@gmail.com',
+    date: today(), time:'18:30', party:4, status:'RSVP Confirmed', server:'Marcus Rivera',
+    notes:'Anniversary dinner, flowers requested', requested: today(),confirmed:'',
+    autoLog:[{msg:'RSVP request received',time:'Today 2:10pm',done:true},
+             {msg:'Confirmation email sent',time:'Today 2:11pm',done:true},
+             {msg:'Table assignment pending',time:'',done:false}]
+  },
+  { id: genId(), first:'Priya', last:'Nair', phone:'6785553819', email:'priya.n@outlook.com',
+    date: today(), time:'19:00', party:6, status:'RSVP Requested', server:'',
+    notes:'Gluten allergy for 1 guest', requested: today(), confirmed:'',
+    autoLog:[{msg:'RSVP request received via forms.app',time:'Today 3:45pm',done:true},
+             {msg:'Confirmation pending — staff review',time:'',done:false}]
+  },
+  { id: genId(), first:'Tyler', last:'Monroe', phone:'4045558823', email:'tmonroe@me.com',
+    date:'2026-06-08', time:'20:00', party:2, status:'Completed', server:'Jenna Park',
+    notes:'Birthday celebration', requested:'06/07/2026', confirmed:'6/8/26',
+    autoLog:[{msg:'RSVP confirmed',time:'Jun 7',done:true},{msg:'Seated',time:'Jun 8 8:02pm',done:true},{msg:'Thank-you SMS sent',time:'Jun 8 9:50pm',done:true},{msg:'Logged to Google Sheets',time:'Jun 8 9:50pm',done:true}]
+  },
+  { id: genId(), first:'Camille', last:'Osei', phone:'4042228811', email:'camille.o@gmail.com',
+    date:'2026-06-15', time:'17:30', party:3, status:'RSVP Requested', server:'',
+    notes:'', requested: today(), confirmed:'',
+    autoLog:[{msg:'RSVP request received',time:'Today 4:12pm',done:true}]
+  },
+];
+
+let activeFilter = null;
+let selectedId = null;
+
+function statusClass(s) {
+  return {
+    'RSVP Requested':'s-requested','RSVP Confirmed':'s-confirmed',
+    'Seated':'s-seated','Completed':'s-completed','Cancelled':'s-cancelled'
+  }[s] || 's-requested';
+}
+function statusLabel(s) { return s; }
+
+function getFiltered() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const df = document.getElementById('date-filter').value;
+  const sf = document.getElementById('server-filter').value;
+  const t = today();
+  return reservations.filter(r => {
+    if(activeFilter && r.status !== activeFilter) return false;
+    if(q && !(`${r.first} ${r.last} ${r.phone} ${r.id}`).toLowerCase().includes(q)) return false;
+    if(df === 'today' && r.date !== t) return false;
+    if(df === 'upcoming' && r.date <= t) return false;
+    if(df === 'past' && r.date >= t) return false;
+    if(sf && r.server !== sf) return false;
+    return true;
+  });
+}
+
+function updateCounts() {
+  const cnt = s => reservations.filter(r=>r.status===s).length;
+  document.getElementById('cnt-requested').textContent = cnt('RSVP Requested');
+  document.getElementById('cnt-confirmed').textContent = cnt('RSVP Confirmed');
+  document.getElementById('cnt-seated').textContent = cnt('Seated');
+  document.getElementById('cnt-completed').textContent = cnt('Completed');
+  document.getElementById('cnt-cancelled').textContent = cnt('Cancelled');
+  const todayRes = reservations.filter(r=>r.date===today());
+  document.getElementById('today-count').textContent = todayRes.length;
+  document.getElementById('stat-total').textContent = todayRes.length;
+  document.getElementById('stat-pending').textContent = cnt('RSVP Requested');
+  document.getElementById('stat-seated').textContent = cnt('Seated');
+  document.getElementById('stat-done').textContent = cnt('Completed');
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const tbody = document.getElementById('table-body');
+  document.getElementById('result-count').textContent = `${filtered.length} result${filtered.length!==1?'s':''}`;
+
+  if(!filtered.length) {
+    tbody.innerHTML = '';
+    document.getElementById('empty-state').style.display = 'flex';
+    return;
+  }
+  document.getElementById('empty-state').style.display = 'none';
+
+  tbody.innerHTML = filtered.sort((a,b)=>{
+    if(a.date===b.date) return a.time.localeCompare(b.time);
+    return a.date.localeCompare(b.date);
+  }).map(r => `
+    <tr onclick="selectRow('${r.id}')" style="${selectedId===r.id?'background:var(--surface2)':''}">
+      <td>
+        <div class="name-cell">${r.first} ${r.last}</div>
+        <div class="sub-text">${r.phone}</div>
+      </td>
+      <td>
+        <div>${fmtDate(r.date)}</div>
+        <div class="sub-text">${fmtTime(r.time)}</div>
+      </td>
+      <td style="text-align:center;font-size:15px;font-family:'Cormorant Garamond',serif">${r.party}</td>
+      <td><span class="status-pill ${statusClass(r.status)}"><span class="dot"></span>${r.status}</span></td>
+      <td style="color:var(--text-muted)">${r.server || '—'}</td>
+      <td style="font-size:11px;color:var(--text-dim);letter-spacing:0.04em">${r.id}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${r.confirmed||'—'}</td>
+    </tr>
+  `).join('');
+  updateCounts();
+}
+
+function selectRow(id) {
+  selectedId = id;
+  const r = reservations.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('p-name').textContent = `${r.first} ${r.last}`;
+  document.getElementById('p-rsvp').textContent = `RSVP #${r.id}`;
+  document.getElementById('p-date').textContent = fmtDate(r.date);
+  document.getElementById('p-time').textContent = fmtTime(r.time);
+  document.getElementById('p-party').textContent = `${r.party} guest${r.party>1?'s':''}`;
+  document.getElementById('p-phone').textContent = r.phone;
+  document.getElementById('p-email').textContent = r.email||'—';
+  document.getElementById('p-requested').textContent = r.requested||'—';
+  document.getElementById('p-status-badge').innerHTML = `<span class="status-pill ${statusClass(r.status)}"><span class="dot"></span>${r.status}</span>`;
+  document.getElementById('p-notes').textContent = r.notes||'No additional notes.';
+  document.getElementById('p-server').value = r.server||'';
+
+  // actions
+  const acts = [];
+  if(r.status==='RSVP Requested') {
+    acts.push(`<button class="action-btn confirm" onclick="advanceStatus('${id}','RSVP Confirmed')">✉ Confirm & Send Email</button>`);
+    acts.push(`<button class="action-btn cancel" onclick="advanceStatus('${id}','Cancelled')">✕ Cancel Reservation</button>`);
+  }
+  if(r.status==='RSVP Confirmed') {
+    acts.push(`<button class="action-btn seat" onclick="advanceStatus('${id}','Seated')">🪑 Mark as Seated</button>`);
+    acts.push(`<button class="action-btn cancel" onclick="advanceStatus('${id}','Cancelled')">✕ Cancel</button>`);
+  }
+  if(r.status==='Seated') {
+    acts.push(`<button class="action-btn complete" onclick="advanceStatus('${id}','Completed')">✓ Complete & Log</button>`);
+  }
+  if(r.status==='Completed'||r.status==='Cancelled') {
+    acts.push(`<button class="action-btn log" onclick="toast('Logged to Google Sheets','success')">↗ Re-sync to Sheets</button>`);
+  }
+  document.getElementById('p-actions').innerHTML = acts.join('');
+
+  // auto log
+  document.getElementById('p-auto-log').innerHTML = r.autoLog.map(a=>`
+    <div class="auto-item">
+      <div class="auto-dot ${a.done?'':'pending'}"></div>
+      <div>
+        <div>${a.msg}</div>
+        ${a.time?`<div class="auto-time">${a.time}</div>`:'<div class="auto-time" style="color:var(--amber)">Pending</div>'}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('detail-panel').classList.remove('hidden');
+  renderTable();
+}
+
+function advanceStatus(id, newStatus) {
+  const r = reservations.find(x=>x.id===id);
+  if(!r) return;
+  const old = r.status;
+  r.status = newStatus;
+
+  const msgs = {
+    'RSVP Confirmed': `Confirmation email & SMS sent to ${r.first}`,
+    'Seated': `${r.first} ${r.last} marked as seated`,
+    'Completed': `Reservation logged to Google Sheets`,
+    'Cancelled': `Reservation cancelled — cancellation notice sent`
+  };
+
+  if(newStatus==='RSVP Confirmed') {
+    r.confirmed = new Date().toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'2-digit'})+', '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    r.autoLog.push({msg:'Confirmation email sent via SendGrid', time: 'Just now', done:true});
+    r.autoLog.push({msg:'Confirmation SMS sent via Twilio', time: 'Just now', done:true});
+    r.autoLog.push({msg:'ClickUp status updated', time: 'Just now', done:true});
+  }
+  if(newStatus==='Seated') {
+    r.autoLog.push({msg:'Status updated to Seated in ClickUp', time:'Just now', done:true});
+  }
+  if(newStatus==='Completed') {
+    r.autoLog.push({msg:'Thank-you SMS sent via Twilio', time:'Just now', done:true});
+    r.autoLog.push({msg:'Row logged to Google Sheets master', time:'Just now', done:true});
+    r.autoLog.push({msg:'ClickUp task closed', time:'Just now', done:true});
+  }
+  if(newStatus==='Cancelled') {
+    r.autoLog.push({msg:'Cancellation email sent via SendGrid', time:'Just now', done:true});
+  }
+
+  toast(msgs[newStatus]||'Status updated', 'success');
+  selectRow(id);
+}
+
+function updateServer() {
+  if(!selectedId) return;
+  const r = reservations.find(x=>x.id===selectedId);
+  if(r) { r.server = document.getElementById('p-server').value; renderTable(); }
+  toast('Server assigned', 'info');
+}
+
+function closePanel() {
+  selectedId = null;
+  document.getElementById('detail-panel').classList.add('hidden');
+  renderTable();
+}
+
+function filterStatus(s, el) {
+  activeFilter = s;
+  document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderTable();
+}
+
+function setView(v, el) {
+  document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+  if(el) el.classList.add('active');
+  activeFilter = v === 'today' ? null : null;
+  if(v==='today') document.getElementById('date-filter').value = 'today';
+  else document.getElementById('date-filter').value = '';
+  renderTable();
+}
+
+function openNewModal() {
+  document.getElementById('f-date').value = today();
+  document.getElementById('new-modal').classList.add('show');
+}
+
+function submitNew() {
+  const first = document.getElementById('f-first').value.trim();
+  const last = document.getElementById('f-last').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const date = document.getElementById('f-date').value;
+  const time = document.getElementById('f-time').value;
+  const party = document.getElementById('f-party').value;
+  if(!first||!last||!phone||!date||!time||!party) { toast('Please fill required fields','warning'); return; }
+  const r = {
+    id: genId(),
+    first, last, phone,
+    email: document.getElementById('f-email').value,
+    date, time, party: +party,
+    status: document.getElementById('f-status').value,
+    server: document.getElementById('f-server').value,
+    notes: document.getElementById('f-notes').value,
+    requested: new Date().toLocaleDateString('en-US'),
+    confirmed: '',
+    autoLog: [{msg:'Reservation created manually by staff',time:'Just now',done:true}]
+  };
+  if(r.status==='RSVP Confirmed') {
+    r.autoLog.push({msg:'Confirmation email queued via SendGrid',time:'Just now',done:true});
+  }
+  reservations.push(r);
+  closeModal('new-modal');
+  renderTable();
+  toast(`Reservation created for ${first} ${last}`, 'success');
+  ['f-first','f-last','f-phone','f-email','f-party','f-notes'].forEach(id=>document.getElementById(id).value='');
+}
+
+function showSyncModal() {
+  document.getElementById('last-sync-time').textContent = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  document.getElementById('sync-modal').classList.add('show');
+}
+
+function doSync() {
+  closeModal('sync-modal');
+  toast('Synced to ClickUp, Google Sheets & Zapier', 'success');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('show'); });
+});
+
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.className = `toast ${type}`;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// Set date
+const dateEl = document.getElementById('nav-date');
+dateEl.textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+
+// Init
+renderTable();
+updateCounts();
+</script>
+</body>
+</html>
