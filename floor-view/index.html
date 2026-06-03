@@ -5,59 +5,80 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hive Buckhead — Live Floor</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="shared.js"></script>
 <style>
-:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.22);--amber:#D4A020;--amber-bg:rgba(212,160,32,.22);--red:#C4524A;--red-bg:rgba(196,82,74,.22);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.18);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.22)}
-[data-theme="light"]{--bg:#EEE9E0;--surface:#F9F6F1;--surface2:#F0EBE2;--surface3:#E5DDD2;--border:rgba(100,80,40,.15);--border-s:rgba(100,80,40,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.18);--amber-bg:rgba(212,160,32,.18);--red-bg:rgba(196,82,74,.18);--purple-bg:rgba(155,126,200,.18)}
+:root{
+  --gold:#C9A96E;--gold-light:#E8D4B0;
+  --bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;
+  --border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);
+  --text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;
+  --green:#4CAF82;--green-bg:rgba(76,175,130,.2);
+  --amber:#D4A020;--amber-bg:rgba(212,160,32,.2);
+  --red:#C4524A;--red-bg:rgba(196,82,74,.2);
+  --blue:#5B96C8;--blue-bg:rgba(91,150,200,.15);
+  --purple:#9B7EC8;--purple-bg:rgba(155,126,200,.2);
+  --teal:#3AACA8;--teal-bg:rgba(58,172,168,.15);
+}
+[data-theme="light"]{
+  --bg:#EEE9E0;--surface:#F9F6F1;--surface2:#EDE8DF;--surface3:#E0D9CE;
+  --border:rgba(100,80,40,.15);--border-s:rgba(100,80,40,.3);
+  --text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;
+  --green-bg:rgba(76,175,130,.15);--amber-bg:rgba(212,160,32,.15);
+  --red-bg:rgba(196,82,74,.15);--purple-bg:rgba(155,126,200,.15);
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;gap:12px}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;gap:10px}
 .nav-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);letter-spacing:.08em;white-space:nowrap}
 .nav-brand span{color:var(--text-m);font-weight:300}
 .live-badge{display:flex;align-items:center;gap:5px;background:var(--red-bg);border:.5px solid rgba(196,82,74,.4);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--red);font-weight:500;flex-shrink:0}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.clock{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--gold);line-height:1}
-.date-str{font-size:10px;color:var(--text-m);text-align:center;margin-top:1px}
-.btn{padding:5px 13px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
+.clock-wrap{text-align:center;line-height:1}
+.clock{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--gold)}
+.date-str{font-size:10px;color:var(--text-m);margin-top:1px}
+.btn{padding:5px 13px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s;white-space:nowrap}
 .btn:hover{background:var(--surface2);border-color:var(--gold)}
 .btn-primary{background:var(--gold);color:#0E0C0A;border-color:var(--gold)}
 .btn-primary:hover{background:var(--gold-light)}
 .btn-sm{padding:4px 10px;font-size:11px}
-.icon-btn{width:30px;height:30px;border-radius:6px;border:.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-m);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.icon-btn{width:30px;height:30px;border-radius:6px;border:.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-m);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .icon-btn:hover{border-color:var(--gold);color:var(--text)}
+
 /* STATS */
 .stats-bar{display:flex;border-bottom:.5px solid var(--border);flex-shrink:0;background:var(--surface)}
-.fstat{flex:1;padding:8px 14px;border-right:.5px solid var(--border);text-align:center}
+.fstat{flex:1;padding:8px 10px;border-right:.5px solid var(--border);text-align:center}
 .fstat:last-child{border-right:none}
-.fstat-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;line-height:1}
+.fstat-val{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;line-height:1}
 .fstat-lbl{font-size:9px;color:var(--text-d);letter-spacing:.04em;margin-top:2px;text-transform:uppercase}
+
 /* LEGEND */
-.legend-bar{display:flex;align-items:center;gap:14px;padding:6px 16px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
+.legend-bar{display:flex;align-items:center;gap:12px;padding:5px 14px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-m)}
-.leg-sw{width:12px;height:12px;border-radius:3px;border:.5px solid}
+.leg-sw{width:11px;height:11px;border-radius:2px;border:.5px solid}
 .hint{font-size:10px;color:var(--text-d);margin-left:auto}
-/* FLOOR SVG CONTAINER */
-.floor-container{flex:1;overflow:auto;position:relative;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:16px}
-#floor-svg{display:block;cursor:default;user-select:none}
-/* TABLE ELEMENTS */
-.tbl-wrap{cursor:pointer;transition:transform .15s}
-.tbl-wrap:hover{filter:brightness(1.18)}
-.tbl-wrap:active{transform:scale(.97)}
+
+/* FLOOR */
+.floor-container{flex:1;overflow:auto;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:12px}
+#floor-svg{display:block;max-width:100%;height:auto}
+.tbl-wrap{cursor:pointer}
+.tbl-wrap:hover rect,.tbl-wrap:hover circle{filter:brightness(1.2)}
+
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
 .modal-overlay.show{opacity:1;pointer-events:all}
-.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:440px;max-height:88vh;overflow-y:auto;padding:1.3rem;transform:translateY(8px);transition:transform .15s}
+.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:440px;max-height:90vh;overflow-y:auto;padding:1.3rem;transform:translateY(8px);transition:transform .15s}
 .modal-overlay.show .modal{transform:translateY(0)}
 .modal-sm{width:400px}
+.modal-lg{width:580px}
 .modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--gold);margin-bottom:.9rem}
 .dr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--border);font-size:13px;gap:8px}
 .dr:last-child{border-bottom:none}
-.dr .l{color:var(--text-m)}
-.dr .v{color:var(--text);font-weight:500;text-align:right}
+.dr .l{color:var(--text-m)}.dr .v{color:var(--text);font-weight:500;text-align:right}
 .form-group{margin-bottom:11px}
 .form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:3px}
-.form-input,.form-select{width:100%;padding:7px 10px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.form-input,.form-select{width:100%;padding:7px 10px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
 .form-input:focus,.form-select:focus{border-color:var(--gold)}
 .form-input::placeholder{color:var(--text-d)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -70,11 +91,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .fa-dirty{color:var(--red);border-color:rgba(196,82,74,.35)}.fa-dirty:hover{background:var(--red-bg)}
 .fa-change{color:var(--blue);border-color:rgba(91,150,200,.4)}.fa-change:hover{background:var(--blue-bg)}
 .info-tag{background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--blue);margin-bottom:10px;line-height:1.5}
-.warn-tag{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--amber);margin-bottom:10px}
-.toast{position:fixed;bottom:18px;right:18px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:10px 15px;font-size:13px;display:flex;align-items:center;gap:8px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.warn-tag{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--amber);margin-bottom:10px;line-height:1.5}
+
+/* SETTINGS PANEL */
+.settings-section{margin-bottom:16px}
+.settings-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-d);margin-bottom:8px}
+.settings-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-row-info{flex:1}
+.settings-row-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.settings-row-sub{font-size:11px;color:var(--text-m);line-height:1.5}
+.zap-btn{width:100%;padding:9px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;border:.5px solid;transition:all .15s;text-align:left;display:flex;align-items:center;gap:8px;background:transparent;margin-bottom:7px}
+.zap-btn:hover{transform:translateX(1px)}
+.zap-confirm{color:var(--blue);border-color:rgba(91,150,200,.4)}.zap-confirm:hover{background:var(--blue-bg)}
+.zap-cancel{color:var(--red);border-color:rgba(196,82,74,.35)}.zap-cancel:hover{background:var(--red-bg)}
+.zap-thankyou{color:var(--green);border-color:rgba(76,175,130,.4)}.zap-thankyou:hover{background:var(--green-bg)}
+.zap-seated{color:var(--purple);border-color:rgba(155,126,200,.4)}.zap-seated:hover{background:var(--purple-bg)}
+.zap-complete{color:var(--gold);border-color:rgba(201,169,110,.35)}.zap-complete:hover{background:rgba(201,169,110,.08)}
+.zap-reminder{color:var(--amber);border-color:rgba(212,160,32,.35)}.zap-reminder:hover{background:var(--amber-bg)}
+.zap-field-preview{background:var(--surface2);border:.5px solid var(--border);border-radius:5px;padding:8px 10px;font-size:11px;color:var(--text-m);margin-top:6px;font-family:monospace;line-height:1.8;white-space:pre-wrap;word-break:break-all}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.tag-green{background:var(--green-bg);color:var(--green)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.tag-blue{background:var(--blue-bg);color:var(--blue)}
+.tag-red{background:var(--red-bg);color:var(--red)}
+.tag-purple{background:var(--purple-bg);color:var(--purple)}
+.fire-result{background:var(--surface2);border:.5px solid var(--green-bg);border-radius:6px;padding:8px 11px;font-size:11px;color:var(--green);margin-top:8px;display:none;line-height:1.6}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:10px 15px;font-size:13px;display:flex;align-items:center;gap:8px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:340px}
 .toast.show{transform:translateY(0) scale(1);opacity:1}
-.toast-icon{width:7px;height:7px;border-radius:50%}
-.toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}.toast.warning .toast-icon{background:var(--amber)}
+.toast-icon{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.toast.success .toast-icon{background:var(--green)}
+.toast.info .toast-icon{background:var(--blue)}
+.toast.warning .toast-icon{background:var(--amber)}
+.toast.zap .toast-icon{background:var(--gold);animation:blink 0.5s 3}
+
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
 </style>
 </head>
@@ -85,33 +137,43 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
     <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
     <div class="live-badge"><div class="live-dot"></div>LIVE FLOOR</div>
   </div>
-  <div style="text-align:center">
+  <div class="clock-wrap">
     <div class="clock" id="clock">—</div>
     <div class="date-str" id="date-str">—</div>
   </div>
-  <div style="display:flex;gap:7px;align-items:center">
+  <div style="display:flex;gap:6px;align-items:center">
     <button class="btn btn-primary btn-sm" onclick="openWalkIn()">+ Walk-In</button>
     <button class="btn btn-sm" onclick="openSeatModal(null)">🪑 Seat Guest</button>
-    <button class="icon-btn" onclick="toggleTheme()" title="Theme">
+    <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
     </button>
-    <a href="index.html"><button class="btn btn-sm">← Reservations</button></a>
-    <a href="admin.html"><button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)">⚙ Admin</button></a>
+    <button class="icon-btn" onclick="openSettings()" title="Settings">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+    <a href="../rsvp-mgnt/index.html"><button class="btn btn-sm">← Reservations</button></a>
+    <a href="../admin-dashboard/index.html"><button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)">⚙ Admin</button></a>
   </div>
 </nav>
 
-<div class="stats-bar" id="stats-bar"></div>
+<div class="stats-bar" id="stats-bar">
+  <div class="fstat"><div class="fstat-val" style="color:var(--purple)" id="s-seated">0</div><div class="fstat-lbl">Seated Now</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--amber)" id="s-arriving">0</div><div class="fstat-lbl">Arriving (24hr)</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--red)" id="s-bussing">0</div><div class="fstat-lbl">Need Bussing</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--green)" id="s-open">0</div><div class="fstat-lbl">Open Tables</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--gold)" id="s-covers">0</div><div class="fstat-lbl">Live Covers</div></div>
+</div>
 
 <div class="legend-bar">
   <div class="leg"><div class="leg-sw" style="background:var(--green-bg);border-color:rgba(76,175,130,.5)"></div>Open</div>
   <div class="leg"><div class="leg-sw" style="background:var(--purple-bg);border-color:rgba(155,126,200,.5)"></div>Seated</div>
-  <div class="leg"><div class="leg-sw" style="background:var(--amber-bg);border-color:rgba(212,160,32,.5)"></div>Reserved Today</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--amber-bg);border-color:rgba(212,160,32,.5)"></div>Reserved (24hr)</div>
   <div class="leg"><div class="leg-sw" style="background:var(--red-bg);border-color:rgba(196,82,74,.5)"></div>Needs Bussing</div>
-  <span class="hint">Tap table to manage · Today's reservations only · No reservation edits on this page</span>
+  <div class="leg"><div class="leg-sw" style="background:var(--teal-bg);border-color:rgba(58,172,168,.4)"></div>Available (was seated)</div>
+  <span class="hint">Tap a table to manage · Confirmed reservations within 24 hours shown</span>
 </div>
 
 <div class="floor-container">
-  <svg id="floor-svg" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg"></svg>
+  <svg id="floor-svg" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" style="width:960px;max-width:100%"></svg>
 </div>
 
 <!-- TABLE ACTION MODAL -->
@@ -124,14 +186,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   </div>
 </div>
 
-<!-- SEAT GUEST (from confirmed) -->
+<!-- SEAT CONFIRMED GUEST -->
 <div class="modal-overlay" id="seat-modal">
   <div class="modal modal-sm">
     <div class="modal-title">Seat Confirmed Guest</div>
-    <div class="info-tag">Select a confirmed reservation for today and assign them to this table.</div>
+    <div class="info-tag" id="seat-info-tag">Select a reservation arriving within 24 hours.</div>
     <div class="form-group"><label class="form-label">Reservation</label>
       <select class="form-select" id="seat-rsv-sel"></select></div>
-    <div class="form-group" id="seat-tbl-grp"><label class="form-label">Table</label>
+    <div class="form-group"><label class="form-label">Assign Table</label>
       <select class="form-select" id="seat-tbl-sel"></select></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('seat-modal')">Cancel</button>
@@ -140,11 +202,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   </div>
 </div>
 
-<!-- WALK-IN MODAL -->
+<!-- WALK-IN -->
 <div class="modal-overlay" id="walkin-modal">
   <div class="modal modal-sm">
     <div class="modal-title">New Walk-In</div>
-    <div class="info-tag">Creates a new reservation labeled as walk-in and seats them immediately.</div>
+    <div class="info-tag">Creates a new reservation as a walk-in and seats them immediately.</div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="wi-first" placeholder="First"></div>
       <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="wi-last" placeholder="Last"></div>
@@ -157,7 +219,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
       <div class="form-group"><label class="form-label">Table *</label>
         <select class="form-select" id="wi-table"><option value="">Select…</option></select></div>
       <div class="form-group"><label class="form-label">Server</label>
-        <select class="form-select" id="wi-server"><option value="">Unassigned</option></select></div>
+        <select class="form-select" id="wi-server">
+          <option value="">Unassigned</option>
+          <option>Ashley Smith</option><option>Marcus Rivera</option>
+          <option>Jenna Park</option><option>Devon Harris</option>
+        </select></div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('walkin-modal')">Cancel</button>
@@ -166,12 +232,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   </div>
 </div>
 
-<!-- CHANGE TABLE MODAL -->
+<!-- CHANGE TABLE -->
 <div class="modal-overlay" id="changeseat-modal">
   <div class="modal modal-sm">
     <div class="modal-title">Change Table</div>
     <div class="form-group" style="margin-top:8px"><label class="form-label">Move to table</label>
-      <select class="form-select" id="cs-table"><option value="">Select…</option></select></div>
+      <select class="form-select" id="cs-table"></select></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('changeseat-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="submitChangeSeat()">Move Table</button>
@@ -179,246 +245,351 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   </div>
 </div>
 
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal modal-lg" style="max-height:88vh">
+    <div class="modal-title">⚙ Settings & Tools</div>
+
+    <!-- DATA MANAGEMENT -->
+    <div class="settings-section">
+      <div class="settings-title">Data Management</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-title">Load Sample Data</div>
+          <div class="settings-row-sub">Populates the floor with realistic test reservations across all statuses — today, upcoming, and past. Use for testing and Zapier setup.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="loadSampleData()">Load Samples</button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-title">Clear All Data</div>
+          <div class="settings-row-sub">Removes all reservations and table states from this browser. Does not affect ClickUp or Google Sheets.</div>
+        </div>
+        <button class="btn btn-sm" style="flex-shrink:0;color:var(--red);border-color:rgba(196,82,74,.35)" onclick="clearAllData()">Clear Data</button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-title">Export Current Data (JSON)</div>
+          <div class="settings-row-sub">Download all current reservation data as JSON for inspection or import.</div>
+        </div>
+        <button class="btn btn-sm" style="flex-shrink:0" onclick="exportData()">Export JSON</button>
+      </div>
+    </div>
+
+    <!-- ZAP TRIGGER TESTING -->
+    <div class="settings-section">
+      <div class="settings-title">⚡ Zapier Trigger Test Buttons</div>
+      <div style="font-size:11.5px;color:var(--text-m);margin-bottom:12px;line-height:1.6;padding:8px 10px;background:var(--surface2);border-radius:6px;border:.5px solid var(--border)">
+        Each button fires a simulated ClickUp webhook payload matching your actual Zapier trigger configuration. Use these to build and test each Zap path. The field data mirrors what ClickUp sends when a task reaches that status in the <strong style="color:var(--text)">Reservations & Tables</strong> list. Copy the payload from the preview to paste into Zapier's "Test trigger" step.
+      </div>
+
+      <div style="margin-bottom:10px">
+        <button class="zap-btn zap-confirm" onclick="fireZap('confirm')">
+          <span>✉</span>
+          <div>
+            <div style="font-weight:500">Trigger: RSVP CONFIRMED</div>
+            <div style="font-size:11px;opacity:.8">Fires when status → RSVP Confirmed → SendGrid confirmation email + Twilio SMS</div>
+          </div>
+        </button>
+        <div class="fire-result" id="zap-result-confirm"></div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <button class="zap-btn zap-seated" onclick="fireZap('seated')">
+          <span>🪑</span>
+          <div>
+            <div style="font-weight:500">Trigger: SEATED</div>
+            <div style="font-size:11px;opacity:.8">Fires when status → Seated → optional internal notification to kitchen/host</div>
+          </div>
+        </button>
+        <div class="fire-result" id="zap-result-seated"></div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <button class="zap-btn zap-complete" onclick="fireZap('complete')">
+          <span>✅</span>
+          <div>
+            <div style="font-weight:500">Trigger: COMPLETED RESERVATION</div>
+            <div style="font-size:11px;opacity:.8">Fires when status → Completed → Thank You email + SMS + logs to Google Sheets master row</div>
+          </div>
+        </button>
+        <div class="fire-result" id="zap-result-complete"></div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <button class="zap-btn zap-cancel" onclick="fireZap('cancel')">
+          <span>✕</span>
+          <div>
+            <div style="font-weight:500">Trigger: CANCELLED</div>
+            <div style="font-size:11px;opacity:.8">Fires when status → Cancelled → cancellation email + SMS via SendGrid + Twilio</div>
+          </div>
+        </button>
+        <div class="fire-result" id="zap-result-cancel"></div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <button class="zap-btn zap-reminder" onclick="fireZap('reminder')">
+          <span>⏰</span>
+          <div>
+            <div style="font-weight:500">Trigger: 24HR REMINDER</div>
+            <div style="font-size:11px;opacity:.8">Fires on ClickUp scheduled trigger 24hrs before reservation date → reminder email + SMS</div>
+          </div>
+        </button>
+        <div class="fire-result" id="zap-result-reminder"></div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <button class="zap-btn zap-thankyou" onclick="fireZap('new_rsvp')">
+          <span>📋</span>
+          <div>
+            <div style="font-weight:500">Trigger: NEW RSVP CREATED (forms.app → ClickUp)</div>
+            <div style="font-size:11px;opacity:.8">Fires when new task created on Reservations & Tables list → ClickUp Task ID assigned as RSVP #</div>
+          </div>
+        </button>
+        <div class="fire-result" id="zap-result-new_rsvp"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('settings-modal')">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
 
 <script>
-const TODAY = window.HiveData.TODAY;
-let actionTid = null, changingSeatId = null, seatPreTable = null;
+// ── SELF-CONTAINED DATA (no shared.js dependency) ──
+const STORE_KEY = 'hive_buckhead_v1';
 
-// ── HELPERS ──
-function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
+function loadStore(){
+  try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}
+  return null;
+}
+function saveStore(d){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(d));}catch(e){}
+}
+
+const NOW = new Date();
+const TODAY = NOW.toISOString().split('T')[0];
+const TOMORROW = new Date(NOW.getTime()+24*60*60*1000).toISOString().split('T')[0];
+const YESTERDAY = new Date(NOW.getTime()-24*60*60*1000).toISOString().split('T')[0];
+const nowHM = NOW.toTimeString().slice(0,5);
+
+const TABLES_DEF = [
+  {id:'T1',num:'T1',cap:4,section:'indoor'},{id:'T2',num:'T2',cap:4,section:'indoor'},
+  {id:'T3',num:'T3',cap:4,section:'indoor'},{id:'T4',num:'T4',cap:4,section:'indoor'},
+  {id:'T5',num:'T5',cap:4,section:'indoor'},{id:'T6',num:'T6',cap:4,section:'indoor'},
+  {id:'T7',num:'T7',cap:6,section:'indoor'},{id:'T8',num:'T8',cap:4,section:'indoor'},
+  {id:'T9',num:'T9',cap:4,section:'indoor'},{id:'T10',num:'T10',cap:4,section:'indoor'},
+  {id:'T11',num:'T11',cap:4,section:'indoor'},{id:'T12',num:'T12',cap:4,section:'indoor'},
+  {id:'T13',num:'T13',cap:4,section:'den'},{id:'T14',num:'T14',cap:4,section:'den'},
+  {id:'T15',num:'T15',cap:4,section:'den'},{id:'T16',num:'T16',cap:4,section:'den'},
+  {id:'T18',num:'T18',cap:4,section:'den'},{id:'T19',num:'T19',cap:4,section:'den'},
+  {id:'T20',num:'T20',cap:4,section:'den'},
+  {id:'BAR1',num:'Main Bar',cap:8,section:'bar'},{id:'BAR2',num:'Service',cap:4,section:'bar'},{id:'BAR3',num:'Lounge',cap:8,section:'bar'},
+  {id:'P1',num:'P1',cap:4,section:'patio'},{id:'P2',num:'P2',cap:4,section:'patio'},
+  {id:'P3',num:'P3',cap:4,section:'patio'},{id:'P4',num:'P4',cap:4,section:'patio'},{id:'P5',num:'P5',cap:4,section:'patio'},
+];
+
+const SAMPLE_DATA = {
+  reservations:[
+    {id:'86AH8ZMTA',first:'Matest',last:'Now',phone:'4702226558',email:'c1.jumpw@gmail.com',date:TODAY,time:'15:15',party:2,status:'Seated',server:'Ashley Smith',table:'T3',notes:'Bringing confetti',orderTotal:null,tableAvailable:false},
+    {id:'9KF3PLMX',first:'Jordan',last:'Baptiste',phone:'4045552341',email:'jbaptiste@gmail.com',date:TODAY,time:'18:30',party:4,status:'RSVP Confirmed',server:'Marcus Rivera',table:'T5',notes:'Anniversary dinner',orderTotal:null,tableAvailable:false},
+    {id:'7ZB2WNQR',first:'Priya',last:'Nair',phone:'6785553819',email:'priya.n@outlook.com',date:TODAY,time:'19:00',party:6,status:'RSVP Requested',server:'',table:'',notes:'Gluten allergy',orderTotal:null,tableAvailable:false},
+    {id:'2RM6DKPN',first:'Camille',last:'Osei',phone:'4042228811',email:'camille.o@gmail.com',date:TODAY,time:'17:30',party:3,status:'RSVP Confirmed',server:'Devon Harris',table:'T8',notes:'',orderTotal:null,tableAvailable:false},
+    {id:'5TN1QABZ',first:'DeShawn',last:'Williams',phone:'6786663322',email:'dw@gmail.com',date:TODAY,time:'20:30',party:8,status:'RSVP Confirmed',server:'Devon Harris',table:'T7',notes:'Large group',orderTotal:null,tableAvailable:false},
+    {id:'4XC9JHTV',first:'Tyler',last:'Monroe',phone:'4045558823',email:'tmonroe@me.com',date:TODAY,time:'16:00',party:2,status:'Completed',server:'Jenna Park',table:'T2',notes:'Birthday',orderTotal:187.50,tableAvailable:false},
+    {id:'3QP7MZNK',first:'Ava',last:'Thompson',phone:'4048887766',email:'ava.t@gmail.com',date:TOMORROW,time:'19:30',party:3,status:'RSVP Confirmed',server:'Ashley Smith',table:'T4',notes:'',orderTotal:null,tableAvailable:false},
+    {id:'8WX2RVCS',first:'Marcus',last:'Lee',phone:'6784443322',email:'mlee@me.com',date:TODAY,time:'21:00',party:5,status:'RSVP Confirmed',server:'Marcus Rivera',table:'T6',notes:'Allergic to shellfish',orderTotal:null,tableAvailable:false},
+  ],
+  tableStates:{'T9':'dirty','T1':'available'},
+  tables:TABLES_DEF,
+  servers:[
+    {id:'s1',name:'Ashley Smith',role:'Lead Server',color:'#C9A96E',initials:'AS'},
+    {id:'s2',name:'Marcus Rivera',role:'Server',color:'#5B96C8',initials:'MR'},
+    {id:'s3',name:'Jenna Park',role:'Server',color:'#9B7EC8',initials:'JP'},
+    {id:'s4',name:'Devon Harris',role:'Server / Bar',color:'#3AACA8',initials:'DH'},
+  ],
+};
+
+// Load or init data
+let DATA = loadStore() || JSON.parse(JSON.stringify(SAMPLE_DATA));
+if(!DATA.tables) DATA.tables = TABLES_DEF;
+if(!DATA.servers) DATA.servers = SAMPLE_DATA.servers;
+if(!DATA.tableStates) DATA.tableStates = {};
+
+// ── TABLE POSITIONS (matching real floor plan) ──
+const TABLE_POS = {
+  T1:{x:318,y:188},T2:{x:408,y:188},T3:{x:498,y:188},T4:{x:588,y:188},
+  T5:{x:318,y:278},T6:{x:408,y:278},T7:{x:498,y:278},T8:{x:588,y:278},
+  T9:{x:318,y:368},T10:{x:408,y:368},T11:{x:498,y:368},T12:{x:588,y:368},
+  T13:{x:68,y:198},T14:{x:168,y:198},
+  T15:{x:68,y:278},T18:{x:168,y:278},
+  T16:{x:68,y:358},T19:{x:68,y:438},T20:{x:168,y:438},
+  BAR1:{x:841,y:208,bar:true,w:170,h:34},
+  BAR2:{x:841,y:318,bar:true,w:110,h:28},
+  BAR3:{x:841,y:460,bar:true,w:170,h:28},
+  P1:{x:188,y:72},P2:{x:258,y:72},P3:{x:328,y:72},P4:{x:398,y:72},P5:{x:468,y:72},
+};
+
+// ── STATE COLOR ──
+function stateColor(state){
+  const m={
+    open:{fill:'rgba(76,175,130,.18)',stroke:'rgba(76,175,130,.6)',text:'#5FC090',label:'OPEN'},
+    seated:{fill:'rgba(155,126,200,.22)',stroke:'rgba(155,126,200,.7)',text:'#C4B0E8',label:'SEATED'},
+    reserved:{fill:'rgba(212,160,32,.2)',stroke:'rgba(212,160,32,.65)',text:'#E8C040',label:'RESERVED'},
+    dirty:{fill:'rgba(196,82,74,.2)',stroke:'rgba(196,82,74,.65)',text:'#D87070',label:'BUS'},
+    available:{fill:'rgba(58,172,168,.18)',stroke:'rgba(58,172,168,.6)',text:'#5DC8C4',label:'AVAILABLE'},
+  };
+  return m[state]||m.open;
+}
+
+// ── GET TABLE STATE (fixed: bussed tables show as available, not re-seated) ──
 function getTableState(tid){
-  const d = window.HiveData.get();
-  const rsv = d.reservations || [];
-  const ts = d.tableStates || {};
-  const seated = rsv.find(r=>r.table===tid&&r.status==='Seated'&&r.date===TODAY);
-  const reserved = rsv.find(r=>r.table===tid&&r.status==='RSVP Confirmed'&&r.date===TODAY);
+  const ts = DATA.tableStates || {};
+  // Table-level state overrides reservation state
   if(ts[tid]==='dirty') return{state:'dirty',r:null};
+  if(ts[tid]==='available') return{state:'available',r:null};
+
+  const now24 = new Date(NOW.getTime() + 24*60*60*1000);
+  const rsv = DATA.reservations || [];
+
+  // Only show reservations within 24hr window
+  const seated = rsv.find(r=>r.table===tid && r.status==='Seated' && isWithin24hr(r));
   if(seated) return{state:'seated',r:seated};
+
+  const reserved = rsv.find(r=>r.table===tid && r.status==='RSVP Confirmed' && isWithin24hr(r));
   if(reserved) return{state:'reserved',r:reserved};
+
   return{state:'open',r:null};
 }
-function stateColor(state){
-  if(state==='seated') return{fill:'rgba(155,126,200,.22)',stroke:'rgba(155,126,200,.7)',text:'#C4B0E8'};
-  if(state==='reserved') return{fill:'rgba(212,160,32,.22)',stroke:'rgba(212,160,32,.65)',text:'#E8C040'};
-  if(state==='dirty') return{fill:'rgba(196,82,74,.22)',stroke:'rgba(196,82,74,.65)',text:'#D87070'};
-  return{fill:'rgba(76,175,130,.18)',stroke:'rgba(76,175,130,.6)',text:'#5FC090'};
-}
-function stateLabelShort(state){
-  return{seated:'SEATED',reserved:'RESERVED',dirty:'BUS',open:'OPEN'}[state]||'OPEN';
+
+// ── 24HR WINDOW CHECK ──
+function isWithin24hr(r){
+  if(!r.date) return false;
+  const rDateTime = new Date(r.date + 'T' + (r.time||'00:00') + ':00');
+  const windowStart = new Date(NOW.getTime() - 2*60*60*1000); // 2hrs ago (in case of late)
+  const windowEnd = new Date(NOW.getTime() + 24*60*60*1000);
+  return rDateTime >= windowStart && rDateTime <= windowEnd;
 }
 
-// ── SVG FLOOR PLAN RENDERER ──
+// ── RENDER FLOOR SVG ──
 function renderFloor(){
   const svg = document.getElementById('floor-svg');
-  const d = window.HiveData.get();
-  const tables = d.tables || [];
-
-  // Theme detection
   const dark = document.documentElement.getAttribute('data-theme') !== 'light';
-  const wallFill = dark ? '#1A1714' : '#F2EDE5';
-  const wallStroke = dark ? 'rgba(201,169,110,.35)' : 'rgba(100,80,40,.3)';
-  const denFill = dark ? '#211D18' : '#EDE5D8';
-  const gridColor = dark ? 'rgba(201,169,110,.06)' : 'rgba(100,80,40,.07)';
-  const labelColor = dark ? '#A89B84' : '#8B7355';
-  const sectionLabelColor = dark ? '#C9A96E' : '#8B6030';
-  const roomFill = dark ? '#141210' : '#E8E0D5';
-  const textPrimary = dark ? '#F5EFE4' : '#1A1510';
+  const wallFill = dark?'#1A1714':'#F2EDE5';
+  const wallStroke = dark?'rgba(201,169,110,.3)':'rgba(100,80,40,.25)';
+  const denFill = dark?'#1E1A15':'#EDE5D8';
+  const gridColor = dark?'rgba(201,169,110,.05)':'rgba(100,80,40,.06)';
+  const labelColor = dark?'#A89B84':'#8B7355';
+  const sectionColor = dark?'#C9A96E':'#8B6030';
+  const roomFill = dark?'#141210':'#E8E0D5';
 
-  // Viewport: 960×560
-  let html = `
-  <!-- GRID -->
-  <defs>
-    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="${gridColor}" stroke-width=".5"/>
-    </pattern>
-  </defs>
-  <rect width="960" height="560" fill="url(#grid)"/>
-
-  <!-- OUTER WALLS -->
+  let h = `
+  <defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse">
+    <path d="M20 0L0 0 0 20" fill="none" stroke="${gridColor}" stroke-width=".5"/>
+  </pattern></defs>
+  <rect width="960" height="560" fill="url(#g)"/>
   <rect x="8" y="8" width="944" height="544" rx="3" fill="${wallFill}" stroke="${wallStroke}" stroke-width="2.5"/>
+  <rect x="152" y="8" width="556" height="118" rx="2" fill="${dark?'rgba(58,172,168,.07)':'rgba(58,172,168,.05)'}" stroke="${dark?'rgba(58,172,168,.28)':'rgba(58,172,168,.22)'}" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="430" y="23" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${sectionColor}" letter-spacing="2" text-anchor="middle">PATIO</text>
+  <line x1="152" y1="126" x2="708" y2="126" stroke="${dark?'rgba(91,150,200,.45)':'rgba(60,100,180,.35)'}" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="430" y="138" font-family="DM Sans,sans-serif" font-size="8" fill="${dark?'rgba(91,150,200,.65)':'rgba(60,100,180,.55)'}" text-anchor="middle" letter-spacing="1.5">GLASS DOORS</text>
+  <rect x="712" y="8" width="116" height="76" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="770" y="50" font-family="DM Sans,sans-serif" font-size="9" fill="${labelColor}" text-anchor="middle" font-weight="500">RESTROOMS</text>
+  <rect x="832" y="8" width="120" height="76" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="892" y="50" font-family="DM Sans,sans-serif" font-size="9" fill="${labelColor}" text-anchor="middle" font-weight="500">KITCHEN</text>
+  <rect x="8" y="148" width="238" height="396" rx="2" fill="${denFill}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="123" y="170" font-family="Cormorant Garamond,serif" font-size="12" font-weight="500" fill="${sectionColor}" text-anchor="middle" letter-spacing="1.5">DEN</text>
+  <text x="250" y="275" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle">DEN</text>
+  <text x="250" y="284" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle">ENT.</text>
+  <text x="500" y="465" font-family="Cormorant Garamond,serif" font-size="12" font-weight="500" fill="${sectionColor}" text-anchor="middle" letter-spacing="1.5" opacity=".4">INDOOR DINING</text>
+  <rect x="726" y="148" width="226" height="396" rx="2" fill="${dark?'rgba(201,169,110,.03)':'rgba(180,140,60,.04)'}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="839" y="170" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${sectionColor}" text-anchor="middle" letter-spacing="1">BAR SEATING</text>
+  <text x="839" y="192" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 1: MAIN BAR</text>
+  <rect x="744" y="195" width="190" height="24" rx="2" fill="${dark?'rgba(201,169,110,.1)':'rgba(180,140,60,.1)'}" stroke="${wallStroke}" stroke-width=".8"/>
+  ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${754+i*23}" cy="${228}" r="7" fill="${dark?'rgba(201,169,110,.1)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".7"/>`).join('')}
+  <text x="839" y="298" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 2: SERVICE AREA</text>
+  <rect x="744" y="302" width="110" height="22" rx="2" fill="${dark?'rgba(201,169,110,.08)':'rgba(180,140,60,.07)'}" stroke="${wallStroke}" stroke-width=".8"/>
+  ${[0,1,2].map(i=>`<circle cx="${754+i*28}" cy="${296}" r="7" fill="${dark?'rgba(201,169,110,.1)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".7"/>`).join('')}
+  <text x="839" y="432" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 3: LOUNGE BAR</text>
+  <rect x="744" y="450" width="190" height="22" rx="2" fill="${dark?'rgba(201,169,110,.1)':'rgba(180,140,60,.1)'}" stroke="${wallStroke}" stroke-width=".8"/>
+  ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${754+i*23}" cy="${445}" r="7" fill="${dark?'rgba(201,169,110,.1)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".7"/>`).join('')}
+  <rect x="576" y="494" width="64" height="34" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.2"/>
+  <text x="608" y="515" font-family="DM Sans,sans-serif" font-size="8" fill="${labelColor}" text-anchor="middle" font-weight="500">HOST</text>
+  <line x1="476" y1="544" x2="556" y2="544" stroke="${sectionColor}" stroke-width="2.5"/>
+  <text x="516" y="540" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${sectionColor}" text-anchor="middle" letter-spacing=".5">↑ MAIN ENTRANCE</text>
+  <text x="20" y="162" font-family="DM Sans,sans-serif" font-size="7" fill="${dark?'rgba(196,82,74,.65)':'rgba(196,82,74,.55)'}" letter-spacing=".3">EMERG. EXIT</text>
+  <line x1="8" y1="155" x2="8" y2="195" stroke="${dark?'rgba(196,82,74,.55)':'rgba(196,82,74,.45)'}" stroke-width="2.5"/>`;
 
-  <!-- PATIO AREA (top) -->
-  <rect x="152" y="8" width="556" height="118" rx="2" fill="${dark?'rgba(58,172,168,.07)':'rgba(58,172,168,.06)'}" stroke="${dark?'rgba(58,172,168,.3)':'rgba(58,172,168,.25)'}" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="420" y="24" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${sectionLabelColor}" letter-spacing="2" text-anchor="middle">PATIO</text>
+  // Decorative plants
+  [{x:162,y:55},{x:220,y:30},{x:500,y:30},{x:620,y:55},{x:148,y:126},{x:620,y:126}].forEach(p=>{
+    h+=`<circle cx="${p.x}" cy="${p.y}" r="7" fill="${dark?'rgba(76,175,130,.22)':'rgba(76,175,130,.18)'}" stroke="${dark?'rgba(76,175,130,.38)':'rgba(76,175,130,.28)'}" stroke-width=".7"/>`;
+    h+=`<text x="${p.x}" y="${p.y+4}" font-size="8" text-anchor="middle">🌿</text>`;
+  });
 
-  <!-- GLASS DOORS line -->
-  <line x1="152" y1="126" x2="708" y2="126" stroke="${dark?'rgba(91,150,200,.5)':'rgba(91,150,200,.4)'}" stroke-width="1.5" stroke-dasharray="6,3"/>
-  <text x="430" y="138" font-family="DM Sans,sans-serif" font-size="8" fill="${dark?'rgba(91,150,200,.7)':'rgba(60,100,160,.6)'}" text-anchor="middle" letter-spacing="1.5">GLASS DOORS</text>
-
-  <!-- RESTROOMS box -->
-  <rect x="712" y="8" width="116" height="80" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.5"/>
-  <text x="770" y="52" font-family="DM Sans,sans-serif" font-size="9" fill="${labelColor}" text-anchor="middle" font-weight="500">RESTROOMS</text>
-
-  <!-- KITCHEN box -->
-  <rect x="832" y="8" width="120" height="80" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.5"/>
-  <text x="892" y="52" font-family="DM Sans,sans-serif" font-size="9" fill="${labelColor}" text-anchor="middle" font-weight="500">KITCHEN</text>
-
-  <!-- DEN section (left) -->
-  <rect x="8" y="148" width="240" height="390" rx="2" fill="${denFill}" stroke="${wallStroke}" stroke-width="1.5"/>
-  <text x="124" y="170" font-family="Cormorant Garamond,serif" font-size="13" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1">DEN</text>
-  <!-- Den entrance arrow -->
-  <line x1="246" y1="280" x2="290" y2="280" stroke="${sectionLabelColor}" stroke-width="1.5"/>
-  <text x="268" y="275" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle">DEN</text>
-  <text x="268" y="285" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle">ENT.</text>
-
-  <!-- INDOOR DINING label -->
-  <text x="530" y="330" font-family="Cormorant Garamond,serif" font-size="13" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1" opacity=".5">INDOOR DINING</text>
-
-  <!-- BAR SEATING section (right) -->
-  <rect x="730" y="148" width="222" height="390" rx="2" fill="${dark?'rgba(201,169,110,.04)':'rgba(180,140,60,.05)'}" stroke="${wallStroke}" stroke-width="1.5"/>
-  <text x="841" y="170" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1">BAR SEATING</text>
-
-  <!-- Bar Part labels -->
-  <text x="841" y="210" font-family="DM Sans,sans-serif" font-size="7.5" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 1: MAIN BAR</text>
-  <text x="841" y="310" font-family="DM Sans,sans-serif" font-size="7.5" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 2: SERVICE AREA</text>
-  <text x="841" y="430" font-family="DM Sans,sans-serif" font-size="7.5" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 3: LOUNGE BAR</text>
-
-  <!-- Bar counter Part 1 (Main Bar) - long counter -->
-  <rect x="748" y="178" width="186" height="26" rx="3" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.12)'}" stroke="${wallStroke}" stroke-width="1"/>
-  <!-- Bar stools row 1 -->
-  ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${758+i*22}" cy="215" r="7" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.1)'}" stroke="${wallStroke}" stroke-width=".8"/>`).join('')}
-
-  <!-- Service area stools -->
-  ${[0,1,2].map(i=>`<circle cx="${758+i*28}" cy="310" r="7" fill="${dark?'rgba(201,169,110,.10)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".8"/>`).join('')}
-  <rect x="748" y="318" width="100" height="20" rx="2" fill="${dark?'rgba(201,169,110,.08)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".8"/>
-
-  <!-- Lounge Bar counter -->
-  <rect x="748" y="448" width="186" height="22" rx="3" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.12)'}" stroke="${wallStroke}" stroke-width="1"/>
-  ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${758+i*22}" cy="443" r="7" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.1)'}" stroke="${wallStroke}" stroke-width=".8"/>`).join('')}
-
-  <!-- HOST STAND -->
-  <rect x="580" y="494" width="64" height="36" rx="3" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.2"/>
-  <text x="612" y="517" font-family="DM Sans,sans-serif" font-size="8" fill="${labelColor}" text-anchor="middle" font-weight="500">HOST</text>
-
-  <!-- MAIN ENTRANCE -->
-  <line x1="480" y1="544" x2="560" y2="544" stroke="${sectionLabelColor}" stroke-width="2.5"/>
-  <text x="520" y="540" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1">↑ MAIN ENTRANCE</text>
-
-  <!-- EMERGENCY EXIT -->
-  <line x1="8" y1="148" x2="8" y2="200" stroke="${dark?'rgba(196,82,74,.6)':'rgba(196,82,74,.5)'}" stroke-width="3"/>
-  <text x="14" y="160" font-family="DM Sans,sans-serif" font-size="7" fill="${dark?'rgba(196,82,74,.7)':'rgba(196,82,74,.6)'}" letter-spacing=".5">EMERG.</text>
-  <text x="14" y="170" font-family="DM Sans,sans-serif" font-size="7" fill="${dark?'rgba(196,82,74,.7)':'rgba(196,82,74,.6)'}" letter-spacing=".5">EXIT</text>
-  `;
-
-  // ── DRAW TABLES ──
-  // Table positions defined precisely based on floor plan
-  const TABLE_POS = {
-    // Indoor 3 rows × 4 cols — centered between Den and Bar
-    T1:  {x:310,y:185}, T2: {x:400,y:185}, T3: {x:490,y:185}, T4: {x:580,y:185},
-    T5:  {x:310,y:275}, T6: {x:400,y:275}, T7: {x:490,y:275}, T8: {x:580,y:275},
-    T9:  {x:310,y:365}, T10:{x:400,y:365}, T11:{x:490,y:365}, T12:{x:580,y:365},
-    // Den — 2 cols, 4 rows (T17 doesn't exist, skip)
-    T13: {x:72, y:195}, T14:{x:172,y:195},
-    T15: {x:72, y:280},
-    T16: {x:72, y:355}, T18:{x:172,y:285},
-    T19: {x:72, y:435}, T20:{x:172,y:435},
-    // Bar — drawn as special shapes, positions for clickable areas
-    BAR1:{x:841,y:195,w:186,h:40,bar:true},
-    BAR2:{x:841,y:310,w:100,h:30,bar:true},
-    BAR3:{x:841,y:455,w:186,h:35,bar:true},
-    // Patio — 5 tables in a row
-    P1:  {x:185,y:72},  P2: {x:257,y:72}, P3: {x:329,y:72},
-    P4:  {x:401,y:72},  P5: {x:490,y:72},
-  };
-
-  // Draw each table
-  const allTables = window.HiveData.tables();
-  allTables.forEach(t => {
+  // Draw tables
+  DATA.tables.forEach(t=>{
     const pos = TABLE_POS[t.id];
     if(!pos) return;
-    const {state, r} = getTableState(t.id);
+    const {state,r} = getTableState(t.id);
     const col = stateColor(state);
-    const lbl = stateLabelShort(state);
     const guestLine = (state==='seated'||state==='reserved') && r ? `${r.first} ${r.last.charAt(0)}.` : '';
-    const isBar = pos.bar;
 
-    if(isBar){
-      // Bar seats shown as label-only clickable zones
-      html += `<g class="tbl-wrap" onclick="tableClick('${t.id}')" role="button" aria-label="Bar ${t.num}">
-        <rect x="${pos.x - pos.w/2}" y="${pos.y - pos.h/2}" width="${pos.w}" height="${pos.h}" rx="4" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.2"/>
-        <text x="${pos.x}" y="${pos.y + 4}" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${col.text}" text-anchor="middle">${t.num} · ${lbl}</text>
-        ${guestLine?`<text x="${pos.x}" y="${pos.y+15}" font-family="DM Sans,sans-serif" font-size="8" fill="${col.text}" text-anchor="middle" opacity=".8">${guestLine}</text>`:''}
+    if(pos.bar){
+      h+=`<g class="tbl-wrap" onclick="tableClick('${t.id}')" style="cursor:pointer">
+        <rect x="${pos.x-pos.w/2}" y="${pos.y-pos.h/2}" width="${pos.w}" height="${pos.h}" rx="4" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.2"/>
+        <text x="${pos.x}" y="${pos.y+2}" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${col.text}" text-anchor="middle">${t.num} · ${col.label}</text>
+        ${guestLine?`<text x="${pos.x}" y="${pos.y+13}" font-family="DM Sans,sans-serif" font-size="8" fill="${col.text}" text-anchor="middle" opacity=".8">${guestLine}</text>`:''}
       </g>`;
       return;
     }
 
-    const R = 32; // table circle radius
-    // Chair positions (4 chairs: top, bottom, left, right)
-    const chairs = [
-      {cx:pos.x, cy:pos.y-R-8},
-      {cx:pos.x, cy:pos.y+R+8},
-      {cx:pos.x-R-8, cy:pos.y},
-      {cx:pos.x+R+8, cy:pos.y},
-    ];
-    // For larger cap tables in Den, add extra chairs
-    const extraChairs = t.cap > 4 ? [
-      {cx:pos.x-R-8, cy:pos.y-14},{cx:pos.x-R-8, cy:pos.y+14},
-      {cx:pos.x+R+8, cy:pos.y-14},{cx:pos.x+R+8, cy:pos.y+14},
-    ] : [];
-    const allChairs = [...chairs, ...extraChairs];
-
-    html += `<g class="tbl-wrap" onclick="tableClick('${t.id}')" role="button" aria-label="Table ${t.num}">`;
-    // Draw chairs first (behind table)
-    allChairs.forEach(c => {
-      html += `<ellipse cx="${c.cx}" cy="${c.cy}" rx="9" ry="6" fill="${col.fill}" stroke="${col.stroke}" stroke-width=".8" opacity=".9"/>`;
-    });
-    // Table circle
-    html += `<circle cx="${pos.x}" cy="${pos.y}" r="${R}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5"/>`;
-    // Table label
-    html += `<text x="${pos.x}" y="${pos.y-4}" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${col.text}" text-anchor="middle">${t.num}</text>`;
-    // Status label
-    html += `<text x="${pos.x}" y="${pos.y+7}" font-family="DM Sans,sans-serif" font-size="7" fill="${col.text}" text-anchor="middle" opacity=".85">${lbl}</text>`;
-    // Guest name if seated/reserved
-    if(guestLine){
-      html += `<text x="${pos.x}" y="${pos.y+17}" font-family="DM Sans,sans-serif" font-size="7" fill="${col.text}" text-anchor="middle" opacity=".7">${guestLine}</text>`;
-    }
-    html += `</g>`;
-  });
-
-  // Patio plants (decorative)
-  const plantPositions = [{x:162,y:58},{x:216,y:32},{x:520,y:32},{x:630,y:58},{x:148,y:128},{x:626,y:128}];
-  plantPositions.forEach(p => {
-    html += `<circle cx="${p.x}" cy="${p.y}" r="7" fill="${dark?'rgba(76,175,130,.25)':'rgba(76,175,130,.2)'}" stroke="${dark?'rgba(76,175,130,.4)':'rgba(76,175,130,.3)'}" stroke-width=".8"/>`;
-    html += `<text x="${p.x}" y="${p.y+3.5}" font-size="8" text-anchor="middle">🌿</text>`;
+    const R=30;
+    const chairs=[{cx:pos.x,cy:pos.y-R-9},{cx:pos.x,cy:pos.y+R+9},{cx:pos.x-R-9,cy:pos.y},{cx:pos.x+R+9,cy:pos.y}];
+    h+=`<g class="tbl-wrap" onclick="tableClick('${t.id}')" style="cursor:pointer">`;
+    chairs.forEach(c=>{h+=`<ellipse cx="${c.cx}" cy="${c.cy}" rx="9" ry="6" fill="${col.fill}" stroke="${col.stroke}" stroke-width=".8" opacity=".85"/>`;});
+    h+=`<circle cx="${pos.x}" cy="${pos.y}" r="${R}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5"/>`;
+    h+=`<text x="${pos.x}" y="${pos.y-3}" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${col.text}" text-anchor="middle">${t.num}</text>`;
+    h+=`<text x="${pos.x}" y="${pos.y+8}" font-family="DM Sans,sans-serif" font-size="7" fill="${col.text}" text-anchor="middle" opacity=".85">${col.label}</text>`;
+    if(guestLine) h+=`<text x="${pos.x}" y="${pos.y+18}" font-family="DM Sans,sans-serif" font-size="7" fill="${col.text}" text-anchor="middle" opacity=".7">${guestLine}</text>`;
+    h+=`</g>`;
   });
 
   // Compass
-  html += `<g transform="translate(930,530)">
-    <circle cx="0" cy="0" r="14" fill="${dark?'rgba(201,169,110,.08)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".8"/>
-    <text x="0" y="-4" font-family="DM Sans,sans-serif" font-size="8" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle">N</text>
-    <line x1="0" y1="-2" x2="0" y2="6" stroke="${sectionLabelColor}" stroke-width="1"/>
-  </g>`;
+  h+=`<g transform="translate(932,532)"><circle r="12" fill="${dark?'rgba(201,169,110,.07)':'rgba(180,140,60,.07)'}" stroke="${wallStroke}" stroke-width=".7"/><text y="-2" font-family="DM Sans,sans-serif" font-size="7" font-weight="500" fill="${sectionColor}" text-anchor="middle">N</text><line y1="0" y2="5" stroke="${sectionColor}" stroke-width="1" x1="0" x2="0"/></g>`;
 
-  svg.innerHTML = html;
-  renderStats();
+  svg.innerHTML = h;
+  updateStats();
 }
 
-function renderStats(){
-  const d = window.HiveData.get();
-  const rsv = d.reservations || [];
-  const ts = d.tableStates || {};
-  const tables = window.HiveData.tables();
-  const seated = rsv.filter(r=>r.status==='Seated'&&r.date===TODAY).length;
+function updateStats(){
+  const rsv = DATA.reservations||[];
+  const ts = DATA.tableStates||{};
+  const seated = rsv.filter(r=>r.status==='Seated'&&isWithin24hr(r)).length;
+  const arriving = rsv.filter(r=>(r.status==='RSVP Confirmed'||r.status==='RSVP Requested')&&isWithin24hr(r)).length;
   const dirty = Object.values(ts).filter(s=>s==='dirty').length;
-  const reserved = rsv.filter(r=>r.status==='RSVP Confirmed'&&r.date===TODAY).length;
-  const covers = rsv.filter(r=>r.status==='Seated'&&r.date===TODAY).reduce((a,r)=>a+r.party,0);
-  const arriving = rsv.filter(r=>(r.status==='RSVP Confirmed'||r.status==='RSVP Requested')&&r.date===TODAY).length;
-  document.getElementById('stats-bar').innerHTML=`
-    <div class="fstat"><div class="fstat-val" style="color:var(--purple)">${seated}</div><div class="fstat-lbl">Seated Now</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--amber)">${reserved}</div><div class="fstat-lbl">Arriving Today</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--red)">${dirty}</div><div class="fstat-lbl">Need Bussing</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--green)">${tables.length - seated - dirty}</div><div class="fstat-lbl">Open Tables</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--gold)">${covers}</div><div class="fstat-lbl">Live Covers</div></div>`;
+  const covers = rsv.filter(r=>r.status==='Seated'&&isWithin24hr(r)).reduce((a,r)=>a+r.party,0);
+  const total = DATA.tables.length;
+  const occupied = rsv.filter(r=>r.status==='Seated'&&isWithin24hr(r)&&r.table).length + dirty;
+  document.getElementById('s-seated').textContent=seated;
+  document.getElementById('s-arriving').textContent=arriving;
+  document.getElementById('s-bussing').textContent=dirty;
+  document.getElementById('s-open').textContent=Math.max(0,total-occupied);
+  document.getElementById('s-covers').textContent=covers;
 }
 
 // ── TABLE CLICK ──
+let actionTid=null, changingSeatId=null, seatPreTable=null;
+
 function tableClick(tid){
-  actionTid = tid;
-  const t = window.HiveData.tables().find(x=>x.id===tid);
-  const {state, r} = getTableState(tid);
-  document.getElementById('tmod-title').textContent = `Table ${t.num}`;
-  let info = '', acts = '';
+  actionTid=tid;
+  const t=DATA.tables.find(x=>x.id===tid);
+  const {state,r}=getTableState(tid);
+  document.getElementById('tmod-title').textContent=`Table ${t.num}`;
+  let info='',acts='';
+
   if(state==='seated'&&r){
     info=`<div class="dr"><span class="l">Guest</span><span class="v">${r.first} ${r.last}</span></div>
     <div class="dr"><span class="l">Party</span><span class="v">${r.party} guests</span></div>
@@ -426,7 +597,7 @@ function tableClick(tid){
     <div class="dr"><span class="l">Seated at</span><span class="v">${fmtTime(r.time)}</span></div>
     <div class="dr"><span class="l">RSVP #</span><span class="v" style="color:var(--gold)">${r.id}</span></div>`;
     acts=`<button class="floor-act fa-change" onclick="openChangeSeat('${r.id}')">↔ Change Table</button>
-    <button class="floor-act fa-dirty" onclick="markState('${tid}','dirty');closeModal('table-modal')">🧹 Flag for Bussing — Table Available</button>`;
+    <button class="floor-act fa-dirty" onclick="flagBussing('${tid}')">🧹 Flag for Bussing — Table Available</button>`;
   } else if(state==='reserved'&&r){
     info=`<div class="dr"><span class="l">Reserved for</span><span class="v">${r.first} ${r.last}</span></div>
     <div class="dr"><span class="l">Party</span><span class="v">${r.party}</span></div>
@@ -435,137 +606,223 @@ function tableClick(tid){
     acts=`<button class="floor-act fa-seat" onclick="seatNow('${r.id}','${tid}')">🪑 Seat Guest Now</button>
     <button class="floor-act fa-change" onclick="openChangeSeat('${r.id}')">↔ Change Their Table</button>`;
   } else if(state==='dirty'){
-    info=`<div class="warn-tag" style="margin:0">⚠ This table needs to be bussed before seating.</div>`;
-    acts=`<button class="floor-act fa-clean" onclick="markState('${tid}','open');closeModal('table-modal')">✓ Mark Clean & Available</button>`;
+    info=`<div class="warn-tag">⚠ This table needs to be bussed before seating a new guest.</div>`;
+    acts=`<button class="floor-act fa-clean" onclick="markClean('${tid}')">✓ Mark as Clean & Available</button>`;
+  } else if(state==='available'){
+    info=`<div style="text-align:center;padding:10px 0;color:var(--teal);font-size:13px">✓ Table has been bussed and is available for seating.</div>`;
+    acts=`<button class="floor-act fa-seat" onclick="closeModal('table-modal');openSeatModal('${tid}')">🪑 Seat a Confirmed Guest</button>
+    <button class="floor-act fa-walkin" onclick="closeModal('table-modal');openWalkIn('${tid}')">🚶 Seat a Walk-In</button>`;
   } else {
     info=`<div style="text-align:center;padding:10px 0;color:var(--green);font-size:13px">Table ${t.num} is open · ${t.cap} seats</div>`;
-    acts=`<button class="floor-act fa-seat" onclick="closeModal('table-modal');openSeatModal('${tid}')">🪑 Seat Confirmed Guest Here</button>
-    <button class="floor-act fa-walkin" onclick="closeModal('table-modal');openWalkIn('${tid}')">🚶 Seat Walk-In Here</button>
-    <button class="floor-act fa-dirty" onclick="markState('${tid}','dirty');closeModal('table-modal')">🧹 Flag for Bussing</button>`;
+    acts=`<button class="floor-act fa-seat" onclick="closeModal('table-modal');openSeatModal('${tid}')">🪑 Seat Confirmed Guest</button>
+    <button class="floor-act fa-walkin" onclick="closeModal('table-modal');openWalkIn('${tid}')">🚶 Seat Walk-In</button>
+    <button class="floor-act fa-dirty" onclick="flagBussing('${tid}')">🧹 Flag for Bussing</button>`;
   }
-  document.getElementById('tmod-info').innerHTML = info;
-  document.getElementById('tmod-acts').innerHTML = acts;
+  document.getElementById('tmod-info').innerHTML=info;
+  document.getElementById('tmod-acts').innerHTML=acts;
   document.getElementById('table-modal').classList.add('show');
 }
 
+// ── KEY FIX: flagBussing advances reservation to Table Available status ──
+function flagBussing(tid){
+  // Find seated guest at this table and advance their status to 'Table Available'
+  // This breaks the link between guest and table so the table doesn't re-show them
+  const rsv = DATA.reservations||[];
+  const seated = rsv.find(r=>r.table===tid && r.status==='Seated');
+  if(seated){
+    seated.status = 'Table Available'; // intermediate status between Seated and Completed
+    seated.tableFlaggedAt = new Date().toISOString();
+  }
+  DATA.tableStates = DATA.tableStates||{};
+  DATA.tableStates[tid] = 'dirty';
+  saveStore(DATA);
+  closeModal('table-modal');
+  showToast('Table flagged for bussing — guest unlinked from table','info');
+  renderFloor();
+}
+
+function markClean(tid){
+  DATA.tableStates = DATA.tableStates||{};
+  DATA.tableStates[tid] = 'available';
+  saveStore(DATA);
+  closeModal('table-modal');
+  showToast('Table marked as clean and available','success');
+  renderFloor();
+}
+
 function seatNow(rsvId, tid){
-  const d = window.HiveData.get();
-  const r = d.reservations.find(x=>x.id===rsvId);
-  if(!r) return;
+  const r=DATA.reservations.find(x=>x.id===rsvId);if(!r)return;
   r.status='Seated'; r.table=tid;
-  r.activities = r.activities||[];
-  r.activities.push({type:'status',text:`Seated at ${tid} from floor map`,time:nowStr()});
-  window.HiveData.updateReservation(r);
-  const t = window.HiveData.tables().find(x=>x.id===tid);
+  if(DATA.tableStates) delete DATA.tableStates[tid];
+  saveStore(DATA);
+  const t=DATA.tables.find(x=>x.id===tid);
   showToast(`${r.first} ${r.last} seated at Table ${t?.num}`,'success');
   closeModal('table-modal'); renderFloor();
 }
 
-function markState(tid, state){
-  window.HiveData.setTableState(tid, state);
-  if(state==='dirty') showToast('Table flagged for bussing','info');
-  else showToast('Table marked as clean & available','success');
-  renderFloor();
-}
-
 // SEAT MODAL
 function openSeatModal(preTable){
-  seatPreTable = preTable;
-  const d = window.HiveData.get();
-  const confirmed = d.reservations.filter(r=>r.date===TODAY&&r.status==='RSVP Confirmed');
-  const sel = document.getElementById('seat-rsv-sel');
-  sel.innerHTML='<option value="">Select reservation…</option>'+confirmed.map(r=>`<option value="${r.id}">${r.first} ${r.last} · Party ${r.party} · ${fmtTime(r.time)}</option>`).join('');
-  const tsel = document.getElementById('seat-tbl-sel');
-  const open = window.HiveData.tables().filter(t=>{const{state}=getTableState(t.id);return state==='open';});
-  tsel.innerHTML='<option value="">Select table…</option>'+open.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap} seats)</option>`).join('');
-  if(!preTable) document.getElementById('seat-tbl-grp').style.display='block';
+  seatPreTable=preTable||null;
+  const confirmed=DATA.reservations.filter(r=>(r.status==='RSVP Confirmed')&&isWithin24hr(r));
+  const sel=document.getElementById('seat-rsv-sel');
+  sel.innerHTML='<option value="">Select reservation…</option>'+confirmed.map(r=>`<option value="${r.id}">${r.first} ${r.last} · Party ${r.party} · ${fmtTime(r.time)} · ${r.date===TODAY?'Today':r.date}</option>`).join('');
+  const openTbls=DATA.tables.filter(t=>{const{state}=getTableState(t.id);return state==='open'||state==='available';});
+  const tsel=document.getElementById('seat-tbl-sel');
+  tsel.innerHTML='<option value="">Select table…</option>'+openTbls.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap} seats)</option>`).join('');
   document.getElementById('seat-modal').classList.add('show');
 }
 function submitSeat(){
-  const rsvId = document.getElementById('seat-rsv-sel').value;
-  const tid = document.getElementById('seat-tbl-sel').value || seatPreTable;
-  if(!rsvId||!tid){showToast('Select reservation and table','warning');return;}
-  const d = window.HiveData.get();
-  const r = d.reservations.find(x=>x.id===rsvId);
-  if(!r) return;
+  const rsvId=document.getElementById('seat-rsv-sel').value;
+  const tid=document.getElementById('seat-tbl-sel').value||seatPreTable;
+  if(!rsvId||!tid){showToast('Select both a reservation and a table','warning');return;}
+  const r=DATA.reservations.find(x=>x.id===rsvId);if(!r)return;
   r.status='Seated'; r.table=tid;
-  r.activities = r.activities||[];
-  r.activities.push({type:'status',text:`Seated at ${tid}`,time:nowStr()});
-  window.HiveData.updateReservation(r);
-  const t = window.HiveData.tables().find(x=>x.id===tid);
+  if(DATA.tableStates) delete DATA.tableStates[tid];
+  saveStore(DATA);
+  const t=DATA.tables.find(x=>x.id===tid);
   showToast(`${r.first} ${r.last} seated at Table ${t?.num}`,'success');
   closeModal('seat-modal'); renderFloor();
 }
 
 // WALK-IN
 function openWalkIn(preTable){
-  seatPreTable = preTable||null;
-  const open = window.HiveData.tables().filter(t=>{const{state}=getTableState(t.id);return state==='open';});
-  const tsel = document.getElementById('wi-table');
-  tsel.innerHTML='<option value="">Select table…</option>'+open.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap})</option>`).join('');
-  const ssel = document.getElementById('wi-server');
-  ssel.innerHTML='<option value="">Unassigned</option>'+window.HiveData.servers().map(s=>`<option>${s.name}</option>`).join('');
+  seatPreTable=preTable||null;
+  const openTbls=DATA.tables.filter(t=>{const{state}=getTableState(t.id);return state==='open'||state==='available';});
+  document.getElementById('wi-table').innerHTML='<option value="">Select…</option>'+openTbls.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap})</option>`).join('');
   ['wi-first','wi-last','wi-phone','wi-party'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('wi-server').value='';
   document.getElementById('walkin-modal').classList.add('show');
 }
 function submitWalkIn(){
-  const first = document.getElementById('wi-first').value.trim();
-  const party = document.getElementById('wi-party').value;
-  const table = document.getElementById('wi-table').value;
+  const first=document.getElementById('wi-first').value.trim();
+  const party=document.getElementById('wi-party').value;
+  const table=document.getElementById('wi-table').value;
   if(!first||!party){showToast('Name and party size required','warning');return;}
-  const now = new Date().toTimeString().slice(0,5);
-  const newId = window.HiveData.genId();
-  const r = {id:newId,first,last:document.getElementById('wi-last').value||'',phone:document.getElementById('wi-phone').value||'',date:TODAY,time:now,party:+party,status:'Seated',server:document.getElementById('wi-server').value,table:table||'',notes:'walk-in',requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,
-    activities:[{type:'walkin',text:`Walk-in created — ${first}, party ${party}${table?' at Table '+table:''}`,time:nowStr()}]};
-  window.HiveData.addReservation(r);
-  if(table) window.HiveData.setTableState(table, 'open');
-  showToast(`Walk-in ${first} seated · Task ID: ${newId}`,'success');
+  const newId=genId();
+  const nowTime=new Date().toTimeString().slice(0,5);
+  const r={id:newId,first,last:document.getElementById('wi-last').value||'',phone:document.getElementById('wi-phone').value||'',date:TODAY,time:nowTime,party:+party,status:'Seated',server:document.getElementById('wi-server').value,table:table||'',notes:'walk-in',orderTotal:null};
+  DATA.reservations.push(r);
+  if(table&&DATA.tableStates) delete DATA.tableStates[table];
+  saveStore(DATA);
+  showToast(`Walk-in ${first} seated · ID: ${newId}`,'success');
   closeModal('walkin-modal'); renderFloor();
 }
 
 // CHANGE SEAT
-let changingSeatRsvId=null;
 function openChangeSeat(rsvId){
-  changingSeatRsvId=rsvId;
-  const d = window.HiveData.get();
-  const r = d.reservations.find(x=>x.id===rsvId);
-  const open = window.HiveData.tables().filter(t=>{const{state}=getTableState(t.id);return state==='open'||t.id===r?.table;});
-  const sel = document.getElementById('cs-table');
-  sel.innerHTML=open.map(t=>`<option value="${t.id}" ${t.id===r?.table?'selected':''}>Table ${t.num} (${t.cap})</option>`).join('');
+  changingSeatId=rsvId;
+  const r=DATA.reservations.find(x=>x.id===rsvId);
+  const openTbls=DATA.tables.filter(t=>{const{state}=getTableState(t.id);return state==='open'||state==='available'||t.id===r?.table;});
+  document.getElementById('cs-table').innerHTML=openTbls.map(t=>`<option value="${t.id}" ${t.id===r?.table?'selected':''}>Table ${t.num} (${t.cap})</option>`).join('');
   closeModal('table-modal');
   document.getElementById('changeseat-modal').classList.add('show');
 }
 function submitChangeSeat(){
-  const tid = document.getElementById('cs-table').value;
-  const d = window.HiveData.get();
-  const r = d.reservations.find(x=>x.id===changingSeatRsvId);
-  if(!r) return;
-  const old = r.table;
-  r.table = tid;
-  r.activities = r.activities||[];
-  r.activities.push({type:'status',text:`Table changed: ${old} → ${tid}`,time:nowStr()});
-  window.HiveData.updateReservation(r);
-  const t = window.HiveData.tables().find(x=>x.id===tid);
+  const tid=document.getElementById('cs-table').value;
+  const r=DATA.reservations.find(x=>x.id===changingSeatId);if(!r)return;
+  r.table=tid;
+  saveStore(DATA);
+  const t=DATA.tables.find(x=>x.id===tid);
   showToast(`${r.first} moved to Table ${t?.num}`,'success');
   closeModal('changeseat-modal'); renderFloor();
 }
 
-function nowStr(){return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
-function closeModal(id){document.getElementById(id).classList.remove('show');}
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');});});
+// ── SETTINGS ──
+function openSettings(){document.getElementById('settings-modal').classList.add('show');}
+
+function loadSampleData(){
+  DATA=JSON.parse(JSON.stringify(SAMPLE_DATA));
+  saveStore(DATA);
+  closeModal('settings-modal');
+  showToast('Sample data loaded — 8 reservations across today & tomorrow','success');
+  renderFloor();
+}
+
+function clearAllData(){
+  if(!confirm('Clear all reservation data from this browser? This cannot be undone.')) return;
+  DATA={reservations:[],tableStates:{},tables:TABLES_DEF,servers:SAMPLE_DATA.servers};
+  saveStore(DATA);
+  closeModal('settings-modal');
+  showToast('All data cleared','info');
+  renderFloor();
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`hive-data-${TODAY}.json`;
+  a.click();
+  showToast('Data exported as JSON','info');
+}
+
+// ── ZAP TRIGGER TEST ──
+function zapPayload(type){
+  const sampleRsv = DATA.reservations.find(r=>r.status==='RSVP Confirmed')||DATA.reservations[0]||{id:'TESTID01',first:'Jordan',last:'Baptiste',phone:'4045552341',email:'jbaptiste@gmail.com',date:TODAY,time:'18:30',party:4,server:'Marcus Rivera',table:'T5',notes:'Anniversary dinner',orderTotal:null};
+  const base={
+    task_id: sampleRsv.id,
+    rsvp_number: sampleRsv.id,
+    custom_fields:{
+      first_name: sampleRsv.first,
+      last_name: sampleRsv.last,
+      full_name: `${sampleRsv.first} ${sampleRsv.last}`,
+      phone_number: sampleRsv.phone,
+      email: sampleRsv.email||'guest@email.com',
+      party_size: sampleRsv.party,
+      reservation_date: sampleRsv.date,
+      arrival_time: fmtTime(sampleRsv.time),
+      server: sampleRsv.server||'',
+      table_assignment: sampleRsv.table||'',
+      notes: sampleRsv.notes||'',
+      order_total: sampleRsv.orderTotal||'',
+      request_date: sampleRsv.date,
+      confirmed_date_time: `${sampleRsv.date} ${sampleRsv.time}`,
+    },
+    list: 'Reservations & Tables',
+    space: 'Operations',
+    workspace: 'Hive Workspace',
+  };
+
+  const statusMap={
+    confirm:{status:'RSVP CONFIRMED',description:'Guest confirmed — triggers confirmation email (SendGrid) + SMS (Twilio/OpenPhone)',paths:['→ SendGrid: confirmation email template','→ Twilio/OpenPhone: confirmation SMS template']},
+    seated:{status:'SEATED',description:'Guest has been seated — optional host/kitchen notification',paths:['→ Optional: Slack / internal alert to kitchen','→ Update Google Sheets row: status = Seated']},
+    complete:{status:'COMPLETED RESERVATION',description:'Order closed — triggers thank-you messages + Google Sheets log',extra:{order_total:'$'+((sampleRsv.orderTotal||187.50).toFixed(2)),closing_remarks:'Great table, enjoyed the anniversary dinner.',receipt_attached:'receipt_'+sampleRsv.id+'.jpg'},paths:['→ SendGrid: thank-you email template','→ Twilio: thank-you SMS template','→ Google Sheets: append full order row with all fields + order total']},
+    cancel:{status:'CANCELLED',description:'Reservation cancelled — triggers cancellation messages',extra:{cancel_reason:'Guest requested cancellation',cancel_remarks:'Called to cancel same day.'},paths:['→ SendGrid: cancellation email template','→ Twilio: cancellation SMS template','→ Google Sheets: mark row as Cancelled']},
+    reminder:{status:'RSVP CONFIRMED',trigger_type:'SCHEDULED (24hrs before reservation_date)',description:'Automated reminder — fires 24hr before the reservation_date custom field',paths:['→ SendGrid: reminder email template','→ Twilio: reminder SMS template']},
+    new_rsvp:{status:'RSVP REQUESTED',trigger_type:'TASK CREATED',description:'New RSVP submitted via forms.app → Zapier creates ClickUp task → Task ID auto-assigned as RSVP #',paths:['→ ClickUp: internal automation assigns task_id to RSVP # custom field','→ Web app: reservation appears in queue for staff review']},
+  };
+  const meta=statusMap[type];
+  return{...base,status:meta.status,trigger_type:meta.trigger_type||'TASK STATUS CHANGED',_description:meta.description,_zap_paths:meta.paths,...(meta.extra||{})};
+}
+
+function fireZap(type){
+  const payload=zapPayload(type);
+  const resultEl=document.getElementById('zap-result-'+type);
+  resultEl.style.display='block';
+  resultEl.innerHTML=`<div style="font-weight:500;color:var(--gold);margin-bottom:6px">⚡ Zap triggered — ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
+<div style="color:var(--text-m);margin-bottom:6px;font-size:10.5px">${payload._description}</div>
+<div style="color:var(--text-d);font-size:10px;margin-bottom:6px">${payload._zap_paths.map(p=>`• ${p}`).join('\n')}</div>
+<div style="color:var(--text-d);font-size:10px;margin-bottom:4px">Webhook payload (copy into Zapier Test Trigger):</div>
+<div class="zap-field-preview">${JSON.stringify({...payload,_description:undefined,_zap_paths:undefined},null,2).substring(0,800)}…</div>`;
+  showToast(`⚡ Zap fired: ${payload.status}`,'zap');
+}
+
+// ── HELPERS ──
+function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
+function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')});});
 
 // CLOCK
 function updateClock(){
-  const now=new Date();
-  document.getElementById('clock').textContent=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
-  document.getElementById('date-str').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+  document.getElementById('date-str').textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
-setInterval(updateClock,1000); updateClock();
-setInterval(()=>renderFloor(),20000);
+setInterval(updateClock,1000);updateClock();
+setInterval(renderFloor,30000);
 
-// SYNC from other tabs
-window.addEventListener('hive_reload',()=>renderFloor());
-
+// THEME
 let dark=true;
 function toggleTheme(){
   dark=!dark;
@@ -573,8 +830,22 @@ function toggleTheme(){
   renderFloor();
 }
 
+// TOAST
 let toastT;
-function showToast(msg,type='success'){const el=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;el.className=`toast ${type} show`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
+function showToast(msg,type='success'){
+  const el=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  el.className=`toast ${type} show`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),3800);
+}
+
+// Storage sync from other tabs
+window.addEventListener('storage',e=>{
+  if(e.key===STORE_KEY&&e.newValue){
+    try{DATA=JSON.parse(e.newValue);renderFloor();}catch(ex){}
+  }
+});
 
 renderFloor();
 </script>
