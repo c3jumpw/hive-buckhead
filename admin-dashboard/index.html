@@ -1,1 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hive Buckhead — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.12);--amber:#D4A020;--amber-bg:rgba(212,160,32,.12);--red:#C4524A;--red-bg:rgba(196,82,74,.12);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.12);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.12)}
+[data-theme="light"]{--bg:#F7F4EF;--surface:#FFFFFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.1);--amber-bg:rgba(212,160,32,.1);--red-bg:rgba(196,82,74,.1);--blue-bg:rgba(91,150,200,.1);--purple-bg:rgba(155,126,200,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);letter-spacing:.08em}
+.nav-brand span{color:var(--text-m);font-weight:300}
+.admin-tag{background:var(--gold);color:#0E0C0A;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;letter-spacing:.06em}
+.layout{display:flex;height:calc(100vh - 54px);overflow:hidden}
+.sidebar{width:190px;flex-shrink:0;border-right:.5px solid var(--border);background:var(--surface);overflow-y:auto;padding:1rem 0}
+.sidebar-section{padding:0 .75rem;margin-bottom:1.25rem}
+.sidebar-label{font-size:10px;font-weight:500;letter-spacing:.1em;color:var(--text-d);text-transform:uppercase;margin-bottom:5px;padding:0 6px}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:var(--text-m);font-size:12.5px;transition:all .12s;margin-bottom:1px;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.sidebar-item:hover{background:var(--surface2);color:var(--text)}
+.sidebar-item.active{background:var(--surface3);color:var(--gold)}
+.sidebar-item svg{width:14px;height:14px;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}.page.active{display:block}
+h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--gold);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text-m);margin-bottom:20px}
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+/* METRICS */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.metric-card{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:16px}
+.metric-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;line-height:1;margin-bottom:4px}
+.metric-lbl{font-size:11px;color:var(--text-m)}
+.metric-sub{font-size:11px;color:var(--text-d);margin-top:3px}
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text-d);text-transform:uppercase;border-bottom:.5px solid var(--border);background:var(--surface2)}
+.data-table td{padding:10px 12px;border-bottom:.5px solid var(--border);font-size:13px}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface2)}
+/* BAR CHART */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.bar-lbl{width:80px;color:var(--text-m);text-align:right;flex-shrink:0}
+.bar-track{flex:1;background:var(--surface2);border-radius:4px;height:16px;overflow:hidden;border:.5px solid var(--border)}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:500}
+.bar-val{width:50px;text-align:right;color:var(--text-m);flex-shrink:0}
+/* FORM */
+.form-group{margin-bottom:12px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px}
+.form-input,.form-select,.form-textarea{width:100%;padding:8px 11px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text-d)}
+.form-textarea{resize:vertical;min-height:60px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
+.btn:hover{background:var(--surface2);border-color:var(--gold)}
+.btn-primary{background:var(--gold);color:#0E0C0A;border-color:var(--gold)}
+.btn-primary:hover{background:var(--gold-light)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:rgba(196,82,74,.4)}
+/* SERVER LIST */
+.server-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border)}
+.server-row:last-child{border-bottom:none}
+.server-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
+.server-name{font-weight:500;font-size:13px}
+.server-role{font-size:11px;color:var(--text-m)}
+/* TABLE CONFIG */
+.tbl-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px}
+.tbl-row:last-child{border-bottom:none}
+.tbl-num{width:60px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold)}
+/* msg templates */
+.tmpl-row{background:var(--surface2);border:.5px solid var(--border);border-radius:7px;padding:10px 12px;margin-bottom:8px}
+.tmpl-type{font-size:10px;color:var(--text-d);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.tmpl-text{font-size:12.5px;color:var(--text-m);line-height:1.5;white-space:pre-wrap}
+/* time-of-day chart */
+.tod-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:80px;margin-bottom:8px}
+.tod-bar{border-radius:3px 3px 0 0;transition:height .5s ease;min-height:4px;cursor:pointer;position:relative}
+.tod-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface);border:.5px solid var(--border-s);border-radius:4px;padding:3px 7px;font-size:10px;white-space:nowrap;z-index:10}
+.tod-labels{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;font-size:9px;color:var(--text-d);text-align:center}
+/* tag */
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.tag-green{background:var(--green-bg);color:var(--green)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.tag-red{background:var(--red-bg);color:var(--red)}
+.tag-blue{background:var(--blue-bg);color:var(--blue)}
+.toast{position:fixed;bottom:20px;right:20px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:9px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none}
+.toast.show{transform:translateY(0) scale(1);opacity:1}
+.toast-icon{width:7px;height:7px;border-radius:50%}
+.toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
+    <div class="admin-tag">SUPER ADMIN</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn btn-sm" onclick="toggleTheme()">🌓 Theme</button>
+    <a href="index.html"><button class="btn btn-sm">← Reservations</button></a>
+  </div>
+</nav>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Analytics</div>
+    <button class="sidebar-item active" onclick="showPage('overview',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Overview
+    </button>
+    <button class="sidebar-item" onclick="showPage('staff',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Staff Performance
+    </button>
+    <button class="sidebar-item" onclick="showPage('tables',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Table Analytics
+    </button>
+    <button class="sidebar-item" onclick="showPage('timeofday',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Time of Day
+    </button>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Configuration</div>
+    <button class="sidebar-item" onclick="showPage('servers',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Servers
+    </button>
+    <button class="sidebar-item" onclick="showPage('tableconfig',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tables & Sections
+    </button>
+    <button class="sidebar-item" onclick="showPage('templates',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message Templates
+    </button>
+    <button class="sidebar-item" onclick="showPage('integrations',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Integrations
+    </button>
+  </div>
+</aside>
+<div class="main">
 
+<!-- OVERVIEW PAGE -->
+<div class="page active" id="page-overview">
+  <h2>Analytics Overview</h2>
+  <div class="page-sub">All-time metrics across reservations, revenue, and guest behavior.</div>
+  <div class="metric-grid">
+    <div class="metric-card"><div class="metric-val" style="color:var(--gold)">247</div><div class="metric-lbl">Total Reservations</div><div class="metric-sub">All time</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--green)">$41,820</div><div class="metric-lbl">Total Revenue</div><div class="metric-sub">Logged orders</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--blue)">892</div><div class="metric-lbl">Total Covers</div><div class="metric-sub">Seated guests</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--purple)">3.6</div><div class="metric-lbl">Avg Party Size</div><div class="metric-sub">Per reservation</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--amber)">$169</div><div class="metric-lbl">Avg Order</div><div class="metric-sub">Per table</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--red)">8%</div><div class="metric-lbl">Cancellation Rate</div><div class="metric-sub">Last 30 days</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--green)">91%</div><div class="metric-lbl">Show Rate</div><div class="metric-sub">Confirmed → seated</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:var(--teal,#3AACA8)">14</div><div class="metric-lbl">Walk-Ins</div><div class="metric-sub">This month</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Reservations by Status (last 30 days)
+      <span style="font-size:11px;color:var(--text-d)">247 total</span>
+    </div>
+    <div>
+      <div class="bar-row"><span class="bar-lbl">Completed</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--green-bg);color:var(--green)">179</div></div><span class="bar-val">72%</span></div>
+      <div class="bar-row"><span class="bar-lbl">Confirmed</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--blue-bg);color:var(--blue)">30</div></div><span class="bar-val">12%</span></div>
+      <div class="bar-row"><span class="bar-lbl">Seated</span><div class="bar-track"><div class="bar-fill" style="width:6%;background:var(--purple-bg);color:var(--purple)">14</div></div><span class="bar-val">6%</span></div>
+      <div class="bar-row"><span class="bar-lbl">Requested</span><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--amber-bg);color:var(--amber)">12</div></div><span class="bar-val">5%</span></div>
+      <div class="bar-row"><span class="bar-lbl">Cancelled</span><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--red-bg);color:var(--red)">12</div></div><span class="bar-val">5%</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Revenue by Month</div>
+    <div>
+      <div class="bar-row"><span class="bar-lbl">Jun 2026</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--gold);color:#0E0C0A">$8,420</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">May 2026</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--green-bg);color:var(--green)">$12,110</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">Apr 2026</span><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--green-bg);color:var(--green)">$11,290</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">Mar 2026</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--blue-bg);color:var(--blue)">$10,000</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STAFF PAGE -->
+<div class="page" id="page-staff">
+  <h2>Staff Performance</h2>
+  <div class="page-sub">Reservations served, covers, and average order by server.</div>
+  <div class="card">
+    <div class="card-title">Server Leaderboard</div>
+    <table class="data-table">
+      <thead><tr><th>Server</th><th>Reservations</th><th>Covers</th><th>Avg Order</th><th>Revenue</th><th>Rating</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ashley Smith</strong></td><td>78</td><td>212</td><td>$184</td><td style="color:var(--green)">$14,320</td><td><span class="tag tag-green">⭐ 4.9</span></td></tr>
+        <tr><td><strong>Devon Harris</strong></td><td>63</td><td>201</td><td>$175</td><td style="color:var(--green)">$11,025</td><td><span class="tag tag-green">⭐ 4.8</span></td></tr>
+        <tr><td><strong>Marcus Rivera</strong></td><td>59</td><td>178</td><td>$162</td><td style="color:var(--green)">$9,558</td><td><span class="tag tag-amber">⭐ 4.6</span></td></tr>
+        <tr><td><strong>Jenna Park</strong></td><td>47</td><td>152</td><td>$149</td><td style="color:var(--green)">$7,003</td><td><span class="tag tag-amber">⭐ 4.5</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">Cancellations by Server</div>
+    <div>
+      <div class="bar-row"><span class="bar-lbl">Marcus</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--amber-bg);color:var(--amber)">5</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">Jenna</span><div class="bar-track"><div class="bar-fill" style="width:16%;background:var(--amber-bg);color:var(--amber)">4</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">Devon</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--blue-bg);color:var(--blue)">3</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">Ashley</span><div class="bar-track"><div class="bar-fill" style="width:8%;background:var(--green-bg);color:var(--green)">2</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLES PAGE -->
+<div class="page" id="page-tables">
+  <h2>Table Analytics</h2>
+  <div class="page-sub">Turn times, utilization, and revenue per table.</div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Table</th><th>Section</th><th>Capacity</th><th>Reservations</th><th>Avg Turn (min)</th><th>Utilization</th><th>Revenue</th></tr></thead>
+      <tbody id="table-analytics-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TIME OF DAY -->
+<div class="page" id="page-timeofday">
+  <h2>Reservations by Time of Day</h2>
+  <div class="page-sub">When guests arrive — hourly distribution across all reservations.</div>
+  <div class="card">
+    <div class="card-title">Hourly Arrival Distribution</div>
+    <div class="tod-grid" id="tod-chart"></div>
+    <div class="tod-labels" id="tod-labels"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Peak Hours Summary</div>
+    <div>
+      <div class="bar-row"><span class="bar-lbl">7–8 PM</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--gold);color:#0E0C0A">38 reservations</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">6–7 PM</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--amber-bg);color:var(--amber)">33</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">8–9 PM</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--amber-bg);color:var(--amber)">28</div></div></div>
+      <div class="bar-row"><span class="bar-lbl">5–6 PM</span><div class="bar-track"><div class="bar-fill" style="width:42%;background:var(--blue-bg);color:var(--blue)">17</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVERS CONFIG -->
+<div class="page" id="page-servers">
+  <h2>Server Management</h2>
+  <div class="page-sub">Add, edit, and manage your floor staff.</div>
+  <div class="card">
+    <div class="card-title">Current Servers <button class="btn btn-sm btn-primary" onclick="showToast('Add server form coming soon','info')">+ Add Server</button></div>
+    <div id="server-list"></div>
+  </div>
+</div>
+
+<!-- TABLE CONFIG -->
+<div class="page" id="page-tableconfig">
+  <h2>Tables & Sections</h2>
+  <div class="page-sub">Configure table numbers, capacity, and section assignments.</div>
+  <div class="card">
+    <div class="card-title">Indoor Dining <button class="btn btn-sm btn-primary" onclick="showToast('Add table form coming soon','info')">+ Add Table</button></div>
+    <div id="tblcfg-indoor"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Bar Seating</div>
+    <div id="tblcfg-bar"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Patio</div>
+    <div id="tblcfg-patio"></div>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div class="page" id="page-templates">
+  <h2>Message Templates</h2>
+  <div class="page-sub">Default templates used across Email (SendGrid) and SMS (Twilio/OpenPhone). Variables: {first}, {date}, {time}, {party}, {rsvp_id}</div>
+  <div class="card">
+    <div class="card-title">Email Templates <button class="btn btn-sm" onclick="showToast('Template editor coming soon','info')">Edit</button></div>
+    <div class="tmpl-row"><div class="tmpl-type">Confirmation</div><div class="tmpl-text">Hi {first},\n\nYour reservation at Hive Buckhead is confirmed!\n\nDate: {date} · Time: {time} · Party of: {party}\nRSVP #: {rsvp_id}\n\nWe look forward to seeing you.\n\nHive Buckhead Team</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Reminder (24hr before)</div><div class="tmpl-text">Hi {first}, just a reminder — your Hive Buckhead reservation is tomorrow at {time} for {party}. See you soon!</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Cancellation</div><div class="tmpl-text">Hi {first}, your reservation at Hive Buckhead on {date} has been cancelled. We hope to see you again soon.\n\nHive Buckhead Team</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Thank You</div><div class="tmpl-text">Hi {first}, thank you for dining with us at Hive Buckhead! We hope you had a wonderful experience and look forward to seeing you again.\n\nHive Buckhead Team</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">SMS Templates (Twilio / OpenPhone) <button class="btn btn-sm" onclick="showToast('Template editor coming soon','info')">Edit</button></div>
+    <div class="tmpl-row"><div class="tmpl-type">Confirmation</div><div class="tmpl-text">Hi {first}! Your Hive Buckhead reservation is confirmed for {date} at {time}, party of {party}. RSVP #{rsvp_id}. See you then!</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Reminder</div><div class="tmpl-text">Hi {first}, your Hive Buckhead table is tonight at {time} for {party}. 🍸</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Cancellation</div><div class="tmpl-text">Hi {first}, your Hive Buckhead reservation on {date} has been cancelled. Questions? Call us.</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Thank You</div><div class="tmpl-text">Hi {first}! Thank you for dining at Hive Buckhead — hope to see you again soon! 🥂</div></div>
+  </div>
+</div>
+
+<!-- INTEGRATIONS -->
+<div class="page" id="page-integrations">
+  <h2>Integrations</h2>
+  <div class="page-sub">Connection status and configuration for your tool stack.</div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Service</th><th>Role</th><th>Status</th><th>Trigger</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ClickUp</strong></td><td>Task management — source of RSVP Task IDs</td><td><span class="tag tag-green">● Connected</span></td><td>Bidirectional sync</td></tr>
+        <tr><td><strong>Google Sheets</strong></td><td>Master reservation & order log</td><td><span class="tag tag-green">● Connected</span></td><td>On Completed/Cancelled</td></tr>
+        <tr><td><strong>Zapier</strong></td><td>Automation hub — 5 active Zaps</td><td><span class="tag tag-green">● Active</span></td><td>ClickUp status changes</td></tr>
+        <tr><td><strong>SendGrid</strong></td><td>Transactional email</td><td><span class="tag tag-green">● Active</span></td><td>Confirmed, Cancelled, Thank You</td></tr>
+        <tr><td><strong>Twilio / OpenPhone</strong></td><td>SMS notifications</td><td><span class="tag tag-green">● Active</span></td><td>Confirmed, Cancelled, Thank You</td></tr>
+        <tr><td><strong>forms.app</strong></td><td>Public-facing RSVP intake form</td><td><span class="tag tag-green">● Active</span></td><td>New submission → Zapier</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
+
+<script>
+const TABLES=[
+  {id:'T1',num:1,cap:2,section:'indoor'},{id:'T2',num:2,cap:2,section:'indoor'},
+  {id:'T3',num:3,cap:4,section:'indoor'},{id:'T4',num:4,cap:4,section:'indoor'},
+  {id:'T5',num:5,cap:6,section:'indoor'},{id:'T6',num:6,cap:6,section:'indoor'},
+  {id:'T7',num:7,cap:8,section:'indoor'},{id:'T8',num:8,cap:4,section:'indoor'},
+  {id:'T9',num:9,cap:2,section:'indoor'},{id:'T10',num:10,cap:10,section:'indoor'},
+  {id:'T11',num:11,cap:4,section:'indoor'},{id:'T12',num:12,cap:6,section:'indoor'},
+  {id:'B1',num:'B1',cap:2,section:'bar'},{id:'B2',num:'B2',cap:2,section:'bar'},{id:'B3',num:'B3',cap:2,section:'bar'},
+  {id:'P1',num:'P1',cap:4,section:'patio'},{id:'P2',num:'P2',cap:4,section:'patio'},{id:'P3',num:'P3',cap:6,section:'patio'},
+];
+const SERVERS=[
+  {name:'Ashley Smith',role:'Lead Server',color:'#C9A96E',initials:'AS'},
+  {name:'Marcus Rivera',role:'Server',color:'#5B96C8',initials:'MR'},
+  {name:'Jenna Park',role:'Server',color:'#9B7EC8',initials:'JP'},
+  {name:'Devon Harris',role:'Server / Bar',color:'#3AACA8',initials:'DH'},
+];
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+
+// TABLE ANALYTICS
+function renderTableAnalytics(){
+  const tRevMap={'T1':2100,'T2':1800,'T3':4200,'T4':3800,'T5':6100,'T6':5800,'T7':8400,'T8':3200,'T9':1200,'T10':9800,'T11':3600,'T12':5400,'B1':800,'B2':700,'B3':650,'P1':2800,'P2':3100,'P3':4400};
+  const tCntMap={'T1':14,'T2':12,'T3':28,'T4':22,'T5':33,'T6':30,'T7':42,'T8':20,'T9':8,'T10':48,'T11':22,'T12':28,'B1':6,'B2':5,'B3':5,'P1':18,'P2':20,'P3':26};
+  const body=document.getElementById('table-analytics-body');
+  const section={'indoor':'Indoor','bar':'Bar','patio':'Patio'};
+  body.innerHTML=TABLES.map(t=>{
+    const rev=tRevMap[t.id]||0;const cnt=tCntMap[t.id]||0;
+    const util=Math.round((cnt/50)*100);
+    const utag=util>70?'tag-green':util>40?'tag-amber':'tag-blue';
+    return`<tr><td><strong>Table ${t.num}</strong></td><td style="color:var(--text-m)">${section[t.section]}</td><td>${t.cap}</td><td>${cnt}</td><td>${45+Math.floor(Math.random()*30)}</td><td><span class="tag ${utag}">${util}%</span></td><td style="color:var(--green)">$${rev.toLocaleString()}</td></tr>`;
+  }).join('');
+}
+
+// TIME OF DAY
+function renderTOD(){
+  const hours=['11a','12p','1p','2p','3p','4p','5p','6p','7p','8p','9p','10p'];
+  const vals=[2,3,5,4,6,10,17,33,38,28,18,8];
+  const max=Math.max(...vals);
+  document.getElementById('tod-chart').innerHTML=vals.map((v,i)=>{
+    const h=Math.round((v/max)*80);
+    return`<div class="tod-bar" style="height:${h}px;background:${v===max?'var(--gold)':v>20?'var(--purple-bg)':v>10?'var(--blue-bg)':'var(--surface3)'};border:.5px solid ${v===max?'var(--gold)':'transparent'}" data-tip="${hours[i]}: ${v} reservations"></div>`;
+  }).join('');
+  document.getElementById('tod-labels').innerHTML=hours.map(h=>`<div>${h}</div>`).join('');
+}
+
+// SERVERS
+function renderServers(){
+  document.getElementById('server-list').innerHTML=SERVERS.map(s=>`
+    <div class="server-row">
+      <div class="server-avatar" style="background:${s.color}22;color:${s.color}">${s.initials}</div>
+      <div><div class="server-name">${s.name}</div><div class="server-role">${s.role}</div></div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="showToast('Edit ${s.name}','info')">Edit</button>
+        <button class="btn btn-sm" style="color:var(--red);border-color:rgba(196,82,74,.3)" onclick="showToast('Remove ${s.name}?','info')">Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+// TABLE CONFIG
+function renderTableConfig(){
+  const secMap={indoor:'tblcfg-indoor',bar:'tblcfg-bar',patio:'tblcfg-patio'};
+  Object.keys(secMap).forEach(sec=>{
+    document.getElementById(secMap[sec]).innerHTML=TABLES.filter(t=>t.section===sec).map(t=>`
+      <div class="tbl-row">
+        <div class="tbl-num">${t.num}</div>
+        <div style="flex:1;font-size:13px;color:var(--text-m)">${t.cap} seats · ${sec.charAt(0).toUpperCase()+sec.slice(1)}</div>
+        <button class="btn btn-sm" onclick="showToast('Edit Table ${t.num}','info')">Edit</button>
+      </div>`).join('');
+  });
+}
+
+let toastT;
+function showToast(msg,type='success'){const el=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;el.className=`toast ${type} show`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
+
+let dark=true;
+function toggleTheme(){dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');}
+
+renderTableAnalytics();renderTOD();renderServers();renderTableConfig();
+</script>
+</body>
+</html>
