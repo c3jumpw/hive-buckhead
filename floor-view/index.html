@@ -5,82 +5,64 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hive Buckhead — Live Floor</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="shared.js"></script>
 <style>
-:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.15);--amber:#D4A020;--amber-bg:rgba(212,160,32,.15);--red:#C4524A;--red-bg:rgba(196,82,74,.15);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.12);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.15);--teal:#3AACA8;--teal-bg:rgba(58,172,168,.12)}
-[data-theme="light"]{--bg:#F7F4EF;--surface:#FFFFFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.12);--amber-bg:rgba(212,160,32,.12);--red-bg:rgba(196,82,74,.12);--purple-bg:rgba(155,126,200,.12)}
+:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.22);--amber:#D4A020;--amber-bg:rgba(212,160,32,.22);--red:#C4524A;--red-bg:rgba(196,82,74,.22);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.18);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.22)}
+[data-theme="light"]{--bg:#EEE9E0;--surface:#F9F6F1;--surface2:#F0EBE2;--surface3:#E5DDD2;--border:rgba(100,80,40,.15);--border-s:rgba(100,80,40,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.18);--amber-bg:rgba(212,160,32,.18);--red-bg:rgba(196,82,74,.18);--purple-bg:rgba(155,126,200,.18)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
-.nav-left{display:flex;align-items:center;gap:16px}
-.nav-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);letter-spacing:.08em}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:52px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;gap:12px}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);letter-spacing:.08em;white-space:nowrap}
 .nav-brand span{color:var(--text-m);font-weight:300}
-.live-badge{display:flex;align-items:center;gap:5px;background:var(--red-bg);border:.5px solid rgba(196,82,74,.4);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--red);font-weight:500}
+.live-badge{display:flex;align-items:center;gap:5px;background:var(--red-bg);border:.5px solid rgba(196,82,74,.4);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--red);font-weight:500;flex-shrink:0}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.clock{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--gold);letter-spacing:.05em}
-.date-str{font-size:11px;color:var(--text-m);text-align:right}
-.nav-right{display:flex;gap:8px;align-items:center}
-.btn{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
+.clock{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--gold);line-height:1}
+.date-str{font-size:10px;color:var(--text-m);text-align:center;margin-top:1px}
+.btn{padding:5px 13px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
 .btn:hover{background:var(--surface2);border-color:var(--gold)}
 .btn-primary{background:var(--gold);color:#0E0C0A;border-color:var(--gold)}
 .btn-primary:hover{background:var(--gold-light)}
-.btn-sm{padding:5px 12px;font-size:12px}
-.icon-btn{width:32px;height:32px;border-radius:6px;border:.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-m);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-sm{padding:4px 10px;font-size:11px}
+.icon-btn{width:30px;height:30px;border-radius:6px;border:.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-m);display:flex;align-items:center;justify-content:center;transition:all .15s}
 .icon-btn:hover{border-color:var(--gold);color:var(--text)}
 /* STATS */
-.floor-stats{display:flex;border-bottom:.5px solid var(--border)}
-.fstat{flex:1;padding:12px 20px;border-right:.5px solid var(--border);text-align:center}
+.stats-bar{display:flex;border-bottom:.5px solid var(--border);flex-shrink:0;background:var(--surface)}
+.fstat{flex:1;padding:8px 14px;border-right:.5px solid var(--border);text-align:center}
 .fstat:last-child{border-right:none}
-.fstat-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;line-height:1}
-.fstat-lbl{font-size:10px;color:var(--text-d);letter-spacing:.05em;margin-top:3px}
+.fstat-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;line-height:1}
+.fstat-lbl{font-size:9px;color:var(--text-d);letter-spacing:.04em;margin-top:2px;text-transform:uppercase}
 /* LEGEND */
-.legend{display:flex;gap:16px;padding:10px 20px;border-bottom:.5px solid var(--border);background:var(--surface);flex-wrap:wrap}
-.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-m)}
-.leg-swatch{width:16px;height:16px;border-radius:4px;border:.5px solid}
-/* FLOOR AREA */
-.floor-area{padding:20px;overflow-y:auto;height:calc(100vh - 190px)}
-.section-title{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:var(--text-m);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;margin-top:20px;padding-bottom:6px;border-bottom:.5px solid var(--border)}
-.section-title:first-child{margin-top:0}
-.table-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px}
-/* TABLE CARD */
-.t-card{border-radius:10px;padding:14px 12px;cursor:pointer;transition:all .18s;border:.5px solid;position:relative;min-width:110px;text-align:center;user-select:none}
-.t-card:hover{transform:scale(1.04);z-index:2}
-.t-card.readonly{cursor:default}
-.t-card.readonly:hover{transform:none}
-.t-open{background:var(--green-bg);border-color:rgba(76,175,130,.35);color:var(--green)}
-.t-seated{background:var(--purple-bg);border-color:rgba(155,126,200,.45);color:var(--purple)}
-.t-reserved{background:var(--amber-bg);border-color:rgba(212,160,32,.4);color:var(--amber)}
-.t-dirty{background:var(--red-bg);border-color:rgba(196,82,74,.35);color:var(--red)}
-.t-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;line-height:1}
-.t-cap{font-size:10px;opacity:.65;margin-top:2px}
-.t-slbl{font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-top:6px}
-.t-guest{font-size:11px;margin-top:5px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
-/* tooltip */
-.tt{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--surface);border:.5px solid var(--border-s);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--text);white-space:nowrap;z-index:50;pointer-events:none;opacity:0;transition:opacity .15s;text-align:left;box-shadow:0 4px 22px rgba(0,0,0,.45);min-width:170px}
-.t-card:hover .tt{opacity:1}
-.tt-row{display:flex;justify-content:space-between;gap:14px;padding:2px 0;font-size:11.5px}
-.tt-row .l{color:var(--text-m)}
-.tt-hdr{font-weight:500;margin-bottom:6px;font-size:12px;color:var(--gold);border-bottom:.5px solid var(--border);padding-bottom:5px}
+.legend-bar{display:flex;align-items:center;gap:14px;padding:6px 16px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-m)}
+.leg-sw{width:12px;height:12px;border-radius:3px;border:.5px solid}
+.hint{font-size:10px;color:var(--text-d);margin-left:auto}
+/* FLOOR SVG CONTAINER */
+.floor-container{flex:1;overflow:auto;position:relative;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:16px}
+#floor-svg{display:block;cursor:default;user-select:none}
+/* TABLE ELEMENTS */
+.tbl-wrap{cursor:pointer;transition:transform .15s}
+.tbl-wrap:hover{filter:brightness(1.18)}
+.tbl-wrap:active{transform:scale(.97)}
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
 .modal-overlay.show{opacity:1;pointer-events:all}
-.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:460px;max-height:90vh;overflow-y:auto;padding:1.4rem;transform:translateY(8px);transition:transform .15s}
+.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:440px;max-height:88vh;overflow-y:auto;padding:1.3rem;transform:translateY(8px);transition:transform .15s}
 .modal-overlay.show .modal{transform:translateY(0)}
 .modal-sm{width:400px}
-.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--gold);margin-bottom:1rem}
-.form-group{margin-bottom:12px}
-.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px}
-.form-input,.form-select{width:100%;padding:8px 11px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--gold);margin-bottom:.9rem}
+.dr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--border);font-size:13px;gap:8px}
+.dr:last-child{border-bottom:none}
+.dr .l{color:var(--text-m)}
+.dr .v{color:var(--text);font-weight:500;text-align:right}
+.form-group{margin-bottom:11px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:3px}
+.form-input,.form-select{width:100%;padding:7px 10px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
 .form-input:focus,.form-select:focus{border-color:var(--gold)}
 .form-input::placeholder{color:var(--text-d)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
-.dr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px}
-.dr:last-child{border-bottom:none}
-.dr .l{color:var(--text-m)}
-.dr .v{color:var(--text);font-weight:500}
-/* actions in modal */
-.floor-act{width:100%;padding:10px 14px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid;transition:all .15s;text-align:left;display:flex;align-items:center;gap:8px;background:transparent;margin-bottom:7px}
+.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:.9rem}
+.floor-act{width:100%;padding:9px 12px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid;transition:all .15s;text-align:left;display:flex;align-items:center;gap:8px;background:transparent;margin-bottom:6px}
 .floor-act:hover{transform:translateX(2px)}
 .fa-seat{color:var(--purple);border-color:rgba(155,126,200,.4)}.fa-seat:hover{background:var(--purple-bg)}
 .fa-walkin{color:var(--gold);border-color:rgba(201,169,110,.35)}.fa-walkin:hover{background:rgba(201,169,110,.08)}
@@ -88,22 +70,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .fa-dirty{color:var(--red);border-color:rgba(196,82,74,.35)}.fa-dirty:hover{background:var(--red-bg)}
 .fa-change{color:var(--blue);border-color:rgba(91,150,200,.4)}.fa-change:hover{background:var(--blue-bg)}
 .info-tag{background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--blue);margin-bottom:10px;line-height:1.5}
-/* toast */
-.toast{position:fixed;bottom:20px;right:20px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:9px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none;box-shadow:0 6px 28px rgba(0,0,0,.35)}
+.warn-tag{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--amber);margin-bottom:10px}
+.toast{position:fixed;bottom:18px;right:18px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:10px 15px;font-size:13px;display:flex;align-items:center;gap:8px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.4)}
 .toast.show{transform:translateY(0) scale(1);opacity:1}
-.toast-icon{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.toast-icon{width:7px;height:7px;border-radius:50%}
 .toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}.toast.warning .toast-icon{background:var(--amber)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
-.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
-.pill .dot{width:5px;height:5px;border-radius:50%}
-.p-req{background:var(--amber-bg);color:var(--amber)}.p-req .dot{background:var(--amber)}
-.p-con{background:var(--blue-bg);color:var(--blue)}.p-con .dot{background:var(--blue)}
-.p-sea{background:var(--purple-bg);color:var(--purple)}.p-sea .dot{background:var(--purple);animation:blink 1.5s infinite}
 </style>
 </head>
 <body>
+
 <nav class="nav">
-  <div class="nav-left">
+  <div style="display:flex;align-items:center;gap:10px">
     <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
     <div class="live-badge"><div class="live-dot"></div>LIVE FLOOR</div>
   </div>
@@ -111,32 +89,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="clock" id="clock">—</div>
     <div class="date-str" id="date-str">—</div>
   </div>
-  <div class="nav-right">
-    <button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)" onclick="openWalkIn()">+ Walk-In</button>
-    <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Theme">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <div style="display:flex;gap:7px;align-items:center">
+    <button class="btn btn-primary btn-sm" onclick="openWalkIn()">+ Walk-In</button>
+    <button class="btn btn-sm" onclick="openSeatModal(null)">🪑 Seat Guest</button>
+    <button class="icon-btn" onclick="toggleTheme()" title="Theme">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
     </button>
-    <a href="index.html"><button class="btn btn-sm">← Back to Reservations</button></a>
+    <a href="index.html"><button class="btn btn-sm">← Reservations</button></a>
+    <a href="admin.html"><button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)">⚙ Admin</button></a>
   </div>
 </nav>
 
-<div class="floor-stats" id="floor-stats"></div>
+<div class="stats-bar" id="stats-bar"></div>
 
-<div class="legend">
-  <div class="leg-item"><div class="leg-swatch" style="background:var(--green-bg);border-color:rgba(76,175,130,.4)"></div>Open</div>
-  <div class="leg-item"><div class="leg-swatch" style="background:var(--purple-bg);border-color:rgba(155,126,200,.4)"></div>Seated</div>
-  <div class="leg-item"><div class="leg-swatch" style="background:var(--amber-bg);border-color:rgba(212,160,32,.4)"></div>Reserved (today)</div>
-  <div class="leg-item"><div class="leg-swatch" style="background:var(--red-bg);border-color:rgba(196,82,74,.4)"></div>Needs Bussing</div>
-  <span style="font-size:11px;color:var(--text-d);margin-left:auto">Tap a table to manage · View only — no reservation edits here</span>
+<div class="legend-bar">
+  <div class="leg"><div class="leg-sw" style="background:var(--green-bg);border-color:rgba(76,175,130,.5)"></div>Open</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--purple-bg);border-color:rgba(155,126,200,.5)"></div>Seated</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--amber-bg);border-color:rgba(212,160,32,.5)"></div>Reserved Today</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--red-bg);border-color:rgba(196,82,74,.5)"></div>Needs Bussing</div>
+  <span class="hint">Tap table to manage · Today's reservations only · No reservation edits on this page</span>
 </div>
 
-<div class="floor-area">
-  <div class="section-title">Indoor Dining</div>
-  <div class="table-grid" id="grid-indoor"></div>
-  <div class="section-title">Bar Seating</div>
-  <div class="table-grid" id="grid-bar"></div>
-  <div class="section-title">Patio</div>
-  <div class="table-grid" id="grid-patio"></div>
+<div class="floor-container">
+  <svg id="floor-svg" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg"></svg>
 </div>
 
 <!-- TABLE ACTION MODAL -->
@@ -144,26 +119,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="modal modal-sm">
     <div class="modal-title" id="tmod-title">Table —</div>
     <div id="tmod-info" style="margin-bottom:12px"></div>
-    <div id="tmod-actions"></div>
-    <div class="modal-actions" style="margin-top:8px">
-      <button class="btn" onclick="closeModal('table-modal')">Close</button>
-    </div>
+    <div id="tmod-acts"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('table-modal')">Close</button></div>
   </div>
 </div>
 
-<!-- SEAT GUEST MODAL (from confirmed reservation) -->
+<!-- SEAT GUEST (from confirmed) -->
 <div class="modal-overlay" id="seat-modal">
-  <div class="modal">
-    <div class="modal-title">Seat Guest</div>
-    <div class="info-tag" id="seat-info"></div>
-    <div class="form-group">
-      <label class="form-label">Select Reservation (Today's Confirmed)</label>
-      <select class="form-select" id="seat-rsv-sel"></select>
-    </div>
-    <div class="form-group" id="seat-table-grp">
-      <label class="form-label">Assign to Table</label>
-      <select class="form-select" id="seat-table-sel"></select>
-    </div>
+  <div class="modal modal-sm">
+    <div class="modal-title">Seat Confirmed Guest</div>
+    <div class="info-tag">Select a confirmed reservation for today and assign them to this table.</div>
+    <div class="form-group"><label class="form-label">Reservation</label>
+      <select class="form-select" id="seat-rsv-sel"></select></div>
+    <div class="form-group" id="seat-tbl-grp"><label class="form-label">Table</label>
+      <select class="form-select" id="seat-tbl-sel"></select></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('seat-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="submitSeat()">Seat Guest</button>
@@ -173,9 +142,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- WALK-IN MODAL -->
 <div class="modal-overlay" id="walkin-modal">
-  <div class="modal">
+  <div class="modal modal-sm">
     <div class="modal-title">New Walk-In</div>
-    <div class="info-tag">Walk-ins are created as reservations with today's date and labeled as walk-in.</div>
+    <div class="info-tag">Creates a new reservation labeled as walk-in and seats them immediately.</div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="wi-first" placeholder="First"></div>
       <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="wi-last" placeholder="Last"></div>
@@ -185,16 +154,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="form-group"><label class="form-label">Party Size *</label><input class="form-input" id="wi-party" type="number" min="1" max="40" placeholder="2"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Assign Table *</label>
-        <select class="form-select" id="wi-table"><option value="">Select table…</option></select>
-      </div>
+      <div class="form-group"><label class="form-label">Table *</label>
+        <select class="form-select" id="wi-table"><option value="">Select…</option></select></div>
       <div class="form-group"><label class="form-label">Server</label>
-        <select class="form-select" id="wi-server">
-          <option value="">Unassigned</option>
-          <option>Ashley Smith</option><option>Marcus Rivera</option>
-          <option>Jenna Park</option><option>Devon Harris</option>
-        </select>
-      </div>
+        <select class="form-select" id="wi-server"><option value="">Unassigned</option></select></div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('walkin-modal')">Cancel</button>
@@ -203,14 +166,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<!-- CHANGE SEAT MODAL -->
+<!-- CHANGE TABLE MODAL -->
 <div class="modal-overlay" id="changeseat-modal">
   <div class="modal modal-sm">
     <div class="modal-title">Change Table</div>
-    <div class="form-group" style="margin-top:8px">
-      <label class="form-label">Move to Table</label>
-      <select class="form-select" id="cs-table"><option value="">Select…</option></select>
-    </div>
+    <div class="form-group" style="margin-top:8px"><label class="form-label">Move to table</label>
+      <select class="form-select" id="cs-table"><option value="">Select…</option></select></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('changeseat-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="submitChangeSeat()">Move Table</button>
@@ -221,102 +182,243 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
 
 <script>
-const TODAY=new Date().toISOString().split('T')[0];
+const TODAY = window.HiveData.TODAY;
+let actionTid = null, changingSeatId = null, seatPreTable = null;
 
-const TABLES=[
-  {id:'T1',num:1,cap:2,section:'indoor'},{id:'T2',num:2,cap:2,section:'indoor'},
-  {id:'T3',num:3,cap:4,section:'indoor'},{id:'T4',num:4,cap:4,section:'indoor'},
-  {id:'T5',num:5,cap:6,section:'indoor'},{id:'T6',num:6,cap:6,section:'indoor'},
-  {id:'T7',num:7,cap:8,section:'indoor'},{id:'T8',num:8,cap:4,section:'indoor'},
-  {id:'T9',num:9,cap:2,section:'indoor'},{id:'T10',num:10,cap:10,section:'indoor'},
-  {id:'T11',num:11,cap:4,section:'indoor'},{id:'T12',num:12,cap:6,section:'indoor'},
-  {id:'B1',num:'B1',cap:2,section:'bar'},{id:'B2',num:'B2',cap:2,section:'bar'},{id:'B3',num:'B3',cap:2,section:'bar'},
-  {id:'P1',num:'P1',cap:4,section:'patio'},{id:'P2',num:'P2',cap:4,section:'patio'},{id:'P3',num:'P3',cap:6,section:'patio'},
-];
-
-let tableStates={'T4':'dirty','T9':'dirty'};
-
-let reservations=[
-  {id:'86AH8ZMTA',first:'Matest',last:'Now',phone:'4702226558',date:TODAY,time:'15:15',party:2,status:'Seated',server:'Ashley Smith',table:'T3',notes:'Bringing confetti',orderTotal:null},
-  {id:'9KF3PLMX',first:'Jordan',last:'Baptiste',phone:'4045552341',date:TODAY,time:'18:30',party:4,status:'RSVP Confirmed',server:'Marcus Rivera',table:'T5',notes:'Anniversary dinner',orderTotal:null},
-  {id:'7ZB2WNQR',first:'Priya',last:'Nair',phone:'6785553819',date:TODAY,time:'19:00',party:6,status:'RSVP Requested',server:'',table:'',notes:'Gluten allergy',orderTotal:null},
-  {id:'2RM6DKPN',first:'Camille',last:'Osei',phone:'4042228811',date:TODAY,time:'17:30',party:3,status:'RSVP Requested',server:'',table:'',notes:'',orderTotal:null},
-  {id:'5TN1QABZ',first:'DeShawn',last:'Williams',phone:'6786663322',date:TODAY,time:'20:30',party:8,status:'RSVP Confirmed',server:'Devon Harris',table:'T7',notes:'Large group',orderTotal:null},
-];
-
-let actionTableId=null,actionRsvId=null,changingSeatRsvId=null;
-
+// ── HELPERS ──
 function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
-function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('')}
-
 function getTableState(tid){
-  const seated=reservations.find(r=>r.table===tid&&r.status==='Seated'&&r.date===TODAY);
-  const reserved=reservations.find(r=>r.table===tid&&r.status==='RSVP Confirmed'&&r.date===TODAY);
-  if(tableStates[tid]==='dirty')return{state:'dirty',r:null};
-  if(seated)return{state:'seated',r:seated};
-  if(reserved)return{state:'reserved',r:reserved};
+  const d = window.HiveData.get();
+  const rsv = d.reservations || [];
+  const ts = d.tableStates || {};
+  const seated = rsv.find(r=>r.table===tid&&r.status==='Seated'&&r.date===TODAY);
+  const reserved = rsv.find(r=>r.table===tid&&r.status==='RSVP Confirmed'&&r.date===TODAY);
+  if(ts[tid]==='dirty') return{state:'dirty',r:null};
+  if(seated) return{state:'seated',r:seated};
+  if(reserved) return{state:'reserved',r:reserved};
   return{state:'open',r:null};
+}
+function stateColor(state){
+  if(state==='seated') return{fill:'rgba(155,126,200,.22)',stroke:'rgba(155,126,200,.7)',text:'#C4B0E8'};
+  if(state==='reserved') return{fill:'rgba(212,160,32,.22)',stroke:'rgba(212,160,32,.65)',text:'#E8C040'};
+  if(state==='dirty') return{fill:'rgba(196,82,74,.22)',stroke:'rgba(196,82,74,.65)',text:'#D87070'};
+  return{fill:'rgba(76,175,130,.18)',stroke:'rgba(76,175,130,.6)',text:'#5FC090'};
+}
+function stateLabelShort(state){
+  return{seated:'SEATED',reserved:'RESERVED',dirty:'BUS',open:'OPEN'}[state]||'OPEN';
+}
+
+// ── SVG FLOOR PLAN RENDERER ──
+function renderFloor(){
+  const svg = document.getElementById('floor-svg');
+  const d = window.HiveData.get();
+  const tables = d.tables || [];
+
+  // Theme detection
+  const dark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const wallFill = dark ? '#1A1714' : '#F2EDE5';
+  const wallStroke = dark ? 'rgba(201,169,110,.35)' : 'rgba(100,80,40,.3)';
+  const denFill = dark ? '#211D18' : '#EDE5D8';
+  const gridColor = dark ? 'rgba(201,169,110,.06)' : 'rgba(100,80,40,.07)';
+  const labelColor = dark ? '#A89B84' : '#8B7355';
+  const sectionLabelColor = dark ? '#C9A96E' : '#8B6030';
+  const roomFill = dark ? '#141210' : '#E8E0D5';
+  const textPrimary = dark ? '#F5EFE4' : '#1A1510';
+
+  // Viewport: 960×560
+  let html = `
+  <!-- GRID -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="${gridColor}" stroke-width=".5"/>
+    </pattern>
+  </defs>
+  <rect width="960" height="560" fill="url(#grid)"/>
+
+  <!-- OUTER WALLS -->
+  <rect x="8" y="8" width="944" height="544" rx="3" fill="${wallFill}" stroke="${wallStroke}" stroke-width="2.5"/>
+
+  <!-- PATIO AREA (top) -->
+  <rect x="152" y="8" width="556" height="118" rx="2" fill="${dark?'rgba(58,172,168,.07)':'rgba(58,172,168,.06)'}" stroke="${dark?'rgba(58,172,168,.3)':'rgba(58,172,168,.25)'}" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="420" y="24" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${sectionLabelColor}" letter-spacing="2" text-anchor="middle">PATIO</text>
+
+  <!-- GLASS DOORS line -->
+  <line x1="152" y1="126" x2="708" y2="126" stroke="${dark?'rgba(91,150,200,.5)':'rgba(91,150,200,.4)'}" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="430" y="138" font-family="DM Sans,sans-serif" font-size="8" fill="${dark?'rgba(91,150,200,.7)':'rgba(60,100,160,.6)'}" text-anchor="middle" letter-spacing="1.5">GLASS DOORS</text>
+
+  <!-- RESTROOMS box -->
+  <rect x="712" y="8" width="116" height="80" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="770" y="52" font-family="DM Sans,sans-serif" font-size="9" fill="${labelColor}" text-anchor="middle" font-weight="500">RESTROOMS</text>
+
+  <!-- KITCHEN box -->
+  <rect x="832" y="8" width="120" height="80" rx="2" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="892" y="52" font-family="DM Sans,sans-serif" font-size="9" fill="${labelColor}" text-anchor="middle" font-weight="500">KITCHEN</text>
+
+  <!-- DEN section (left) -->
+  <rect x="8" y="148" width="240" height="390" rx="2" fill="${denFill}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="124" y="170" font-family="Cormorant Garamond,serif" font-size="13" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1">DEN</text>
+  <!-- Den entrance arrow -->
+  <line x1="246" y1="280" x2="290" y2="280" stroke="${sectionLabelColor}" stroke-width="1.5"/>
+  <text x="268" y="275" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle">DEN</text>
+  <text x="268" y="285" font-family="DM Sans,sans-serif" font-size="7" fill="${labelColor}" text-anchor="middle">ENT.</text>
+
+  <!-- INDOOR DINING label -->
+  <text x="530" y="330" font-family="Cormorant Garamond,serif" font-size="13" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1" opacity=".5">INDOOR DINING</text>
+
+  <!-- BAR SEATING section (right) -->
+  <rect x="730" y="148" width="222" height="390" rx="2" fill="${dark?'rgba(201,169,110,.04)':'rgba(180,140,60,.05)'}" stroke="${wallStroke}" stroke-width="1.5"/>
+  <text x="841" y="170" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1">BAR SEATING</text>
+
+  <!-- Bar Part labels -->
+  <text x="841" y="210" font-family="DM Sans,sans-serif" font-size="7.5" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 1: MAIN BAR</text>
+  <text x="841" y="310" font-family="DM Sans,sans-serif" font-size="7.5" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 2: SERVICE AREA</text>
+  <text x="841" y="430" font-family="DM Sans,sans-serif" font-size="7.5" fill="${labelColor}" text-anchor="middle" letter-spacing="1">PART 3: LOUNGE BAR</text>
+
+  <!-- Bar counter Part 1 (Main Bar) - long counter -->
+  <rect x="748" y="178" width="186" height="26" rx="3" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.12)'}" stroke="${wallStroke}" stroke-width="1"/>
+  <!-- Bar stools row 1 -->
+  ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${758+i*22}" cy="215" r="7" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.1)'}" stroke="${wallStroke}" stroke-width=".8"/>`).join('')}
+
+  <!-- Service area stools -->
+  ${[0,1,2].map(i=>`<circle cx="${758+i*28}" cy="310" r="7" fill="${dark?'rgba(201,169,110,.10)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".8"/>`).join('')}
+  <rect x="748" y="318" width="100" height="20" rx="2" fill="${dark?'rgba(201,169,110,.08)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".8"/>
+
+  <!-- Lounge Bar counter -->
+  <rect x="748" y="448" width="186" height="22" rx="3" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.12)'}" stroke="${wallStroke}" stroke-width="1"/>
+  ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${758+i*22}" cy="443" r="7" fill="${dark?'rgba(201,169,110,.12)':'rgba(180,140,60,.1)'}" stroke="${wallStroke}" stroke-width=".8"/>`).join('')}
+
+  <!-- HOST STAND -->
+  <rect x="580" y="494" width="64" height="36" rx="3" fill="${roomFill}" stroke="${wallStroke}" stroke-width="1.2"/>
+  <text x="612" y="517" font-family="DM Sans,sans-serif" font-size="8" fill="${labelColor}" text-anchor="middle" font-weight="500">HOST</text>
+
+  <!-- MAIN ENTRANCE -->
+  <line x1="480" y1="544" x2="560" y2="544" stroke="${sectionLabelColor}" stroke-width="2.5"/>
+  <text x="520" y="540" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle" letter-spacing="1">↑ MAIN ENTRANCE</text>
+
+  <!-- EMERGENCY EXIT -->
+  <line x1="8" y1="148" x2="8" y2="200" stroke="${dark?'rgba(196,82,74,.6)':'rgba(196,82,74,.5)'}" stroke-width="3"/>
+  <text x="14" y="160" font-family="DM Sans,sans-serif" font-size="7" fill="${dark?'rgba(196,82,74,.7)':'rgba(196,82,74,.6)'}" letter-spacing=".5">EMERG.</text>
+  <text x="14" y="170" font-family="DM Sans,sans-serif" font-size="7" fill="${dark?'rgba(196,82,74,.7)':'rgba(196,82,74,.6)'}" letter-spacing=".5">EXIT</text>
+  `;
+
+  // ── DRAW TABLES ──
+  // Table positions defined precisely based on floor plan
+  const TABLE_POS = {
+    // Indoor 3 rows × 4 cols — centered between Den and Bar
+    T1:  {x:310,y:185}, T2: {x:400,y:185}, T3: {x:490,y:185}, T4: {x:580,y:185},
+    T5:  {x:310,y:275}, T6: {x:400,y:275}, T7: {x:490,y:275}, T8: {x:580,y:275},
+    T9:  {x:310,y:365}, T10:{x:400,y:365}, T11:{x:490,y:365}, T12:{x:580,y:365},
+    // Den — 2 cols, 4 rows (T17 doesn't exist, skip)
+    T13: {x:72, y:195}, T14:{x:172,y:195},
+    T15: {x:72, y:280},
+    T16: {x:72, y:355}, T18:{x:172,y:285},
+    T19: {x:72, y:435}, T20:{x:172,y:435},
+    // Bar — drawn as special shapes, positions for clickable areas
+    BAR1:{x:841,y:195,w:186,h:40,bar:true},
+    BAR2:{x:841,y:310,w:100,h:30,bar:true},
+    BAR3:{x:841,y:455,w:186,h:35,bar:true},
+    // Patio — 5 tables in a row
+    P1:  {x:185,y:72},  P2: {x:257,y:72}, P3: {x:329,y:72},
+    P4:  {x:401,y:72},  P5: {x:490,y:72},
+  };
+
+  // Draw each table
+  const allTables = window.HiveData.tables();
+  allTables.forEach(t => {
+    const pos = TABLE_POS[t.id];
+    if(!pos) return;
+    const {state, r} = getTableState(t.id);
+    const col = stateColor(state);
+    const lbl = stateLabelShort(state);
+    const guestLine = (state==='seated'||state==='reserved') && r ? `${r.first} ${r.last.charAt(0)}.` : '';
+    const isBar = pos.bar;
+
+    if(isBar){
+      // Bar seats shown as label-only clickable zones
+      html += `<g class="tbl-wrap" onclick="tableClick('${t.id}')" role="button" aria-label="Bar ${t.num}">
+        <rect x="${pos.x - pos.w/2}" y="${pos.y - pos.h/2}" width="${pos.w}" height="${pos.h}" rx="4" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.2"/>
+        <text x="${pos.x}" y="${pos.y + 4}" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${col.text}" text-anchor="middle">${t.num} · ${lbl}</text>
+        ${guestLine?`<text x="${pos.x}" y="${pos.y+15}" font-family="DM Sans,sans-serif" font-size="8" fill="${col.text}" text-anchor="middle" opacity=".8">${guestLine}</text>`:''}
+      </g>`;
+      return;
+    }
+
+    const R = 32; // table circle radius
+    // Chair positions (4 chairs: top, bottom, left, right)
+    const chairs = [
+      {cx:pos.x, cy:pos.y-R-8},
+      {cx:pos.x, cy:pos.y+R+8},
+      {cx:pos.x-R-8, cy:pos.y},
+      {cx:pos.x+R+8, cy:pos.y},
+    ];
+    // For larger cap tables in Den, add extra chairs
+    const extraChairs = t.cap > 4 ? [
+      {cx:pos.x-R-8, cy:pos.y-14},{cx:pos.x-R-8, cy:pos.y+14},
+      {cx:pos.x+R+8, cy:pos.y-14},{cx:pos.x+R+8, cy:pos.y+14},
+    ] : [];
+    const allChairs = [...chairs, ...extraChairs];
+
+    html += `<g class="tbl-wrap" onclick="tableClick('${t.id}')" role="button" aria-label="Table ${t.num}">`;
+    // Draw chairs first (behind table)
+    allChairs.forEach(c => {
+      html += `<ellipse cx="${c.cx}" cy="${c.cy}" rx="9" ry="6" fill="${col.fill}" stroke="${col.stroke}" stroke-width=".8" opacity=".9"/>`;
+    });
+    // Table circle
+    html += `<circle cx="${pos.x}" cy="${pos.y}" r="${R}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5"/>`;
+    // Table label
+    html += `<text x="${pos.x}" y="${pos.y-4}" font-family="DM Sans,sans-serif" font-size="9" font-weight="500" fill="${col.text}" text-anchor="middle">${t.num}</text>`;
+    // Status label
+    html += `<text x="${pos.x}" y="${pos.y+7}" font-family="DM Sans,sans-serif" font-size="7" fill="${col.text}" text-anchor="middle" opacity=".85">${lbl}</text>`;
+    // Guest name if seated/reserved
+    if(guestLine){
+      html += `<text x="${pos.x}" y="${pos.y+17}" font-family="DM Sans,sans-serif" font-size="7" fill="${col.text}" text-anchor="middle" opacity=".7">${guestLine}</text>`;
+    }
+    html += `</g>`;
+  });
+
+  // Patio plants (decorative)
+  const plantPositions = [{x:162,y:58},{x:216,y:32},{x:520,y:32},{x:630,y:58},{x:148,y:128},{x:626,y:128}];
+  plantPositions.forEach(p => {
+    html += `<circle cx="${p.x}" cy="${p.y}" r="7" fill="${dark?'rgba(76,175,130,.25)':'rgba(76,175,130,.2)'}" stroke="${dark?'rgba(76,175,130,.4)':'rgba(76,175,130,.3)'}" stroke-width=".8"/>`;
+    html += `<text x="${p.x}" y="${p.y+3.5}" font-size="8" text-anchor="middle">🌿</text>`;
+  });
+
+  // Compass
+  html += `<g transform="translate(930,530)">
+    <circle cx="0" cy="0" r="14" fill="${dark?'rgba(201,169,110,.08)':'rgba(180,140,60,.08)'}" stroke="${wallStroke}" stroke-width=".8"/>
+    <text x="0" y="-4" font-family="DM Sans,sans-serif" font-size="8" font-weight="500" fill="${sectionLabelColor}" text-anchor="middle">N</text>
+    <line x1="0" y1="-2" x2="0" y2="6" stroke="${sectionLabelColor}" stroke-width="1"/>
+  </g>`;
+
+  svg.innerHTML = html;
+  renderStats();
 }
 
 function renderStats(){
-  const all=reservations.filter(r=>r.date===TODAY&&r.status!=='Cancelled');
-  const seated=all.filter(r=>r.status==='Seated').length;
-  const open=TABLES.length-reservations.filter(r=>r.date===TODAY&&r.status==='Seated').length-Object.values(tableStates).filter(s=>s==='dirty').length;
-  const dirty=Object.values(tableStates).filter(s=>s==='dirty').length;
-  const covers=all.filter(r=>r.status==='Seated').reduce((a,r)=>a+r.party,0);
-  document.getElementById('floor-stats').innerHTML=`
-    <div class="fstat"><div class="fstat-val" style="color:var(--purple)">${seated}</div><div class="fstat-lbl">Tables Seated</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--green)">${Math.max(0,open)}</div><div class="fstat-lbl">Tables Open</div></div>
+  const d = window.HiveData.get();
+  const rsv = d.reservations || [];
+  const ts = d.tableStates || {};
+  const tables = window.HiveData.tables();
+  const seated = rsv.filter(r=>r.status==='Seated'&&r.date===TODAY).length;
+  const dirty = Object.values(ts).filter(s=>s==='dirty').length;
+  const reserved = rsv.filter(r=>r.status==='RSVP Confirmed'&&r.date===TODAY).length;
+  const covers = rsv.filter(r=>r.status==='Seated'&&r.date===TODAY).reduce((a,r)=>a+r.party,0);
+  const arriving = rsv.filter(r=>(r.status==='RSVP Confirmed'||r.status==='RSVP Requested')&&r.date===TODAY).length;
+  document.getElementById('stats-bar').innerHTML=`
+    <div class="fstat"><div class="fstat-val" style="color:var(--purple)">${seated}</div><div class="fstat-lbl">Seated Now</div></div>
+    <div class="fstat"><div class="fstat-val" style="color:var(--amber)">${reserved}</div><div class="fstat-lbl">Arriving Today</div></div>
     <div class="fstat"><div class="fstat-val" style="color:var(--red)">${dirty}</div><div class="fstat-lbl">Need Bussing</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--gold)">${covers}</div><div class="fstat-lbl">Live Covers</div></div>
-    <div class="fstat"><div class="fstat-val" style="color:var(--amber)">${reservations.filter(r=>r.date===TODAY&&(r.status==='RSVP Confirmed'||r.status==='RSVP Requested')).length}</div><div class="fstat-lbl">Arriving Today</div></div>`;
+    <div class="fstat"><div class="fstat-val" style="color:var(--green)">${tables.length - seated - dirty}</div><div class="fstat-lbl">Open Tables</div></div>
+    <div class="fstat"><div class="fstat-val" style="color:var(--gold)">${covers}</div><div class="fstat-lbl">Live Covers</div></div>`;
 }
 
-function buildCard(t){
-  const{state,r}=getTableState(t.id);
-  const clsMap={open:'t-open',seated:'t-seated',reserved:'t-reserved',dirty:'t-dirty'};
-  const lblMap={open:'Open',seated:'Seated',reserved:'Reserved',dirty:'Needs Bussing'};
-  let guestLine='',tooltip='';
-  if(state==='seated'&&r){
-    guestLine=`<div class="t-guest">${r.first} ${r.last}</div>`;
-    tooltip=`<div class="tt-row"><span class="l">Guest</span><span>${r.first} ${r.last}</span></div>
-    <div class="tt-row"><span class="l">Party</span><span>${r.party} guests</span></div>
-    <div class="tt-row"><span class="l">Server</span><span>${r.server||'—'}</span></div>
-    <div class="tt-row"><span class="l">Seated</span><span>${fmtTime(r.time)}</span></div>
-    <div class="tt-row"><span class="l">RSVP #</span><span style="color:var(--gold)">${r.id}</span></div>`;
-  }else if(state==='reserved'&&r){
-    guestLine=`<div class="t-guest">${r.first} ${r.last}</div>`;
-    tooltip=`<div class="tt-row"><span class="l">Reserved for</span><span>${r.first} ${r.last}</span></div>
-    <div class="tt-row"><span class="l">Party</span><span>${r.party}</span></div>
-    <div class="tt-row"><span class="l">Arrives</span><span>${fmtTime(r.time)}</span></div>
-    <div class="tt-row"><span class="l">Server</span><span>${r.server||'—'}</span></div>`;
-  }else if(state==='dirty'){
-    tooltip=`<div class="tt-row"><span class="l">Status</span><span style="color:var(--red)">Needs bussing</span></div><div class="tt-row"><span class="l">Capacity</span><span>${t.cap} seats</span></div>`;
-  }else{
-    tooltip=`<div class="tt-row"><span class="l">Status</span><span style="color:var(--green)">Open</span></div><div class="tt-row"><span class="l">Capacity</span><span>${t.cap} seats</span></div>`;
-  }
-  return`<div class="t-card ${clsMap[state]}" onclick="tableClick('${t.id}')">
-    <div class="t-num">${t.num}</div>
-    <div class="t-cap">${t.cap} seats</div>
-    ${guestLine}
-    <div class="t-slbl">${lblMap[state]}</div>
-    <div class="tt"><div class="tt-hdr">Table ${t.num}</div>${tooltip}</div>
-  </div>`;
-}
-
-function renderFloor(){
-  renderStats();
-  document.getElementById('grid-indoor').innerHTML=TABLES.filter(t=>t.section==='indoor').map(buildCard).join('');
-  document.getElementById('grid-bar').innerHTML=TABLES.filter(t=>t.section==='bar').map(buildCard).join('');
-  document.getElementById('grid-patio').innerHTML=TABLES.filter(t=>t.section==='patio').map(buildCard).join('');
-}
-
+// ── TABLE CLICK ──
 function tableClick(tid){
-  actionTableId=tid;
-  const t=TABLES.find(x=>x.id===tid);
-  const{state,r}=getTableState(tid);
-  document.getElementById('tmod-title').textContent=`Table ${t.num}`;
-  let info='',acts='';
+  actionTid = tid;
+  const t = window.HiveData.tables().find(x=>x.id===tid);
+  const {state, r} = getTableState(tid);
+  document.getElementById('tmod-title').textContent = `Table ${t.num}`;
+  let info = '', acts = '';
   if(state==='seated'&&r){
     info=`<div class="dr"><span class="l">Guest</span><span class="v">${r.first} ${r.last}</span></div>
     <div class="dr"><span class="l">Party</span><span class="v">${r.party} guests</span></div>
@@ -324,121 +426,151 @@ function tableClick(tid){
     <div class="dr"><span class="l">Seated at</span><span class="v">${fmtTime(r.time)}</span></div>
     <div class="dr"><span class="l">RSVP #</span><span class="v" style="color:var(--gold)">${r.id}</span></div>`;
     acts=`<button class="floor-act fa-change" onclick="openChangeSeat('${r.id}')">↔ Change Table</button>
-    <button class="floor-act fa-dirty" onclick="markAvailable('${tid}','dirty');closeModal('table-modal')">🧹 Flag for Bussing (Table Available)</button>`;
-  }else if(state==='reserved'&&r){
+    <button class="floor-act fa-dirty" onclick="markState('${tid}','dirty');closeModal('table-modal')">🧹 Flag for Bussing — Table Available</button>`;
+  } else if(state==='reserved'&&r){
     info=`<div class="dr"><span class="l">Reserved for</span><span class="v">${r.first} ${r.last}</span></div>
-    <div class="dr"><span class="l">Party of</span><span class="v">${r.party}</span></div>
-    <div class="dr"><span class="l">Arrives at</span><span class="v">${fmtTime(r.time)}</span></div>
+    <div class="dr"><span class="l">Party</span><span class="v">${r.party}</span></div>
+    <div class="dr"><span class="l">Arrives</span><span class="v">${fmtTime(r.time)}</span></div>
     <div class="dr"><span class="l">Server</span><span class="v">${r.server||'—'}</span></div>`;
-    acts=`<button class="floor-act fa-seat" onclick="seatConfirmed('${r.id}','${tid}')">🪑 Seat Guest Now</button>
+    acts=`<button class="floor-act fa-seat" onclick="seatNow('${r.id}','${tid}')">🪑 Seat Guest Now</button>
     <button class="floor-act fa-change" onclick="openChangeSeat('${r.id}')">↔ Change Their Table</button>`;
-  }else if(state==='dirty'){
-    info=`<div style="text-align:center;padding:12px 0;color:var(--red);font-size:13px">⚠ This table needs to be bussed.</div>`;
-    acts=`<button class="floor-act fa-clean" onclick="markAvailable('${tid}','open');closeModal('table-modal')">✓ Mark as Clean & Available</button>`;
-  }else{
-    info=`<div style="text-align:center;padding:12px 0;color:var(--green);font-size:13px">Table is open — ${t.cap} seats available.</div>`;
-    acts=`<button class="floor-act fa-seat" onclick="closeModal('table-modal');openSeatModal('${tid}')">🪑 Seat a Confirmed Guest Here</button>
+  } else if(state==='dirty'){
+    info=`<div class="warn-tag" style="margin:0">⚠ This table needs to be bussed before seating.</div>`;
+    acts=`<button class="floor-act fa-clean" onclick="markState('${tid}','open');closeModal('table-modal')">✓ Mark Clean & Available</button>`;
+  } else {
+    info=`<div style="text-align:center;padding:10px 0;color:var(--green);font-size:13px">Table ${t.num} is open · ${t.cap} seats</div>`;
+    acts=`<button class="floor-act fa-seat" onclick="closeModal('table-modal');openSeatModal('${tid}')">🪑 Seat Confirmed Guest Here</button>
     <button class="floor-act fa-walkin" onclick="closeModal('table-modal');openWalkIn('${tid}')">🚶 Seat Walk-In Here</button>
-    <button class="floor-act fa-dirty" onclick="markAvailable('${tid}','dirty');closeModal('table-modal')">🧹 Flag for Bussing</button>`;
+    <button class="floor-act fa-dirty" onclick="markState('${tid}','dirty');closeModal('table-modal')">🧹 Flag for Bussing</button>`;
   }
-  document.getElementById('tmod-info').innerHTML=info;
-  document.getElementById('tmod-actions').innerHTML=acts;
+  document.getElementById('tmod-info').innerHTML = info;
+  document.getElementById('tmod-acts').innerHTML = acts;
   document.getElementById('table-modal').classList.add('show');
 }
 
-function seatConfirmed(rsvId,tid){
-  const r=reservations.find(x=>x.id===rsvId);if(!r)return;
-  r.status='Seated';r.table=tid;
-  showToast(`${r.first} ${r.last} seated at Table ${TABLES.find(t=>t.id===tid)?.num}`,'success');
-  closeModal('table-modal');renderFloor();
+function seatNow(rsvId, tid){
+  const d = window.HiveData.get();
+  const r = d.reservations.find(x=>x.id===rsvId);
+  if(!r) return;
+  r.status='Seated'; r.table=tid;
+  r.activities = r.activities||[];
+  r.activities.push({type:'status',text:`Seated at ${tid} from floor map`,time:nowStr()});
+  window.HiveData.updateReservation(r);
+  const t = window.HiveData.tables().find(x=>x.id===tid);
+  showToast(`${r.first} ${r.last} seated at Table ${t?.num}`,'success');
+  closeModal('table-modal'); renderFloor();
 }
 
-function markAvailable(tid,state){
-  if(state==='dirty'){tableStates[tid]='dirty';showToast('Table flagged for bussing','info');}
-  else{delete tableStates[tid];showToast('Table marked as clean & available','success');}
+function markState(tid, state){
+  window.HiveData.setTableState(tid, state);
+  if(state==='dirty') showToast('Table flagged for bussing','info');
+  else showToast('Table marked as clean & available','success');
   renderFloor();
 }
 
-function openSeatModal(preselectedTableId){
-  const confirmed=reservations.filter(r=>r.date===TODAY&&r.status==='RSVP Confirmed');
-  const sel=document.getElementById('seat-rsv-sel');
-  sel.innerHTML='<option value="">Select a reservation…</option>'+confirmed.map(r=>`<option value="${r.id}">${r.first} ${r.last} · Party ${r.party} · ${fmtTime(r.time)}</option>`).join('');
-  const tsel=document.getElementById('seat-table-sel');
-  const open=TABLES.filter(t=>{const{state}=getTableState(t.id);return state==='open';});
-  tsel.innerHTML='<option value="">Select table…</option>'+open.map(t=>`<option value="${t.id}" ${t.id===preselectedTableId?'selected':''}>Table ${t.num} (${t.cap} seats)</option>`).join('');
-  document.getElementById('seat-info').textContent='Select a confirmed reservation for today and assign them to an open table.';
+// SEAT MODAL
+function openSeatModal(preTable){
+  seatPreTable = preTable;
+  const d = window.HiveData.get();
+  const confirmed = d.reservations.filter(r=>r.date===TODAY&&r.status==='RSVP Confirmed');
+  const sel = document.getElementById('seat-rsv-sel');
+  sel.innerHTML='<option value="">Select reservation…</option>'+confirmed.map(r=>`<option value="${r.id}">${r.first} ${r.last} · Party ${r.party} · ${fmtTime(r.time)}</option>`).join('');
+  const tsel = document.getElementById('seat-tbl-sel');
+  const open = window.HiveData.tables().filter(t=>{const{state}=getTableState(t.id);return state==='open';});
+  tsel.innerHTML='<option value="">Select table…</option>'+open.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap} seats)</option>`).join('');
+  if(!preTable) document.getElementById('seat-tbl-grp').style.display='block';
   document.getElementById('seat-modal').classList.add('show');
 }
 function submitSeat(){
-  const rsvId=document.getElementById('seat-rsv-sel').value;
-  const tId=document.getElementById('seat-table-sel').value;
-  if(!rsvId||!tId){showToast('Select a reservation and table','warning');return;}
-  const r=reservations.find(x=>x.id===rsvId);if(!r)return;
-  r.status='Seated';r.table=tId;
-  const t=TABLES.find(x=>x.id===tId);
+  const rsvId = document.getElementById('seat-rsv-sel').value;
+  const tid = document.getElementById('seat-tbl-sel').value || seatPreTable;
+  if(!rsvId||!tid){showToast('Select reservation and table','warning');return;}
+  const d = window.HiveData.get();
+  const r = d.reservations.find(x=>x.id===rsvId);
+  if(!r) return;
+  r.status='Seated'; r.table=tid;
+  r.activities = r.activities||[];
+  r.activities.push({type:'status',text:`Seated at ${tid}`,time:nowStr()});
+  window.HiveData.updateReservation(r);
+  const t = window.HiveData.tables().find(x=>x.id===tid);
   showToast(`${r.first} ${r.last} seated at Table ${t?.num}`,'success');
-  closeModal('seat-modal');renderFloor();
+  closeModal('seat-modal'); renderFloor();
 }
 
+// WALK-IN
+function openWalkIn(preTable){
+  seatPreTable = preTable||null;
+  const open = window.HiveData.tables().filter(t=>{const{state}=getTableState(t.id);return state==='open';});
+  const tsel = document.getElementById('wi-table');
+  tsel.innerHTML='<option value="">Select table…</option>'+open.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap})</option>`).join('');
+  const ssel = document.getElementById('wi-server');
+  ssel.innerHTML='<option value="">Unassigned</option>'+window.HiveData.servers().map(s=>`<option>${s.name}</option>`).join('');
+  ['wi-first','wi-last','wi-phone','wi-party'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('walkin-modal').classList.add('show');
+}
+function submitWalkIn(){
+  const first = document.getElementById('wi-first').value.trim();
+  const party = document.getElementById('wi-party').value;
+  const table = document.getElementById('wi-table').value;
+  if(!first||!party){showToast('Name and party size required','warning');return;}
+  const now = new Date().toTimeString().slice(0,5);
+  const newId = window.HiveData.genId();
+  const r = {id:newId,first,last:document.getElementById('wi-last').value||'',phone:document.getElementById('wi-phone').value||'',date:TODAY,time:now,party:+party,status:'Seated',server:document.getElementById('wi-server').value,table:table||'',notes:'walk-in',requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,
+    activities:[{type:'walkin',text:`Walk-in created — ${first}, party ${party}${table?' at Table '+table:''}`,time:nowStr()}]};
+  window.HiveData.addReservation(r);
+  if(table) window.HiveData.setTableState(table, 'open');
+  showToast(`Walk-in ${first} seated · Task ID: ${newId}`,'success');
+  closeModal('walkin-modal'); renderFloor();
+}
+
+// CHANGE SEAT
+let changingSeatRsvId=null;
 function openChangeSeat(rsvId){
   changingSeatRsvId=rsvId;
-  const r=reservations.find(x=>x.id===rsvId);
-  const open=TABLES.filter(t=>{const{state}=getTableState(t.id);return state==='open'||t.id===r.table;});
-  const sel=document.getElementById('cs-table');
-  sel.innerHTML=open.map(t=>`<option value="${t.id}" ${t.id===r?.table?'selected':''}>Table ${t.num} (${t.cap} seats)</option>`).join('');
+  const d = window.HiveData.get();
+  const r = d.reservations.find(x=>x.id===rsvId);
+  const open = window.HiveData.tables().filter(t=>{const{state}=getTableState(t.id);return state==='open'||t.id===r?.table;});
+  const sel = document.getElementById('cs-table');
+  sel.innerHTML=open.map(t=>`<option value="${t.id}" ${t.id===r?.table?'selected':''}>Table ${t.num} (${t.cap})</option>`).join('');
   closeModal('table-modal');
   document.getElementById('changeseat-modal').classList.add('show');
 }
 function submitChangeSeat(){
-  const tId=document.getElementById('cs-table').value;
-  const r=reservations.find(x=>x.id===changingSeatRsvId);if(!r)return;
-  r.table=tId;
-  const t=TABLES.find(x=>x.id===tId);
+  const tid = document.getElementById('cs-table').value;
+  const d = window.HiveData.get();
+  const r = d.reservations.find(x=>x.id===changingSeatRsvId);
+  if(!r) return;
+  const old = r.table;
+  r.table = tid;
+  r.activities = r.activities||[];
+  r.activities.push({type:'status',text:`Table changed: ${old} → ${tid}`,time:nowStr()});
+  window.HiveData.updateReservation(r);
+  const t = window.HiveData.tables().find(x=>x.id===tid);
   showToast(`${r.first} moved to Table ${t?.num}`,'success');
-  closeModal('changeseat-modal');renderFloor();
+  closeModal('changeseat-modal'); renderFloor();
 }
 
-function openWalkIn(preTable){
-  const open=TABLES.filter(t=>{const{state}=getTableState(t.id);return state==='open';});
-  const sel=document.getElementById('wi-table');
-  sel.innerHTML='<option value="">Select table…</option>'+open.map(t=>`<option value="${t.id}" ${t.id===preTable?'selected':''}>Table ${t.num} (${t.cap} seats)</option>`).join('');
-  document.getElementById('wi-first').value='';
-  document.getElementById('wi-last').value='';
-  document.getElementById('wi-phone').value='';
-  document.getElementById('wi-party').value='';
-  document.getElementById('wi-server').value='';
-  document.getElementById('walkin-modal').classList.add('show');
-}
-function submitWalkIn(){
-  const first=document.getElementById('wi-first').value.trim();
-  const party=document.getElementById('wi-party').value;
-  const table=document.getElementById('wi-table').value;
-  if(!first||!party){showToast('Name and party size required','warning');return;}
-  const now=new Date().toTimeString().slice(0,5);
-  const newId=genId();
-  const r={id:newId,first,last:document.getElementById('wi-last').value||'(Walk-In)',phone:document.getElementById('wi-phone').value||'',date:TODAY,time:now,party:+party,status:'Seated',server:document.getElementById('wi-server').value,table:table||'',notes:'walk-in',orderTotal:null};
-  reservations.push(r);
-  if(table)delete tableStates[table];
-  showToast(`Walk-in ${first} seated · Task ID: ${newId}`,'success');
-  closeModal('walkin-modal');renderFloor();
-}
-
-function closeModal(id){document.getElementById(id).classList.remove('show')}
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')})});
+function nowStr(){return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');});});
 
 // CLOCK
 function updateClock(){
   const now=new Date();
   document.getElementById('clock').textContent=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
-  document.getElementById('date-str').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('date-str').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
-setInterval(updateClock,1000);updateClock();
-setInterval(renderFloor,30000);
+setInterval(updateClock,1000); updateClock();
+setInterval(()=>renderFloor(),20000);
+
+// SYNC from other tabs
+window.addEventListener('hive_reload',()=>renderFloor());
 
 let dark=true;
 function toggleTheme(){
   dark=!dark;
   document.documentElement.setAttribute('data-theme',dark?'':'light');
+  renderFloor();
 }
 
 let toastT;
