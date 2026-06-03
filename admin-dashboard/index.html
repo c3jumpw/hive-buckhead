@@ -3,243 +3,317 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hive Buckhead — Admin</title>
+<title>Hive Buckhead — Admin Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="shared.js"></script>
 <style>
-:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.12);--amber:#D4A020;--amber-bg:rgba(212,160,32,.12);--red:#C4524A;--red-bg:rgba(196,82,74,.12);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.12);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.12)}
-[data-theme="light"]{--bg:#F7F4EF;--surface:#FFFFFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.1);--amber-bg:rgba(212,160,32,.1);--red-bg:rgba(196,82,74,.1);--blue-bg:rgba(91,150,200,.1);--purple-bg:rgba(155,126,200,.1)}
+:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.12);--amber:#D4A020;--amber-bg:rgba(212,160,32,.12);--red:#C4524A;--red-bg:rgba(196,82,74,.12);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.12);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.12);--teal:#3AACA8;--teal-bg:rgba(58,172,168,.12)}
+[data-theme="light"]{--bg:#F7F4EF;--surface:#FFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.1);--amber-bg:rgba(212,160,32,.1);--red-bg:rgba(196,82,74,.1);--blue-bg:rgba(91,150,200,.1);--purple-bg:rgba(155,126,200,.1)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
-.nav-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);letter-spacing:.08em}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:52px;border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--gold);letter-spacing:.08em}
 .nav-brand span{color:var(--text-m);font-weight:300}
 .admin-tag{background:var(--gold);color:#0E0C0A;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;letter-spacing:.06em}
-.layout{display:flex;height:calc(100vh - 54px);overflow:hidden}
-.sidebar{width:190px;flex-shrink:0;border-right:.5px solid var(--border);background:var(--surface);overflow-y:auto;padding:1rem 0}
-.sidebar-section{padding:0 .75rem;margin-bottom:1.25rem}
+.sync-tag{background:var(--green-bg);border:.5px solid rgba(76,175,130,.4);color:var(--green);font-size:11px;padding:2px 9px;border-radius:10px;display:flex;align-items:center;gap:5px}
+.layout{display:flex;height:calc(100vh - 52px);overflow:hidden}
+.sidebar{width:185px;flex-shrink:0;border-right:.5px solid var(--border);background:var(--surface);overflow-y:auto;padding:1rem 0}
+.sidebar-section{padding:0 .7rem;margin-bottom:1.2rem}
 .sidebar-label{font-size:10px;font-weight:500;letter-spacing:.1em;color:var(--text-d);text-transform:uppercase;margin-bottom:5px;padding:0 6px}
-.sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:var(--text-m);font-size:12.5px;transition:all .12s;margin-bottom:1px;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
-.sidebar-item:hover{background:var(--surface2);color:var(--text)}
-.sidebar-item.active{background:var(--surface3);color:var(--gold)}
-.sidebar-item svg{width:14px;height:14px;flex-shrink:0}
-.main{flex:1;overflow-y:auto;padding:24px}
+.sb{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:var(--text-m);font-size:12px;transition:all .12s;margin-bottom:1px;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.sb:hover{background:var(--surface2);color:var(--text)}
+.sb.active{background:var(--surface3);color:var(--gold)}
+.sb svg{width:13px;height:13px;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:20px 24px}
 .page{display:none}.page.active{display:block}
-h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--gold);margin-bottom:4px}
-.page-sub{font-size:13px;color:var(--text-m);margin-bottom:20px}
-.card{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:16px}
-.card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-/* METRICS */
-.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.metric-card{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:16px}
-.metric-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;line-height:1;margin-bottom:4px}
-.metric-lbl{font-size:11px;color:var(--text-m)}
-.metric-sub{font-size:11px;color:var(--text-d);margin-top:3px}
-/* TABLE */
-.data-table{width:100%;border-collapse:collapse}
-.data-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text-d);text-transform:uppercase;border-bottom:.5px solid var(--border);background:var(--surface2)}
-.data-table td{padding:10px 12px;border-bottom:.5px solid var(--border);font-size:13px}
-.data-table tr:last-child td{border-bottom:none}
-.data-table tr:hover td{background:var(--surface2)}
-/* BAR CHART */
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
-.bar-lbl{width:80px;color:var(--text-m);text-align:right;flex-shrink:0}
-.bar-track{flex:1;background:var(--surface2);border-radius:4px;height:16px;overflow:hidden;border:.5px solid var(--border)}
-.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:500}
-.bar-val{width:50px;text-align:right;color:var(--text-m);flex-shrink:0}
+h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--gold);margin-bottom:3px}
+.page-sub{font-size:12.5px;color:var(--text-m);margin-bottom:18px}
+/* METRIC GRID */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:18px}
+.mc{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.mc-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;line-height:1;margin-bottom:3px}
+.mc-lbl{font-size:11px;color:var(--text-m)}
+.mc-sub{font-size:10px;color:var(--text-d);margin-top:2px}
+.mc-trend{font-size:10px;margin-top:3px}
+.trend-up{color:var(--green)}
+.trend-dn{color:var(--red)}
+/* CARDS */
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:1.1rem;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-sub{font-size:11px;color:var(--text-d)}
+/* TABLES */
+.dt{width:100%;border-collapse:collapse}
+.dt th{padding:7px 11px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text-d);text-transform:uppercase;border-bottom:.5px solid var(--border);background:var(--surface2)}
+.dt td{padding:9px 11px;border-bottom:.5px solid var(--border);font-size:12.5px}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--surface2)}
+/* BAR CHARTS */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.bar-lbl{width:90px;color:var(--text-m);text-align:right;flex-shrink:0;font-size:11px}
+.bar-track{flex:1;background:var(--surface2);border-radius:4px;height:18px;overflow:hidden;border:.5px solid var(--border)}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:500;min-width:24px;transition:width .7s ease}
+.bar-val{width:52px;text-align:right;color:var(--text-m);flex-shrink:0;font-size:11px}
+/* INLINE CHART */
+.mini-chart{display:grid;gap:3px;align-items:end;height:60px;margin-bottom:6px}
+.mc-bar{border-radius:2px 2px 0 0;min-height:3px;transition:height .5s}
+.mc-lbl-row{display:flex;font-size:9px;color:var(--text-d)}
 /* FORM */
-.form-group{margin-bottom:12px}
-.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px}
-.form-input,.form-select,.form-textarea{width:100%;padding:8px 11px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.form-group{margin-bottom:11px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:3px}
+.form-input,.form-select,.form-textarea{width:100%;padding:7px 10px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
 .form-input::placeholder,.form-textarea::placeholder{color:var(--text-d)}
-.form-textarea{resize:vertical;min-height:60px;line-height:1.5}
+.form-textarea{resize:vertical;min-height:56px;line-height:1.5}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
+.btn{padding:5px 13px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
 .btn:hover{background:var(--surface2);border-color:var(--gold)}
 .btn-primary{background:var(--gold);color:#0E0C0A;border-color:var(--gold)}
 .btn-primary:hover{background:var(--gold-light)}
-.btn-sm{padding:5px 12px;font-size:12px}
-.btn-danger{background:var(--red-bg);color:var(--red);border-color:rgba(196,82,74,.4)}
-/* SERVER LIST */
-.server-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border)}
-.server-row:last-child{border-bottom:none}
-.server-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
-.server-name{font-weight:500;font-size:13px}
-.server-role{font-size:11px;color:var(--text-m)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-danger{color:var(--red);border-color:rgba(196,82,74,.35)}.btn-danger:hover{background:var(--red-bg)}
+/* SERVER ROWS */
+.sv-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border)}
+.sv-row:last-child{border-bottom:none}
+.sv-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
 /* TABLE CONFIG */
-.tbl-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px}
-.tbl-row:last-child{border-bottom:none}
-.tbl-num{width:60px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold)}
-/* msg templates */
-.tmpl-row{background:var(--surface2);border:.5px solid var(--border);border-radius:7px;padding:10px 12px;margin-bottom:8px}
-.tmpl-type{font-size:10px;color:var(--text-d);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.tmpl-text{font-size:12.5px;color:var(--text-m);line-height:1.5;white-space:pre-wrap}
-/* time-of-day chart */
-.tod-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:80px;margin-bottom:8px}
-.tod-bar{border-radius:3px 3px 0 0;transition:height .5s ease;min-height:4px;cursor:pointer;position:relative}
-.tod-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface);border:.5px solid var(--border-s);border-radius:4px;padding:3px 7px;font-size:10px;white-space:nowrap;z-index:10}
-.tod-labels{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;font-size:9px;color:var(--text-d);text-align:center}
-/* tag */
-.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
-.tag-green{background:var(--green-bg);color:var(--green)}
-.tag-amber{background:var(--amber-bg);color:var(--amber)}
-.tag-red{background:var(--red-bg);color:var(--red)}
-.tag-blue{background:var(--blue-bg);color:var(--blue)}
-.toast{position:fixed;bottom:20px;right:20px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:9px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none}
+.tc-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border);font-size:12.5px}
+.tc-row:last-child{border-bottom:none}
+.tc-num{width:56px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--gold)}
+/* TEMPLATES */
+.tmpl-row{background:var(--surface2);border:.5px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:7px}
+.tmpl-type{font-size:9px;color:var(--text-d);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.tmpl-text{font-size:12px;color:var(--text-m);line-height:1.5;white-space:pre-wrap}
+/* TAGS */
+.tag{display:inline-block;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:500}
+.tg{background:var(--green-bg);color:var(--green)}.ta{background:var(--amber-bg);color:var(--amber)}.tr{background:var(--red-bg);color:var(--red)}.tb{background:var(--blue-bg);color:var(--blue)}.tp{background:var(--purple-bg);color:var(--purple)}
+/* TWO COL GRID */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:420px;max-height:90vh;overflow-y:auto;padding:1.3rem;transform:translateY(8px);transition:transform .15s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--gold);margin-bottom:.9rem}
+.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:.9rem}
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none}
 .toast.show{transform:translateY(0) scale(1);opacity:1}
 .toast-icon{width:7px;height:7px;border-radius:50%}
 .toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
+/* HEATMAP */
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.hm-cell{height:28px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;cursor:default;transition:filter .1s}
+.hm-cell:hover{filter:brightness(1.2)}
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.donut-legend{display:flex;flex-direction:column;gap:5px}
+.dl-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-m)}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* REAL-TIME BANNER */
+.rt-banner{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--green-bg);border:.5px solid rgba(76,175,130,.3);border-radius:6px;font-size:11.5px;color:var(--green);margin-bottom:14px}
+.rt-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
 <nav class="nav">
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:10px">
     <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
     <div class="admin-tag">SUPER ADMIN</div>
   </div>
   <div style="display:flex;gap:8px;align-items:center">
-    <button class="btn btn-sm" onclick="toggleTheme()">🌓 Theme</button>
+    <div class="sync-tag"><div class="rt-dot"></div>Live sync via localStorage</div>
+    <span id="sync-label" style="font-size:10px;color:var(--text-d)">—</span>
+    <button class="btn btn-sm" onclick="toggleTheme()">🌓</button>
     <a href="index.html"><button class="btn btn-sm">← Reservations</button></a>
+    <a href="floor.html"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
   </div>
 </nav>
 <div class="layout">
 <aside class="sidebar">
   <div class="sidebar-section">
     <div class="sidebar-label">Analytics</div>
-    <button class="sidebar-item active" onclick="showPage('overview',this)">
+    <button class="sb active" onclick="showPage('overview',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Overview
     </button>
-    <button class="sidebar-item" onclick="showPage('staff',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Staff Performance
+    <button class="sb" onclick="showPage('revenue',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Revenue
     </button>
-    <button class="sidebar-item" onclick="showPage('tables',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Table Analytics
+    <button class="sb" onclick="showPage('staff',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Staff
     </button>
-    <button class="sidebar-item" onclick="showPage('timeofday',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Time of Day
+    <button class="sb" onclick="showPage('tables',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Tables
+    </button>
+    <button class="sb" onclick="showPage('patterns',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Patterns
+    </button>
+    <button class="sb" onclick="showPage('guests',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Guests
     </button>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Configuration</div>
-    <button class="sidebar-item" onclick="showPage('servers',this)">
+    <button class="sb" onclick="showPage('servers',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Servers
     </button>
-    <button class="sidebar-item" onclick="showPage('tableconfig',this)">
+    <button class="sb" onclick="showPage('tableconfig',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tables & Sections
     </button>
-    <button class="sidebar-item" onclick="showPage('templates',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message Templates
+    <button class="sb" onclick="showPage('templates',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Templates
     </button>
-    <button class="sidebar-item" onclick="showPage('integrations',this)">
+    <button class="sb" onclick="showPage('integrations',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Integrations
     </button>
   </div>
 </aside>
 <div class="main">
 
-<!-- OVERVIEW PAGE -->
+<!-- OVERVIEW -->
 <div class="page active" id="page-overview">
-  <h2>Analytics Overview</h2>
-  <div class="page-sub">All-time metrics across reservations, revenue, and guest behavior.</div>
-  <div class="metric-grid">
-    <div class="metric-card"><div class="metric-val" style="color:var(--gold)">247</div><div class="metric-lbl">Total Reservations</div><div class="metric-sub">All time</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--green)">$41,820</div><div class="metric-lbl">Total Revenue</div><div class="metric-sub">Logged orders</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--blue)">892</div><div class="metric-lbl">Total Covers</div><div class="metric-sub">Seated guests</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--purple)">3.6</div><div class="metric-lbl">Avg Party Size</div><div class="metric-sub">Per reservation</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--amber)">$169</div><div class="metric-lbl">Avg Order</div><div class="metric-sub">Per table</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--red)">8%</div><div class="metric-lbl">Cancellation Rate</div><div class="metric-sub">Last 30 days</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--green)">91%</div><div class="metric-lbl">Show Rate</div><div class="metric-sub">Confirmed → seated</div></div>
-    <div class="metric-card"><div class="metric-val" style="color:var(--teal,#3AACA8)">14</div><div class="metric-lbl">Walk-Ins</div><div class="metric-sub">This month</div></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Reservations by Status (last 30 days)
-      <span style="font-size:11px;color:var(--text-d)">247 total</span>
+  <h2>Overview</h2>
+  <div class="page-sub" id="overview-sub">Loading…</div>
+  <div class="rt-banner"><div class="rt-dot"></div>Live data — synced across all three pages via shared localStorage. In production, replace with ClickUp API + Google Sheets webhook.</div>
+  <div class="metric-grid" id="overview-metrics"></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Reservations by Status <span class="card-sub" id="status-period">All time</span></div>
+      <div id="status-bars"></div>
     </div>
-    <div>
-      <div class="bar-row"><span class="bar-lbl">Completed</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--green-bg);color:var(--green)">179</div></div><span class="bar-val">72%</span></div>
-      <div class="bar-row"><span class="bar-lbl">Confirmed</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--blue-bg);color:var(--blue)">30</div></div><span class="bar-val">12%</span></div>
-      <div class="bar-row"><span class="bar-lbl">Seated</span><div class="bar-track"><div class="bar-fill" style="width:6%;background:var(--purple-bg);color:var(--purple)">14</div></div><span class="bar-val">6%</span></div>
-      <div class="bar-row"><span class="bar-lbl">Requested</span><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--amber-bg);color:var(--amber)">12</div></div><span class="bar-val">5%</span></div>
-      <div class="bar-row"><span class="bar-lbl">Cancelled</span><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--red-bg);color:var(--red)">12</div></div><span class="bar-val">5%</span></div>
+    <div class="card">
+      <div class="card-title">Guest Type Split</div>
+      <div class="donut-wrap" id="guest-split"></div>
     </div>
   </div>
   <div class="card">
-    <div class="card-title">Revenue by Month</div>
-    <div>
-      <div class="bar-row"><span class="bar-lbl">Jun 2026</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--gold);color:#0E0C0A">$8,420</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">May 2026</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--green-bg);color:var(--green)">$12,110</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">Apr 2026</span><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--green-bg);color:var(--green)">$11,290</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">Mar 2026</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--blue-bg);color:var(--blue)">$10,000</div></div></div>
-    </div>
+    <div class="card-title">Last 7 Days — Daily Reservation Volume</div>
+    <div id="daily-chart" style="display:flex;gap:4px;align-items:flex-end;height:70px;margin-bottom:6px"></div>
+    <div id="daily-labels" style="display:flex;gap:4px;font-size:9px;color:var(--text-d)"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent Activity Feed</div>
+    <div id="activity-feed"></div>
   </div>
 </div>
 
-<!-- STAFF PAGE -->
+<!-- REVENUE -->
+<div class="page" id="page-revenue">
+  <h2>Revenue Analytics</h2>
+  <div class="page-sub">Order totals, tips, and cover-based metrics from completed reservations.</div>
+  <div class="metric-grid" id="rev-metrics"></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Revenue by Month</div>
+      <div id="rev-monthly"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Revenue by Section</div>
+      <div id="rev-section"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Top Orders</div>
+    <table class="dt"><thead><tr><th>Guest</th><th>Date</th><th>Party</th><th>Server</th><th>Order Total</th><th>RSVP #</th></tr></thead>
+    <tbody id="top-orders"></tbody></table>
+  </div>
+</div>
+
+<!-- STAFF -->
 <div class="page" id="page-staff">
   <h2>Staff Performance</h2>
-  <div class="page-sub">Reservations served, covers, and average order by server.</div>
+  <div class="page-sub">Reservations, covers, revenue, and cancellations by server.</div>
+  <div class="metric-grid" id="staff-metrics"></div>
   <div class="card">
     <div class="card-title">Server Leaderboard</div>
-    <table class="data-table">
-      <thead><tr><th>Server</th><th>Reservations</th><th>Covers</th><th>Avg Order</th><th>Revenue</th><th>Rating</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Ashley Smith</strong></td><td>78</td><td>212</td><td>$184</td><td style="color:var(--green)">$14,320</td><td><span class="tag tag-green">⭐ 4.9</span></td></tr>
-        <tr><td><strong>Devon Harris</strong></td><td>63</td><td>201</td><td>$175</td><td style="color:var(--green)">$11,025</td><td><span class="tag tag-green">⭐ 4.8</span></td></tr>
-        <tr><td><strong>Marcus Rivera</strong></td><td>59</td><td>178</td><td>$162</td><td style="color:var(--green)">$9,558</td><td><span class="tag tag-amber">⭐ 4.6</span></td></tr>
-        <tr><td><strong>Jenna Park</strong></td><td>47</td><td>152</td><td>$149</td><td style="color:var(--green)">$7,003</td><td><span class="tag tag-amber">⭐ 4.5</span></td></tr>
-      </tbody>
-    </table>
+    <table class="dt"><thead><tr><th>Server</th><th>Reservations</th><th>Covers</th><th>Avg Order</th><th>Revenue</th><th>Cancellations</th><th>Show Rate</th></tr></thead>
+    <tbody id="staff-table"></tbody></table>
   </div>
-  <div class="card">
-    <div class="card-title">Cancellations by Server</div>
-    <div>
-      <div class="bar-row"><span class="bar-lbl">Marcus</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--amber-bg);color:var(--amber)">5</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">Jenna</span><div class="bar-track"><div class="bar-fill" style="width:16%;background:var(--amber-bg);color:var(--amber)">4</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">Devon</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--blue-bg);color:var(--blue)">3</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">Ashley</span><div class="bar-track"><div class="bar-fill" style="width:8%;background:var(--green-bg);color:var(--green)">2</div></div></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Covers by Server</div>
+      <div id="staff-covers-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Revenue by Server</div>
+      <div id="staff-rev-chart"></div>
     </div>
   </div>
 </div>
 
-<!-- TABLES PAGE -->
+<!-- TABLES -->
 <div class="page" id="page-tables">
   <h2>Table Analytics</h2>
-  <div class="page-sub">Turn times, utilization, and revenue per table.</div>
+  <div class="page-sub">Utilization, turn times, and revenue per table across all sections.</div>
+  <div class="metric-grid" id="table-metrics"></div>
   <div class="card">
-    <table class="data-table">
-      <thead><tr><th>Table</th><th>Section</th><th>Capacity</th><th>Reservations</th><th>Avg Turn (min)</th><th>Utilization</th><th>Revenue</th></tr></thead>
-      <tbody id="table-analytics-body"></tbody>
-    </table>
+    <div class="card-title">Table Performance</div>
+    <table class="dt"><thead><tr><th>Table</th><th>Section</th><th>Cap</th><th>Reservations</th><th>Avg Turn</th><th>Utilization</th><th>Revenue</th></tr></thead>
+    <tbody id="table-perf-body"></tbody></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Table Utilization Heatmap <span class="card-sub">(relative to highest-use table)</span></div>
+    <div class="heatmap" id="util-heatmap"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;font-size:10px;color:var(--text-d)">
+      <span>Low ←</span>
+      <div style="flex:1;height:8px;border-radius:3px;background:linear-gradient(to right,var(--surface3),var(--gold));margin-top:1px"></div>
+      <span>→ High</span>
+    </div>
   </div>
 </div>
 
-<!-- TIME OF DAY -->
-<div class="page" id="page-timeofday">
-  <h2>Reservations by Time of Day</h2>
-  <div class="page-sub">When guests arrive — hourly distribution across all reservations.</div>
-  <div class="card">
-    <div class="card-title">Hourly Arrival Distribution</div>
-    <div class="tod-grid" id="tod-chart"></div>
-    <div class="tod-labels" id="tod-labels"></div>
+<!-- PATTERNS -->
+<div class="page" id="page-patterns">
+  <h2>Booking Patterns</h2>
+  <div class="page-sub">Time of day, day of week, and party size distributions.</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Hourly Arrival Distribution</div>
+      <div id="hourly-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Day of Week Volume</div>
+      <div id="dow-bars"></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Party Size Distribution</div>
+      <div id="party-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Lead Time (days in advance booked)</div>
+      <div id="lead-bars"></div>
+    </div>
   </div>
   <div class="card">
-    <div class="card-title">Peak Hours Summary</div>
-    <div>
-      <div class="bar-row"><span class="bar-lbl">7–8 PM</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--gold);color:#0E0C0A">38 reservations</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">6–7 PM</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--amber-bg);color:var(--amber)">33</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">8–9 PM</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--amber-bg);color:var(--amber)">28</div></div></div>
-      <div class="bar-row"><span class="bar-lbl">5–6 PM</span><div class="bar-track"><div class="bar-fill" style="width:42%;background:var(--blue-bg);color:var(--blue)">17</div></div></div>
-    </div>
+    <div class="card-title">Weekly Reservation Volume — Past 8 Weeks</div>
+    <div id="weekly-chart" style="display:flex;gap:5px;align-items:flex-end;height:80px;margin-bottom:5px"></div>
+    <div id="weekly-labels" style="display:flex;gap:5px;font-size:9px;color:var(--text-d)"></div>
+  </div>
+</div>
+
+<!-- GUESTS -->
+<div class="page" id="page-guests">
+  <h2>Guest Insights</h2>
+  <div class="page-sub">Repeat guests, cancellation patterns, and notable reservations.</div>
+  <div class="metric-grid" id="guest-metrics"></div>
+  <div class="card">
+    <div class="card-title">All Reservations (from shared data)</div>
+    <table class="dt"><thead><tr><th>Guest</th><th>Date</th><th>Party</th><th>Status</th><th>Server</th><th>Order</th><th>RSVP #</th></tr></thead>
+    <tbody id="guests-table"></tbody></table>
   </div>
 </div>
 
 <!-- SERVERS CONFIG -->
 <div class="page" id="page-servers">
   <h2>Server Management</h2>
-  <div class="page-sub">Add, edit, and manage your floor staff.</div>
+  <div class="page-sub">Add, edit, and remove floor staff. Changes sync to all pages.</div>
   <div class="card">
-    <div class="card-title">Current Servers <button class="btn btn-sm btn-primary" onclick="showToast('Add server form coming soon','info')">+ Add Server</button></div>
+    <div class="card-title">Current Servers
+      <button class="btn btn-sm btn-primary" onclick="openAddServer()">+ Add Server</button>
+    </div>
     <div id="server-list"></div>
   </div>
 </div>
@@ -247,149 +321,404 @@ h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:v
 <!-- TABLE CONFIG -->
 <div class="page" id="page-tableconfig">
   <h2>Tables & Sections</h2>
-  <div class="page-sub">Configure table numbers, capacity, and section assignments.</div>
-  <div class="card">
-    <div class="card-title">Indoor Dining <button class="btn btn-sm btn-primary" onclick="showToast('Add table form coming soon','info')">+ Add Table</button></div>
-    <div id="tblcfg-indoor"></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Bar Seating</div>
-    <div id="tblcfg-bar"></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Patio</div>
-    <div id="tblcfg-patio"></div>
-  </div>
+  <div class="page-sub">Table configuration mirrors the actual floor plan. Edit capacity and section assignments here.</div>
+  <div class="card"><div class="card-title">Indoor Dining</div><div id="tc-indoor"></div></div>
+  <div class="card"><div class="card-title">Den</div><div id="tc-den"></div></div>
+  <div class="card"><div class="card-title">Bar Seating</div><div id="tc-bar"></div></div>
+  <div class="card"><div class="card-title">Patio</div><div id="tc-patio"></div></div>
 </div>
 
 <!-- TEMPLATES -->
 <div class="page" id="page-templates">
   <h2>Message Templates</h2>
-  <div class="page-sub">Default templates used across Email (SendGrid) and SMS (Twilio/OpenPhone). Variables: {first}, {date}, {time}, {party}, {rsvp_id}</div>
+  <div class="page-sub">Templates used by SendGrid (email) and Twilio/OpenPhone (SMS) via Zapier. Variables: {first}, {date}, {time}, {party}, {rsvp_id}</div>
   <div class="card">
-    <div class="card-title">Email Templates <button class="btn btn-sm" onclick="showToast('Template editor coming soon','info')">Edit</button></div>
-    <div class="tmpl-row"><div class="tmpl-type">Confirmation</div><div class="tmpl-text">Hi {first},\n\nYour reservation at Hive Buckhead is confirmed!\n\nDate: {date} · Time: {time} · Party of: {party}\nRSVP #: {rsvp_id}\n\nWe look forward to seeing you.\n\nHive Buckhead Team</div></div>
-    <div class="tmpl-row"><div class="tmpl-type">Reminder (24hr before)</div><div class="tmpl-text">Hi {first}, just a reminder — your Hive Buckhead reservation is tomorrow at {time} for {party}. See you soon!</div></div>
-    <div class="tmpl-row"><div class="tmpl-type">Cancellation</div><div class="tmpl-text">Hi {first}, your reservation at Hive Buckhead on {date} has been cancelled. We hope to see you again soon.\n\nHive Buckhead Team</div></div>
-    <div class="tmpl-row"><div class="tmpl-type">Thank You</div><div class="tmpl-text">Hi {first}, thank you for dining with us at Hive Buckhead! We hope you had a wonderful experience and look forward to seeing you again.\n\nHive Buckhead Team</div></div>
+    <div class="card-title">Email Templates (SendGrid)</div>
+    <div class="tmpl-row"><div class="tmpl-type">RSVP Confirmed</div><div class="tmpl-text">Hi {first},\n\nYour reservation at Hive Buckhead is confirmed!\n\nDate: {date} · Time: {time} · Party of: {party}\nRSVP #: {rsvp_id}\n\nWe look forward to seeing you.\n\nHive Buckhead Team</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Reminder (24hr)</div><div class="tmpl-text">Hi {first}, just a reminder — your Hive Buckhead reservation is tomorrow at {time} for {party}. See you soon!</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Cancellation</div><div class="tmpl-text">Hi {first}, your reservation at Hive Buckhead on {date} has been cancelled. We hope to see you again.\n\nHive Buckhead Team</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Thank You (post-visit)</div><div class="tmpl-text">Hi {first}, thank you for dining with us at Hive Buckhead! We hope you had a wonderful experience and look forward to seeing you again.\n\nHive Buckhead Team</div></div>
   </div>
   <div class="card">
-    <div class="card-title">SMS Templates (Twilio / OpenPhone) <button class="btn btn-sm" onclick="showToast('Template editor coming soon','info')">Edit</button></div>
-    <div class="tmpl-row"><div class="tmpl-type">Confirmation</div><div class="tmpl-text">Hi {first}! Your Hive Buckhead reservation is confirmed for {date} at {time}, party of {party}. RSVP #{rsvp_id}. See you then!</div></div>
+    <div class="card-title">SMS Templates (Twilio / OpenPhone via Zapier)</div>
+    <div class="tmpl-row"><div class="tmpl-type">Confirmed</div><div class="tmpl-text">Hi {first}! Your Hive Buckhead reservation is confirmed for {date} at {time}, party of {party}. RSVP #{rsvp_id}. See you then!</div></div>
     <div class="tmpl-row"><div class="tmpl-type">Reminder</div><div class="tmpl-text">Hi {first}, your Hive Buckhead table is tonight at {time} for {party}. 🍸</div></div>
     <div class="tmpl-row"><div class="tmpl-type">Cancellation</div><div class="tmpl-text">Hi {first}, your Hive Buckhead reservation on {date} has been cancelled. Questions? Call us.</div></div>
     <div class="tmpl-row"><div class="tmpl-type">Thank You</div><div class="tmpl-text">Hi {first}! Thank you for dining at Hive Buckhead — hope to see you again soon! 🥂</div></div>
+    <div class="tmpl-row"><div class="tmpl-type">Zapier Trigger: Status → Confirmed</div><div class="tmpl-text" style="color:var(--blue)">ClickUp task status changes to "RSVP CONFIRMED" → Zapier fires → SendGrid email + Twilio SMS using above templates with ClickUp custom field values mapped to variables.</div></div>
   </div>
 </div>
 
 <!-- INTEGRATIONS -->
 <div class="page" id="page-integrations">
   <h2>Integrations</h2>
-  <div class="page-sub">Connection status and configuration for your tool stack.</div>
+  <div class="page-sub">Full tool stack connection status and trigger map.</div>
   <div class="card">
-    <table class="data-table">
-      <thead><tr><th>Service</th><th>Role</th><th>Status</th><th>Trigger</th></tr></thead>
+    <div class="card-title">Sync Architecture</div>
+    <div style="padding:10px 0;font-size:12.5px;color:var(--text-m);line-height:2">
+      <span style="color:var(--gold)">forms.app</span> → guest submits RSVP →
+      <span style="color:var(--blue)">Zapier</span> → creates <span style="color:var(--purple)">ClickUp task</span> (Task ID auto-assigned = RSVP #) →
+      <span style="color:var(--text)">Staff manages</span> via this web app →
+      Status changes sync back to <span style="color:var(--purple)">ClickUp</span> →
+      <span style="color:var(--blue)">Zapier triggers</span> → <span style="color:var(--green)">SendGrid email</span> + <span style="color:var(--teal)">Twilio SMS</span> →
+      On completion: <span style="color:var(--green)">Google Sheets</span> master log updated
+    </div>
+  </div>
+  <div class="card">
+    <table class="dt">
+      <thead><tr><th>Service</th><th>Role</th><th>Status</th><th>Zapier Trigger</th><th>Action</th></tr></thead>
       <tbody>
-        <tr><td><strong>ClickUp</strong></td><td>Task management — source of RSVP Task IDs</td><td><span class="tag tag-green">● Connected</span></td><td>Bidirectional sync</td></tr>
-        <tr><td><strong>Google Sheets</strong></td><td>Master reservation & order log</td><td><span class="tag tag-green">● Connected</span></td><td>On Completed/Cancelled</td></tr>
-        <tr><td><strong>Zapier</strong></td><td>Automation hub — 5 active Zaps</td><td><span class="tag tag-green">● Active</span></td><td>ClickUp status changes</td></tr>
-        <tr><td><strong>SendGrid</strong></td><td>Transactional email</td><td><span class="tag tag-green">● Active</span></td><td>Confirmed, Cancelled, Thank You</td></tr>
-        <tr><td><strong>Twilio / OpenPhone</strong></td><td>SMS notifications</td><td><span class="tag tag-green">● Active</span></td><td>Confirmed, Cancelled, Thank You</td></tr>
-        <tr><td><strong>forms.app</strong></td><td>Public-facing RSVP intake form</td><td><span class="tag tag-green">● Active</span></td><td>New submission → Zapier</td></tr>
+        <tr><td><strong>ClickUp</strong></td><td>Task mgmt · RSVP Task ID source</td><td><span class="tag tg">● Connected</span></td><td>Internal automation</td><td>Auto-assigns Task ID on list entry</td></tr>
+        <tr><td><strong>Google Sheets</strong></td><td>Master reservation log</td><td><span class="tag tg">● Connected</span></td><td>On Completed / Cancelled</td><td>Appends full row with order data</td></tr>
+        <tr><td><strong>Zapier</strong></td><td>Automation hub</td><td><span class="tag tg">● 5 Zaps active</span></td><td>ClickUp status changes</td><td>Routes to SendGrid / Twilio</td></tr>
+        <tr><td><strong>SendGrid</strong></td><td>Transactional email</td><td><span class="tag tg">● Active</span></td><td>Confirmed, Cancelled, Thank You</td><td>Sends templated email</td></tr>
+        <tr><td><strong>Twilio / OpenPhone</strong></td><td>SMS notifications</td><td><span class="tag tg">● Active</span></td><td>Confirmed, Cancelled, Thank You</td><td>Sends SMS to guest phone</td></tr>
+        <tr><td><strong>forms.app</strong></td><td>Public RSVP intake</td><td><span class="tag tg">● Active</span></td><td>New submission</td><td>→ Zapier → ClickUp task created</td></tr>
+        <tr><td><strong>Web App (this)</strong></td><td>Staff management UI</td><td><span class="tag tg">● Live</span></td><td>Manual actions by staff</td><td>Updates ClickUp + triggers Zapier</td></tr>
       </tbody>
     </table>
   </div>
+  <div class="card">
+    <div class="card-title">Cross-Page Sync Note</div>
+    <div style="font-size:12.5px;color:var(--text-m);line-height:1.7">
+      Currently, the three pages (<strong style="color:var(--text)">index.html</strong>, <strong style="color:var(--text)">floor.html</strong>, <strong style="color:var(--text)">admin.html</strong>) share state via <strong style="color:var(--gold)">localStorage</strong> through the <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">shared.js</code> module. Changes in one tab broadcast to others via the <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">storage</code> event. <br><br>
+      <strong style="color:var(--text)">For production:</strong> Replace the <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">load()</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">save()</code> functions in shared.js with API calls to your ClickUp webhook endpoint. All three pages will then read/write from ClickUp as the single source of truth, with Google Sheets as the archive layer.
+    </div>
+  </div>
 </div>
 
-</div><!-- /main -->
-</div><!-- /layout -->
+</div>
+</div>
+
+<!-- ADD SERVER MODAL -->
+<div class="modal-overlay" id="server-modal">
+  <div class="modal">
+    <div class="modal-title" id="sv-modal-title">Add Server</div>
+    <input type="hidden" id="sv-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="sv-first" placeholder="First"></div>
+      <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="sv-last" placeholder="Last"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Role</label><input class="form-input" id="sv-role" placeholder="Server, Bartender…"></div>
+      <div class="form-group"><label class="form-label">Accent Color</label><input class="form-input" id="sv-color" type="color" value="#C9A96E"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('server-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitServer()">Save Server</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
 
 <script>
-const TABLES=[
-  {id:'T1',num:1,cap:2,section:'indoor'},{id:'T2',num:2,cap:2,section:'indoor'},
-  {id:'T3',num:3,cap:4,section:'indoor'},{id:'T4',num:4,cap:4,section:'indoor'},
-  {id:'T5',num:5,cap:6,section:'indoor'},{id:'T6',num:6,cap:6,section:'indoor'},
-  {id:'T7',num:7,cap:8,section:'indoor'},{id:'T8',num:8,cap:4,section:'indoor'},
-  {id:'T9',num:9,cap:2,section:'indoor'},{id:'T10',num:10,cap:10,section:'indoor'},
-  {id:'T11',num:11,cap:4,section:'indoor'},{id:'T12',num:12,cap:6,section:'indoor'},
-  {id:'B1',num:'B1',cap:2,section:'bar'},{id:'B2',num:'B2',cap:2,section:'bar'},{id:'B3',num:'B3',cap:2,section:'bar'},
-  {id:'P1',num:'P1',cap:4,section:'patio'},{id:'P2',num:'P2',cap:4,section:'patio'},{id:'P3',num:'P3',cap:6,section:'patio'},
-];
-const SERVERS=[
-  {name:'Ashley Smith',role:'Lead Server',color:'#C9A96E',initials:'AS'},
-  {name:'Marcus Rivera',role:'Server',color:'#5B96C8',initials:'MR'},
-  {name:'Jenna Park',role:'Server',color:'#9B7EC8',initials:'JP'},
-  {name:'Devon Harris',role:'Server / Bar',color:'#3AACA8',initials:'DH'},
-];
-
-function showPage(id,btn){
+function showPage(id, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sb').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  if(btn)btn.classList.add('active');
+  if(btn) btn.classList.add('active');
+  renderPage(id);
 }
 
-// TABLE ANALYTICS
-function renderTableAnalytics(){
-  const tRevMap={'T1':2100,'T2':1800,'T3':4200,'T4':3800,'T5':6100,'T6':5800,'T7':8400,'T8':3200,'T9':1200,'T10':9800,'T11':3600,'T12':5400,'B1':800,'B2':700,'B3':650,'P1':2800,'P2':3100,'P3':4400};
-  const tCntMap={'T1':14,'T2':12,'T3':28,'T4':22,'T5':33,'T6':30,'T7':42,'T8':20,'T9':8,'T10':48,'T11':22,'T12':28,'B1':6,'B2':5,'B3':5,'P1':18,'P2':20,'P3':26};
-  const body=document.getElementById('table-analytics-body');
-  const section={'indoor':'Indoor','bar':'Bar','patio':'Patio'};
-  body.innerHTML=TABLES.map(t=>{
-    const rev=tRevMap[t.id]||0;const cnt=tCntMap[t.id]||0;
-    const util=Math.round((cnt/50)*100);
-    const utag=util>70?'tag-green':util>40?'tag-amber':'tag-blue';
-    return`<tr><td><strong>Table ${t.num}</strong></td><td style="color:var(--text-m)">${section[t.section]}</td><td>${t.cap}</td><td>${cnt}</td><td>${45+Math.floor(Math.random()*30)}</td><td><span class="tag ${utag}">${util}%</span></td><td style="color:var(--green)">$${rev.toLocaleString()}</td></tr>`;
+function renderPage(id){
+  if(id==='overview') renderOverview();
+  else if(id==='revenue') renderRevenue();
+  else if(id==='staff') renderStaff();
+  else if(id==='tables') renderTables();
+  else if(id==='patterns') renderPatterns();
+  else if(id==='guests') renderGuests();
+  else if(id==='servers') renderServers();
+  else if(id==='tableconfig') renderTableConfig();
+}
+
+function pill(s){const m={Completed:'tg','RSVP Confirmed':'tb','Seated':'tp','RSVP Requested':'ta',Cancelled:'tr'};return`<span class="tag ${m[s]||'ta'}">${s}</span>`}
+
+// ── OVERVIEW ──
+function renderOverview(){
+  const d = window.HiveData.get();
+  const rsv = d.reservations||[];
+  const TODAY = window.HiveData.TODAY;
+  const completed = rsv.filter(r=>r.status==='Completed');
+  const revenue = completed.reduce((a,r)=>a+(r.orderTotal||0),0);
+  const covers = rsv.filter(r=>r.status!=='Cancelled'&&r.status!=='RSVP Requested').reduce((a,r)=>a+r.party,0);
+  const todayR = rsv.filter(r=>r.date===TODAY);
+  const cancRate = rsv.length ? Math.round(rsv.filter(r=>r.status==='Cancelled').length/rsv.length*100) : 0;
+  const showRate = rsv.filter(r=>r.status==='RSVP Confirmed'||r.status==='Seated'||r.status==='Completed').length;
+  const confTotal = rsv.filter(r=>r.status!=='RSVP Requested').length;
+
+  document.getElementById('overview-sub').textContent = `${rsv.length} total reservations · Updated ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
+  document.getElementById('sync-label').textContent = 'Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+
+  document.getElementById('overview-metrics').innerHTML=`
+    <div class="mc"><div class="mc-val" style="color:var(--gold)">${rsv.length}</div><div class="mc-lbl">Total Reservations</div><div class="mc-sub">All time</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--green)">$${revenue.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="mc-lbl">Total Revenue</div><div class="mc-sub">Logged orders</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--blue)">${covers}</div><div class="mc-lbl">Total Covers</div><div class="mc-sub">Non-cancelled</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--purple)">${todayR.length}</div><div class="mc-lbl">Today's Reservations</div><div class="mc-sub">All statuses</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--amber)">${cancRate}%</div><div class="mc-lbl">Cancellation Rate</div><div class="mc-sub">All time</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--green)">${confTotal ? Math.round(showRate/confTotal*100) : 0}%</div><div class="mc-lbl">Show Rate</div><div class="mc-sub">Confirmed → seated</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--teal,#3AACA8)">${rsv.filter(r=>r.notes&&r.notes.includes('walk-in')).length}</div><div class="mc-lbl">Walk-Ins</div><div class="mc-sub">All time</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--red)">${rsv.filter(r=>r.status==='RSVP Requested').length}</div><div class="mc-lbl">Pending Confirm</div><div class="mc-sub">Need action</div></div>`;
+
+  const statCounts = {};
+  rsv.forEach(r=>statCounts[r.status]=(statCounts[r.status]||0)+1);
+  const total = rsv.length||1;
+  const statMap = [
+    {s:'Completed',c:'var(--green-bg)',t:'var(--green)'},
+    {s:'RSVP Confirmed',c:'var(--blue-bg)',t:'var(--blue)'},
+    {s:'Seated',c:'var(--purple-bg)',t:'var(--purple)'},
+    {s:'RSVP Requested',c:'var(--amber-bg)',t:'var(--amber)'},
+    {s:'Cancelled',c:'var(--red-bg)',t:'var(--red)'},
+  ];
+  document.getElementById('status-bars').innerHTML=statMap.map(({s,c,t})=>{
+    const n=statCounts[s]||0;const pct=Math.round(n/total*100);
+    return`<div class="bar-row"><span class="bar-lbl">${s.replace('RSVP ','')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(pct,3)}%;background:${c};color:${t}">${n}</div></div><span class="bar-val">${pct}%</span></div>`;
+  }).join('');
+
+  // Guest split donut (approximate using bars)
+  const walkins = rsv.filter(r=>r.notes&&r.notes.includes('walk-in')).length;
+  const forms = rsv.length - walkins;
+  document.getElementById('guest-split').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:5px;flex:1">
+      <div class="bar-row" style="margin:0"><span class="bar-lbl">via forms.app</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(forms/total*100)}%;background:var(--blue-bg);color:var(--blue)">${forms}</div></div></div>
+      <div class="bar-row" style="margin:0"><span class="bar-lbl">Walk-ins</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(walkins/total*100),3)}%;background:var(--amber-bg);color:var(--amber)">${walkins}</div></div></div>
+    </div>`;
+
+  // 7-day chart
+  const days=[]; const dayLabels=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);dayLabels.push(d.toLocaleDateString('en-US',{weekday:'short'}));}
+  const dayCounts=days.map(d=>rsv.filter(r=>r.date===d).length);
+  const maxD=Math.max(...dayCounts,1);
+  document.getElementById('daily-chart').innerHTML=dayCounts.map((v,i)=>`<div style="flex:1;height:${Math.max(v/maxD*68,4)}px;background:${days[i]===window.HiveData.TODAY?'var(--gold)':'var(--purple-bg)'};border-radius:3px 3px 0 0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:${days[i]===window.HiveData.TODAY?'#0E0C0A':'var(--purple)'}">${v||''}</div>`).join('');
+  document.getElementById('daily-labels').innerHTML=dayLabels.map((l,i)=>`<div style="flex:1;text-align:center;color:${days[i]===window.HiveData.TODAY?'var(--gold)':'var(--text-d)'}">${l}</div>`).join('');
+
+  // Activity feed
+  const allActs = rsv.flatMap(r=>(r.activities||[]).map(a=>({...a,guest:r.first+' '+r.last,rsvp:r.id}))).slice(-8).reverse();
+  document.getElementById('activity-feed').innerHTML = allActs.length ? allActs.map(a=>`
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border);font-size:12px">
+      <span style="font-size:14px;flex-shrink:0">${{created:'🆕',email:'✉️',sms:'📱',status:'🔄',close:'✅',cancel:'❌',sync:'🔗',note:'📝',walkin:'🚶'}[a.type]||'•'}</span>
+      <div style="flex:1"><strong style="color:var(--text)">${a.guest}</strong> — ${a.text}</div>
+      <div style="font-size:10px;color:var(--text-d);white-space:nowrap">${a.time}</div>
+    </div>`).join('') : '<div style="color:var(--text-d);font-size:12px">No activity yet.</div>';
+}
+
+// ── REVENUE ──
+function renderRevenue(){
+  const d = window.HiveData.get();
+  const completed = (d.reservations||[]).filter(r=>r.status==='Completed'&&r.orderTotal);
+  const total = completed.reduce((a,r)=>a+(r.orderTotal||0),0);
+  const avg = completed.length ? total/completed.length : 0;
+  const covers = completed.reduce((a,r)=>a+r.party,0);
+  document.getElementById('rev-metrics').innerHTML=`
+    <div class="mc"><div class="mc-val" style="color:var(--green)">$${total.toFixed(0)}</div><div class="mc-lbl">Total Revenue</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--gold)">$${avg.toFixed(0)}</div><div class="mc-lbl">Avg Order</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--blue)">${completed.length}</div><div class="mc-lbl">Logged Orders</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--purple)">${covers}</div><div class="mc-lbl">Covers (completed)</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--amber)">$${covers?Math.round(total/covers):0}</div><div class="mc-lbl">Rev per Cover</div></div>`;
+  // Monthly (simulated)
+  const months=[['Mar','$10,000'],['Apr','$11,290'],['May','$12,110'],['Jun','$'+total.toFixed(0)]];
+  const maxRev=12110;
+  document.getElementById('rev-monthly').innerHTML=months.map(([m,v])=>{
+    const n=parseInt(v.replace(/\D/g,''));
+    return`<div class="bar-row"><span class="bar-lbl">${m}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxRev*100)}%;background:var(--green-bg);color:var(--green)">${v}</div></div></div>`;
+  }).join('');
+  document.getElementById('rev-section').innerHTML=[['Indoor Dining','$28,400'],['Den','$8,200'],['Bar Seating','$9,100'],['Patio','$4,700']].map(([s,v])=>{
+    const n=parseInt(v.replace(/\D/g,''));
+    return`<div class="bar-row"><span class="bar-lbl">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/28400*100)}%;background:var(--blue-bg);color:var(--blue)">${v}</div></div></div>`;
+  }).join('');
+  const top=completed.sort((a,b)=>(b.orderTotal||0)-(a.orderTotal||0)).slice(0,10);
+  document.getElementById('top-orders').innerHTML=top.map(r=>`<tr><td><strong>${r.first} ${r.last}</strong></td><td>${r.date}</td><td>${r.party}</td><td>${r.server||'—'}</td><td style="color:var(--green);font-weight:500">$${(r.orderTotal||0).toFixed(2)}</td><td style="color:var(--gold);font-size:11px">${r.id}</td></tr>`).join('');
+}
+
+// ── STAFF ──
+function renderStaff(){
+  const rsv = window.HiveData.reservations();
+  const servers = window.HiveData.servers();
+  const completed = rsv.filter(r=>r.status==='Completed');
+  document.getElementById('staff-metrics').innerHTML=`
+    <div class="mc"><div class="mc-val" style="color:var(--gold)">${servers.length}</div><div class="mc-lbl">Active Servers</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--green)">$${completed.reduce((a,r)=>a+(r.orderTotal||0),0).toFixed(0)}</div><div class="mc-lbl">Total Logged Revenue</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--blue)">${rsv.filter(r=>r.status==='Seated').length}</div><div class="mc-lbl">Currently Seated</div></div>`;
+  const perf = servers.map(s=>{
+    const mine = rsv.filter(r=>r.server===s.name);
+    const rev = mine.filter(r=>r.status==='Completed').reduce((a,r)=>a+(r.orderTotal||0),0);
+    const cov = mine.reduce((a,r)=>a+r.party,0);
+    const can = mine.filter(r=>r.status==='Cancelled').length;
+    const shown = mine.filter(r=>r.status==='Completed'||r.status==='Seated').length;
+    const showR = mine.length ? Math.round(shown/mine.length*100) : 0;
+    return{...s,cnt:mine.length,rev,cov,can,showR,avg:mine.filter(r=>r.orderTotal).length?Math.round(rev/mine.filter(r=>r.orderTotal).length):0};
+  }).sort((a,b)=>b.rev-a.rev);
+  document.getElementById('staff-table').innerHTML=perf.map(s=>`
+    <tr><td><strong>${s.name}</strong><br><span style="font-size:10px;color:var(--text-d)">${s.role}</span></td>
+    <td>${s.cnt}</td><td>${s.cov}</td><td>$${s.avg}</td>
+    <td style="color:var(--green)">$${s.rev.toFixed(0)}</td>
+    <td>${s.can}</td>
+    <td><span class="tag ${s.showR>=80?'tg':s.showR>=60?'ta':'tr'}">${s.showR}%</span></td></tr>`).join('');
+  const maxCov=Math.max(...perf.map(s=>s.cov),1);
+  document.getElementById('staff-covers-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.cov/maxCov*100),3)}%;background:var(--purple-bg);color:var(--purple)">${s.cov}</div></div></div>`).join('');
+  const maxRev=Math.max(...perf.map(s=>s.rev),1);
+  document.getElementById('staff-rev-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.rev/maxRev*100),3)}%;background:var(--green-bg);color:var(--green)">$${s.rev.toFixed(0)}</div></div></div>`).join('');
+}
+
+// ── TABLES ──
+function renderTables(){
+  const tables=window.HiveData.tables();
+  const rsv=window.HiveData.reservations();
+  const secMap={indoor:'Indoor',den:'Den',bar_main:'Bar Main',bar_service:'Bar Service',bar_lounge:'Bar Lounge',patio:'Patio'};
+  const tRevBase={T1:2100,T2:1800,T3:4200,T4:3800,T5:6100,T6:5800,T7:8400,T8:3200,T9:1200,T10:9800,T11:3600,T12:5400,T13:2800,T14:2600,T15:2400,T16:2200,T18:2000,T19:1800,T20:1600,BAR1:4200,BAR2:1800,BAR3:3800,P1:1800,P2:2100,P3:1600,P4:1400,P5:900};
+  document.getElementById('table-metrics').innerHTML=`
+    <div class="mc"><div class="mc-val" style="color:var(--gold)">${tables.length}</div><div class="mc-lbl">Total Tables</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--purple)">${rsv.filter(r=>r.status==='Seated').length}</div><div class="mc-lbl">Currently Seated</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--green)">${tables.filter(t=>t.section==='indoor').length}</div><div class="mc-lbl">Indoor Tables</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--teal,#3AACA8)">${tables.filter(t=>t.section==='patio').length}</div><div class="mc-lbl">Patio Tables</div></div>`;
+  const maxRev=Math.max(...tables.map(t=>tRevBase[t.id]||0),1);
+  document.getElementById('table-perf-body').innerHTML=tables.map(t=>{
+    const n=Math.floor(Math.random()*30)+10;
+    const util=Math.min(Math.round((tRevBase[t.id]||0)/maxRev*90),95);
+    const turn=42+Math.floor(Math.random()*28);
+    return`<tr><td><strong>${t.num}</strong></td><td style="color:var(--text-m)">${secMap[t.section]||t.section}</td><td>${t.cap}</td><td>${n}</td><td>${turn}m</td><td><span class="tag ${util>70?'tg':util>40?'ta':'tb'}">${util}%</span></td><td style="color:var(--green)">$${(tRevBase[t.id]||0).toLocaleString()}</td></tr>`;
+  }).join('');
+  // Heatmap
+  const hmMax=Math.max(...tables.map(t=>tRevBase[t.id]||0),1);
+  document.getElementById('util-heatmap').innerHTML=tables.map(t=>{
+    const pct=(tRevBase[t.id]||0)/hmMax;
+    const alpha=0.15+pct*0.7;
+    return`<div class="hm-cell" style="background:rgba(201,169,110,${alpha.toFixed(2)});color:${pct>0.5?'#0E0C0A':'var(--gold)'};" title="${t.num}: $${(tRevBase[t.id]||0).toLocaleString()}">${t.num}</div>`;
   }).join('');
 }
 
-// TIME OF DAY
-function renderTOD(){
-  const hours=['11a','12p','1p','2p','3p','4p','5p','6p','7p','8p','9p','10p'];
-  const vals=[2,3,5,4,6,10,17,33,38,28,18,8];
-  const max=Math.max(...vals);
-  document.getElementById('tod-chart').innerHTML=vals.map((v,i)=>{
-    const h=Math.round((v/max)*80);
-    return`<div class="tod-bar" style="height:${h}px;background:${v===max?'var(--gold)':v>20?'var(--purple-bg)':v>10?'var(--blue-bg)':'var(--surface3)'};border:.5px solid ${v===max?'var(--gold)':'transparent'}" data-tip="${hours[i]}: ${v} reservations"></div>`;
-  }).join('');
-  document.getElementById('tod-labels').innerHTML=hours.map(h=>`<div>${h}</div>`).join('');
+// ── PATTERNS ──
+function renderPatterns(){
+  const hours=[{l:'11a',v:2},{l:'12p',v:4},{l:'1p',v:5},{l:'2p',v:3},{l:'3p',v:5},{l:'4p',v:8},{l:'5p',v:15},{l:'6p',v:28},{l:'7p',v:38},{l:'8p',v:32},{l:'9p',v:18},{l:'10p',v:7}];
+  const dows=[{l:'Mon',v:18},{l:'Tue',v:22},{l:'Wed',v:28},{l:'Thu',v:35},{l:'Fri',v:48},{l:'Sat',v:52},{l:'Sun',v:24}];
+  const parties=[{l:'1',v:8},{l:'2',v:42},{l:'3',v:28},{l:'4',v:35},{l:'5',v:18},{l:'6',v:22},{l:'7',v:12},{l:'8+',v:14}];
+  const leads=[{l:'Same day',v:18},{l:'1 day',v:22},{l:'2–3 days',v:35},{l:'4–7 days',v:42},{l:'1–2 wks',v:28},{l:'2–4 wks',v:16},{l:'1+ mo',v:8}];
+  const maxH=Math.max(...hours.map(h=>h.v));
+  const maxD=Math.max(...dows.map(d=>d.v));
+  const maxP=Math.max(...parties.map(p=>p.v));
+  const maxL=Math.max(...leads.map(l=>l.v));
+  document.getElementById('hourly-bars').innerHTML=hours.map(h=>`<div class="bar-row"><span class="bar-lbl">${h.l}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(h.v/maxH*100)}%;background:${h.v===maxH?'rgba(201,169,110,.3)':'var(--blue-bg)'};color:${h.v===maxH?'var(--gold)':'var(--blue)'}">${h.v}</div></div></div>`).join('');
+  document.getElementById('dow-bars').innerHTML=dows.map(d=>`<div class="bar-row"><span class="bar-lbl">${d.l}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.v/maxD*100)}%;background:${d.v===maxD?'rgba(155,126,200,.25)':'var(--purple-bg)'};color:var(--purple)">${d.v}</div></div></div>`).join('');
+  document.getElementById('party-bars').innerHTML=parties.map(p=>`<div class="bar-row"><span class="bar-lbl">Party ${p.l}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.v/maxP*100)}%;background:var(--green-bg);color:var(--green)">${p.v}</div></div></div>`).join('');
+  document.getElementById('lead-bars').innerHTML=leads.map(l=>`<div class="bar-row"><span class="bar-lbl">${l.l}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(l.v/maxL*100)}%;background:var(--amber-bg);color:var(--amber)">${l.v}</div></div></div>`).join('');
+  const weeks=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6','Wk 7','Wk 8'];
+  const wVals=[28,32,35,30,40,45,38,42];
+  const maxW=Math.max(...wVals);
+  document.getElementById('weekly-chart').innerHTML=wVals.map((v,i)=>`<div style="flex:1;height:${Math.max(v/maxW*78,4)}px;background:var(--blue-bg);border-radius:3px 3px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:3px;font-size:9px;color:var(--blue)">${v}</div>`).join('');
+  document.getElementById('weekly-labels').innerHTML=weeks.map(w=>`<div style="flex:1;text-align:center">${w}</div>`).join('');
 }
 
-// SERVERS
+// ── GUESTS ──
+function renderGuests(){
+  const rsv = window.HiveData.reservations();
+  const walkins = rsv.filter(r=>r.notes&&r.notes.includes('walk-in')).length;
+  const repeat = rsv.length - [...new Set(rsv.map(r=>r.phone||r.email))].length;
+  document.getElementById('guest-metrics').innerHTML=`
+    <div class="mc"><div class="mc-val" style="color:var(--gold)">${rsv.length}</div><div class="mc-lbl">Total Guests</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--green)">${repeat}</div><div class="mc-lbl">Repeat Guests</div><div class="mc-sub">same phone/email</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--amber)">${walkins}</div><div class="mc-lbl">Walk-Ins</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--red)">${rsv.filter(r=>r.status==='Cancelled').length}</div><div class="mc-lbl">Cancellations</div></div>`;
+  document.getElementById('guests-table').innerHTML=rsv.slice().reverse().map(r=>`
+    <tr><td><strong>${r.first} ${r.last}</strong><br><span style="font-size:10px;color:var(--text-d)">${r.phone}</span></td>
+    <td style="font-size:12px">${r.date}</td><td style="text-align:center">${r.party}</td>
+    <td>${pill(r.status)}</td><td style="color:var(--text-m);font-size:12px">${r.server||'—'}</td>
+    <td style="color:var(--green);font-size:12px">${r.orderTotal?'$'+r.orderTotal.toFixed(2):'—'}</td>
+    <td style="color:var(--gold);font-size:11px">${r.id}</td></tr>`).join('');
+}
+
+// ── SERVERS ──
 function renderServers(){
-  document.getElementById('server-list').innerHTML=SERVERS.map(s=>`
-    <div class="server-row">
-      <div class="server-avatar" style="background:${s.color}22;color:${s.color}">${s.initials}</div>
-      <div><div class="server-name">${s.name}</div><div class="server-role">${s.role}</div></div>
+  const servers = window.HiveData.servers();
+  document.getElementById('server-list').innerHTML=servers.map(s=>`
+    <div class="sv-row">
+      <div class="sv-avatar" style="background:${s.color}22;color:${s.color}">${s.initials}</div>
+      <div><div style="font-weight:500;font-size:13px">${s.name}</div><div style="font-size:11px;color:var(--text-m)">${s.role}</div></div>
       <div style="margin-left:auto;display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="showToast('Edit ${s.name}','info')">Edit</button>
-        <button class="btn btn-sm" style="color:var(--red);border-color:rgba(196,82,74,.3)" onclick="showToast('Remove ${s.name}?','info')">Remove</button>
+        <button class="btn btn-sm" onclick="openEditServer('${s.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="removeServer('${s.id}')">Remove</button>
       </div>
     </div>`).join('');
 }
 
-// TABLE CONFIG
-function renderTableConfig(){
-  const secMap={indoor:'tblcfg-indoor',bar:'tblcfg-bar',patio:'tblcfg-patio'};
-  Object.keys(secMap).forEach(sec=>{
-    document.getElementById(secMap[sec]).innerHTML=TABLES.filter(t=>t.section===sec).map(t=>`
-      <div class="tbl-row">
-        <div class="tbl-num">${t.num}</div>
-        <div style="flex:1;font-size:13px;color:var(--text-m)">${t.cap} seats · ${sec.charAt(0).toUpperCase()+sec.slice(1)}</div>
-        <button class="btn btn-sm" onclick="showToast('Edit Table ${t.num}','info')">Edit</button>
-      </div>`).join('');
-  });
+function openAddServer(){
+  document.getElementById('sv-modal-title').textContent='Add Server';
+  document.getElementById('sv-edit-id').value='';
+  ['sv-first','sv-last','sv-role'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('sv-color').value='#C9A96E';
+  document.getElementById('server-modal').classList.add('show');
+}
+function openEditServer(id){
+  const s=window.HiveData.servers().find(x=>x.id===id);if(!s)return;
+  document.getElementById('sv-modal-title').textContent='Edit Server';
+  document.getElementById('sv-edit-id').value=id;
+  const [first,...rest]=s.name.split(' ');
+  document.getElementById('sv-first').value=first;
+  document.getElementById('sv-last').value=rest.join(' ');
+  document.getElementById('sv-role').value=s.role;
+  document.getElementById('sv-color').value=s.color;
+  document.getElementById('server-modal').classList.add('show');
+}
+function submitServer(){
+  const first=document.getElementById('sv-first').value.trim();
+  const last=document.getElementById('sv-last').value.trim();
+  if(!first){showToast('Name required','warning');return;}
+  const d=window.HiveData.get();
+  const editId=document.getElementById('sv-edit-id').value;
+  const name=`${first} ${last}`.trim();
+  const initials=(first[0]+(last?last[0]:'')).toUpperCase();
+  const color=document.getElementById('sv-color').value;
+  const role=document.getElementById('sv-role').value||'Server';
+  if(editId){
+    const idx=d.servers.findIndex(s=>s.id===editId);
+    if(idx>=0)d.servers[idx]={...d.servers[idx],name,initials,color,role};
+  }else{
+    d.servers.push({id:'s'+Date.now(),name,initials,color,role});
+  }
+  window.HiveData.save(d);
+  closeModal('server-modal');
+  renderServers();
+  showToast(`${name} saved`,'success');
+}
+function removeServer(id){
+  const d=window.HiveData.get();
+  d.servers=d.servers.filter(s=>s.id!==id);
+  window.HiveData.save(d);
+  renderServers();
+  showToast('Server removed','info');
 }
 
-let toastT;
-function showToast(msg,type='success'){const el=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;el.className=`toast ${type} show`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
+// ── TABLE CONFIG ──
+function renderTableConfig(){
+  const tables=window.HiveData.tables();
+  const sections=['indoor','den','bar_main','bar_service','bar_lounge','patio'];
+  const secIds={indoor:'tc-indoor',den:'tc-den',bar_main:'tc-bar',bar_service:'tc-bar',bar_lounge:'tc-bar',patio:'tc-patio'};
+  const secLabels={indoor:'Indoor',den:'Den',bar_main:'Main Bar',bar_service:'Service Area',bar_lounge:'Lounge Bar',patio:'Patio'};
+  const rendered={};
+  tables.forEach(t=>{
+    const elId=secIds[t.section];
+    if(!elId)return;
+    if(!rendered[elId])rendered[elId]='';
+    rendered[elId]+=`<div class="tc-row"><div class="tc-num">${t.num}</div><div style="flex:1;font-size:12px;color:var(--text-m)">${t.cap} seats · ${secLabels[t.section]||t.section}</div><button class="btn btn-sm" onclick="showToast('Edit table ${t.num}','info')">Edit</button></div>`;
+  });
+  Object.entries(rendered).forEach(([id,html])=>{const el=document.getElementById(id);if(el)el.innerHTML+=html;});
+}
+
+window.addEventListener('hive_reload',()=>{
+  const active=document.querySelector('.page.active');
+  if(active)renderPage(active.id.replace('page-',''));
+});
+
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');});});
 
 let dark=true;
 function toggleTheme(){dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');}
 
-renderTableAnalytics();renderTOD();renderServers();renderTableConfig();
+let toastT;
+function showToast(msg,type='success'){const el=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;el.className=`toast ${type} show`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
+
+// Initial render
+renderOverview();
 </script>
 </body>
 </html>
