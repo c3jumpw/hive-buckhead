@@ -126,8 +126,8 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     <div class="sync-tag"><div class="rt-dot"></div>Live sync via localStorage</div>
     <span id="sync-label" style="font-size:10px;color:var(--text-d)">—</span>
     <button class="btn btn-sm" onclick="toggleTheme()">🌓</button>
-    <a href="index.html"><button class="btn btn-sm">← Reservations</button></a>
-    <a href="floor.html"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
+    <a href="../rsvp-mgnt/index.html"><button class="btn btn-sm">← Reservations</button></a>
+    <a href="../floor-view/index.html"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
   </div>
 </nav>
 <div class="layout">
@@ -167,7 +167,16 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     <button class="sb" onclick="showPage('integrations',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Integrations
     </button>
+    <div class="sidebar-section">
+    <div class="sidebar-label">Data</div>
+    <button class="sb" onclick="loadSampleAdmin()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Load Sample Data
+    </button>
+    <button class="sb" onclick="clearDataAdmin()" style="color:var(--red)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Clear All Data
+    </button>
   </div>
+</div>
 </aside>
 <div class="main">
 
@@ -413,6 +422,85 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
 <div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
 
 <script>
+// ── SHARED DATA LAYER — same localStorage key as floor-view and rsvp-mgnt ──
+const STORE_KEY = "hive_buckhead_v1";
+const TODAY = new Date().toISOString().split("T")[0];
+const TOMORROW = new Date(Date.now()+86400000).toISOString().split("T")[0];
+
+const TABLES_DEF=[
+  {id:"T1",num:"T1",cap:4,section:"indoor"},{id:"T2",num:"T2",cap:4,section:"indoor"},{id:"T3",num:"T3",cap:4,section:"indoor"},{id:"T4",num:"T4",cap:4,section:"indoor"},
+  {id:"T5",num:"T5",cap:6,section:"indoor"},{id:"T6",num:"T6",cap:6,section:"indoor"},{id:"T7",num:"T7",cap:8,section:"indoor"},{id:"T8",num:"T8",cap:4,section:"indoor"},
+  {id:"T9",num:"T9",cap:4,section:"indoor"},{id:"T10",num:"T10",cap:4,section:"indoor"},{id:"T11",num:"T11",cap:4,section:"indoor"},{id:"T12",num:"T12",cap:4,section:"indoor"},
+  {id:"T13",num:"T13",cap:4,section:"den"},{id:"T14",num:"T14",cap:4,section:"den"},{id:"T15",num:"T15",cap:4,section:"den"},{id:"T16",num:"T16",cap:4,section:"den"},
+  {id:"T18",num:"T18",cap:4,section:"den"},{id:"T19",num:"T19",cap:4,section:"den"},{id:"T20",num:"T20",cap:4,section:"den"},
+  {id:"BAR1",num:"Main Bar",cap:8,section:"bar"},{id:"BAR2",num:"Service",cap:4,section:"bar"},{id:"BAR3",num:"Lounge",cap:8,section:"bar"},
+  {id:"P1",num:"P1",cap:4,section:"patio"},{id:"P2",num:"P2",cap:4,section:"patio"},{id:"P3",num:"P3",cap:4,section:"patio"},{id:"P4",num:"P4",cap:4,section:"patio"},{id:"P5",num:"P5",cap:4,section:"patio"},
+];
+const SERVERS_DEF=[
+  {id:"s1",name:"Ashley Smith",role:"Lead Server",color:"#C9A96E",initials:"AS"},
+  {id:"s2",name:"Marcus Rivera",role:"Server",color:"#5B96C8",initials:"MR"},
+  {id:"s3",name:"Jenna Park",role:"Server",color:"#9B7EC8",initials:"JP"},
+  {id:"s4",name:"Devon Harris",role:"Server / Bar",color:"#3AACA8",initials:"DH"},
+];
+const SAMPLE_RSV=[
+  {id:"86AH8ZMTA",first:"Matest",last:"Now",phone:"4702226558",email:"c1.jumpw@gmail.com",date:TODAY,time:"15:15",party:2,status:"Seated",server:"Ashley Smith",table:"T3",notes:"Bringing confetti",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+  {id:"9KF3PLMX",first:"Jordan",last:"Baptiste",phone:"4045552341",email:"jbaptiste@gmail.com",date:TODAY,time:"18:30",party:4,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T5",notes:"Anniversary dinner",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+  {id:"7ZB2WNQR",first:"Priya",last:"Nair",phone:"6785553819",email:"priya.n@outlook.com",date:TODAY,time:"19:00",party:6,status:"RSVP Requested",server:"",table:"",notes:"Gluten allergy",requested:TODAY,confirmed:"",orderTotal:null,receipt:null,activities:[]},
+  {id:"4XC9JHTV",first:"Tyler",last:"Monroe",phone:"4045558823",email:"tmonroe@me.com",date:TODAY,time:"16:00",party:2,status:"Completed",server:"Jenna Park",table:"T2",notes:"Birthday celebration",requested:TODAY,confirmed:TODAY,orderTotal:187.50,receipt:"receipt_4XC9JHTV.jpg",activities:[]},
+  {id:"2RM6DKPN",first:"Camille",last:"Osei",phone:"4042228811",email:"camille.o@gmail.com",date:TODAY,time:"17:30",party:3,status:"RSVP Confirmed",server:"Devon Harris",table:"T8",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+  {id:"5TN1QABZ",first:"DeShawn",last:"Williams",phone:"6786663322",email:"dw@gmail.com",date:TODAY,time:"20:30",party:8,status:"RSVP Confirmed",server:"Devon Harris",table:"T7",notes:"Large group",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+  {id:"3QP7MZNK",first:"Ava",last:"Thompson",phone:"4048887766",email:"ava.t@gmail.com",date:TOMORROW,time:"19:30",party:3,status:"RSVP Confirmed",server:"Ashley Smith",table:"T4",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+  {id:"8WX2RVCS",first:"Marcus",last:"Lee",phone:"6784443322",email:"mlee@me.com",date:TODAY,time:"21:00",party:5,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T6",notes:"Allergic to shellfish",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+];
+
+function loadStore(){try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
+function saveStore(d){try{localStorage.setItem(STORE_KEY,JSON.stringify(d));}catch(e){}}
+
+let _store = loadStore();
+if(!_store){
+  _store={reservations:JSON.parse(JSON.stringify(SAMPLE_RSV)),tableStates:{"T9":"dirty","T1":"available"},tables:TABLES_DEF,servers:SERVERS_DEF};
+  saveStore(_store);
+}
+if(!_store.tables) _store.tables=TABLES_DEF;
+if(!_store.servers) _store.servers=SERVERS_DEF;
+if(!_store.reservations) _store.reservations=JSON.parse(JSON.stringify(SAMPLE_RSV));
+
+// Compatibility shim — replaces the shared store calls
+const window_HiveData_get = () => _store;
+const window_HiveData_reservations = () => _store.reservations || [];
+const window_HiveData_servers = () => _store.servers || SERVERS_DEF;
+const window_HiveData_tables = () => _store.tables || TABLES_DEF;
+
+function persistStore(){saveStore(_store);}
+
+// Live sync from other tabs
+window.addEventListener("storage", function(e){
+  if(e.key===STORE_KEY && e.newValue){
+    try{
+      _store = JSON.parse(e.newValue);
+      const active = document.querySelector('.page.active');
+      if(active) renderPage(active.id.replace('page-',''));
+      document.getElementById('sync-label').textContent = 'Synced ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    }catch(ex){}
+  }
+});
+
+function loadSampleAdmin(){
+  _store={reservations:JSON.parse(JSON.stringify(SAMPLE_RSV)),tableStates:{"T9":"dirty","T1":"available"},tables:TABLES_DEF,servers:SERVERS_DEF};
+  saveStore(_store);
+  const active=document.querySelector('.page.active');
+  if(active) renderPage(active.id.replace('page-',''));
+  showToast('Sample data loaded and synced','success');
+}
+function clearDataAdmin(){
+  if(!confirm('Clear all data from shared store? This affects all three pages.')) return;
+  _store={reservations:[],tableStates:{},tables:TABLES_DEF,servers:SERVERS_DEF};
+  saveStore(_store);
+  const active=document.querySelector('.page.active');
+  if(active) renderPage(active.id.replace('page-',''));
+  showToast('All data cleared','info');
+}
+
 function showPage(id, btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb').forEach(b=>b.classList.remove('active'));
@@ -436,9 +524,9 @@ function pill(s){const m={Completed:'tg','RSVP Confirmed':'tb','Seated':'tp','RS
 
 // ── OVERVIEW ──
 function renderOverview(){
-  const d = window.HiveData.get();
+  const d = window_HiveData_get();
   const rsv = d.reservations||[];
-  const TODAY = window.HiveData.TODAY;
+  const TODAY = TODAY;
   const completed = rsv.filter(r=>r.status==='Completed');
   const revenue = completed.reduce((a,r)=>a+(r.orderTotal||0),0);
   const covers = rsv.filter(r=>r.status!=='Cancelled'&&r.status!=='RSVP Requested').reduce((a,r)=>a+r.party,0);
@@ -489,8 +577,8 @@ function renderOverview(){
   for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);dayLabels.push(d.toLocaleDateString('en-US',{weekday:'short'}));}
   const dayCounts=days.map(d=>rsv.filter(r=>r.date===d).length);
   const maxD=Math.max(...dayCounts,1);
-  document.getElementById('daily-chart').innerHTML=dayCounts.map((v,i)=>`<div style="flex:1;height:${Math.max(v/maxD*68,4)}px;background:${days[i]===window.HiveData.TODAY?'var(--gold)':'var(--purple-bg)'};border-radius:3px 3px 0 0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:${days[i]===window.HiveData.TODAY?'#0E0C0A':'var(--purple)'}">${v||''}</div>`).join('');
-  document.getElementById('daily-labels').innerHTML=dayLabels.map((l,i)=>`<div style="flex:1;text-align:center;color:${days[i]===window.HiveData.TODAY?'var(--gold)':'var(--text-d)'}">${l}</div>`).join('');
+  document.getElementById('daily-chart').innerHTML=dayCounts.map((v,i)=>`<div style="flex:1;height:${Math.max(v/maxD*68,4)}px;background:${days[i]===TODAY?'var(--gold)':'var(--purple-bg)'};border-radius:3px 3px 0 0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:${days[i]===TODAY?'#0E0C0A':'var(--purple)'}">${v||''}</div>`).join('');
+  document.getElementById('daily-labels').innerHTML=dayLabels.map((l,i)=>`<div style="flex:1;text-align:center;color:${days[i]===TODAY?'var(--gold)':'var(--text-d)'}">${l}</div>`).join('');
 
   // Activity feed
   const allActs = rsv.flatMap(r=>(r.activities||[]).map(a=>({...a,guest:r.first+' '+r.last,rsvp:r.id}))).slice(-8).reverse();
@@ -504,7 +592,7 @@ function renderOverview(){
 
 // ── REVENUE ──
 function renderRevenue(){
-  const d = window.HiveData.get();
+  const d = window_HiveData_get();
   const completed = (d.reservations||[]).filter(r=>r.status==='Completed'&&r.orderTotal);
   const total = completed.reduce((a,r)=>a+(r.orderTotal||0),0);
   const avg = completed.length ? total/completed.length : 0;
@@ -532,8 +620,8 @@ function renderRevenue(){
 
 // ── STAFF ──
 function renderStaff(){
-  const rsv = window.HiveData.reservations();
-  const servers = window.HiveData.servers();
+  const rsv = window_HiveData_reservations();
+  const servers = window_HiveData_servers();
   const completed = rsv.filter(r=>r.status==='Completed');
   document.getElementById('staff-metrics').innerHTML=`
     <div class="mc"><div class="mc-val" style="color:var(--gold)">${servers.length}</div><div class="mc-lbl">Active Servers</div></div>
@@ -562,8 +650,8 @@ function renderStaff(){
 
 // ── TABLES ──
 function renderTables(){
-  const tables=window.HiveData.tables();
-  const rsv=window.HiveData.reservations();
+  const tables=window_HiveData_tables();
+  const rsv=window_HiveData_reservations();
   const secMap={indoor:'Indoor',den:'Den',bar_main:'Bar Main',bar_service:'Bar Service',bar_lounge:'Bar Lounge',patio:'Patio'};
   const tRevBase={T1:2100,T2:1800,T3:4200,T4:3800,T5:6100,T6:5800,T7:8400,T8:3200,T9:1200,T10:9800,T11:3600,T12:5400,T13:2800,T14:2600,T15:2400,T16:2200,T18:2000,T19:1800,T20:1600,BAR1:4200,BAR2:1800,BAR3:3800,P1:1800,P2:2100,P3:1600,P4:1400,P5:900};
   document.getElementById('table-metrics').innerHTML=`
@@ -610,7 +698,7 @@ function renderPatterns(){
 
 // ── GUESTS ──
 function renderGuests(){
-  const rsv = window.HiveData.reservations();
+  const rsv = window_HiveData_reservations();
   const walkins = rsv.filter(r=>r.notes&&r.notes.includes('walk-in')).length;
   const repeat = rsv.length - [...new Set(rsv.map(r=>r.phone||r.email))].length;
   document.getElementById('guest-metrics').innerHTML=`
@@ -628,7 +716,7 @@ function renderGuests(){
 
 // ── SERVERS ──
 function renderServers(){
-  const servers = window.HiveData.servers();
+  const servers = window_HiveData_servers();
   document.getElementById('server-list').innerHTML=servers.map(s=>`
     <div class="sv-row">
       <div class="sv-avatar" style="background:${s.color}22;color:${s.color}">${s.initials}</div>
@@ -648,7 +736,7 @@ function openAddServer(){
   document.getElementById('server-modal').classList.add('show');
 }
 function openEditServer(id){
-  const s=window.HiveData.servers().find(x=>x.id===id);if(!s)return;
+  const s=window_HiveData_servers().find(x=>x.id===id);if(!s)return;
   document.getElementById('sv-modal-title').textContent='Edit Server';
   document.getElementById('sv-edit-id').value=id;
   const [first,...rest]=s.name.split(' ');
@@ -662,7 +750,7 @@ function submitServer(){
   const first=document.getElementById('sv-first').value.trim();
   const last=document.getElementById('sv-last').value.trim();
   if(!first){showToast('Name required','warning');return;}
-  const d=window.HiveData.get();
+  const d=window_HiveData_get();
   const editId=document.getElementById('sv-edit-id').value;
   const name=`${first} ${last}`.trim();
   const initials=(first[0]+(last?last[0]:'')).toUpperCase();
@@ -674,22 +762,22 @@ function submitServer(){
   }else{
     d.servers.push({id:'s'+Date.now(),name,initials,color,role});
   }
-  window.HiveData.save(d);
+  Object.assign(_store, d); persistStore();
   closeModal('server-modal');
   renderServers();
   showToast(`${name} saved`,'success');
 }
 function removeServer(id){
-  const d=window.HiveData.get();
+  const d=window_HiveData_get();
   d.servers=d.servers.filter(s=>s.id!==id);
-  window.HiveData.save(d);
+  Object.assign(_store, d); persistStore();
   renderServers();
   showToast('Server removed','info');
 }
 
 // ── TABLE CONFIG ──
 function renderTableConfig(){
-  const tables=window.HiveData.tables();
+  const tables=window_HiveData_tables();
   const sections=['indoor','den','bar_main','bar_service','bar_lounge','patio'];
   const secIds={indoor:'tc-indoor',den:'tc-den',bar_main:'tc-bar',bar_service:'tc-bar',bar_lounge:'tc-bar',patio:'tc-patio'};
   const secLabels={indoor:'Indoor',den:'Den',bar_main:'Main Bar',bar_service:'Service Area',bar_lounge:'Lounge Bar',patio:'Patio'};
