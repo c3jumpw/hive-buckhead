@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.12);--amber:#D4A020;--amber-bg:rgba(212,160,32,.12);--red:#C4524A;--red-bg:rgba(196,82,74,.12);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.12);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.12);--teal:#3AACA8;--teal-bg:rgba(58,172,168,.12)}
-[data-theme="light"]{--bg:#F7F4EF;--surface:#FFFFFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.1);--amber-bg:rgba(212,160,32,.1);--red-bg:rgba(196,82,74,.1);--blue-bg:rgba(91,150,200,.1);--purple-bg:rgba(155,126,200,.1)}
+[data-theme="light"]{--bg:#F7F4EF;--surface:#FFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.1);--amber-bg:rgba(212,160,32,.1);--red-bg:rgba(196,82,74,.1);--blue-bg:rgba(91,150,200,.1);--purple-bg:rgba(155,126,200,.1)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;transition:background .2s,color .2s}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;gap:12px}
@@ -23,10 +23,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s}
 .btn:hover{background:var(--surface2);border-color:var(--gold)}
 .btn-primary{background:var(--gold);color:#0E0C0A;border-color:var(--gold)}
-.btn-primary:hover{background:var(--gold-light);border-color:var(--gold-light)}
+.btn-primary:hover{background:var(--gold-light)}
 .btn-sm{padding:5px 12px;font-size:12px}
 .btn-danger{background:var(--red-bg);color:var(--red);border-color:rgba(196,82,74,.4)}
-.btn-danger:hover{background:var(--red);color:#fff}
 .layout{display:flex;height:calc(100vh - 54px);overflow:hidden}
 .sidebar{width:200px;flex-shrink:0;border-right:.5px solid var(--border);background:var(--surface);overflow-y:auto;padding:1rem 0}
 .sidebar-section{padding:0 .75rem;margin-bottom:1.25rem}
@@ -48,7 +47,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0}
 .search-wrap{position:relative;flex:1;max-width:280px}
 .search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--text-d);pointer-events:none}
-.search-input{width:100%;padding:6px 9px 6px 29px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.search-input{width:100%;padding:6px 9px 6px 29px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
 .search-input::placeholder{color:var(--text-d)}
 .search-input:focus{border-color:var(--gold)}
 .flt{padding:6px 10px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text-m);font-size:12.5px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer}
@@ -70,8 +69,8 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .p-sea{background:var(--purple-bg);color:var(--purple)}.p-sea .dot{background:var(--purple);animation:pulse 1.5s infinite}
 .p-com{background:var(--green-bg);color:var(--green)}.p-com .dot{background:var(--green)}
 .p-can{background:var(--red-bg);color:var(--red)}.p-can .dot{background:var(--red)}
+.p-avail{background:var(--teal-bg);color:var(--teal)}.p-avail .dot{background:var(--teal)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-/* KANBAN */
 .kanban-wrap{flex:1;overflow-x:auto;overflow-y:hidden;padding:16px;display:flex;gap:12px}
 .kb-col{min-width:240px;max-width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
 .kb-header{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:7px;background:var(--surface);border:.5px solid var(--border);margin-bottom:4px}
@@ -85,7 +84,6 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .kb-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:.5px solid var(--border)}
 .add-card{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:7px;border:.5px dashed var(--border);color:var(--text-d);font-size:12px;cursor:pointer;transition:all .15s;background:transparent;width:100%;font-family:'DM Sans',sans-serif}
 .add-card:hover{border-color:var(--gold);color:var(--gold)}
-/* CALENDAR */
 .cal-wrap{flex:1;overflow-y:auto;padding:16px}
 .cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .cal-month{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--gold)}
@@ -98,11 +96,10 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .cal-day.is-today .cal-dn{color:var(--gold);font-weight:500}
 .cal-dn{font-size:12px;color:var(--text-m);margin-bottom:4px;display:block}
 .cal-chips{display:flex;flex-direction:column;gap:2px}
-.cal-chip{font-size:10px;padding:2px 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:filter .1s}
+.cal-chip{font-size:10px;padding:2px 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .cal-chip:hover{filter:brightness(1.2)}
-.cal-more-btn{font-size:10px;color:var(--blue);background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);border-radius:3px;padding:2px 6px;cursor:pointer;margin-top:2px;font-family:'DM Sans',sans-serif;transition:all .15s;display:inline-block;text-align:center}
+.cal-more-btn{font-size:10px;color:var(--blue);background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);border-radius:3px;padding:2px 6px;cursor:pointer;margin-top:2px;font-family:'DM Sans',sans-serif;display:inline-block}
 .cal-more-btn:hover{background:var(--blue);color:#fff}
-/* DETAIL PANEL */
 .detail-panel{width:340px;flex-shrink:0;border-left:.5px solid var(--border);background:var(--surface);overflow-y:auto;display:flex;flex-direction:column;transition:width .2s}
 .detail-panel.hidden{width:0;overflow:hidden;border:none}
 .panel-header{padding:1.1rem 1.1rem .9rem;border-bottom:.5px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
@@ -128,14 +125,12 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .act-btn.a-cancel{color:var(--red);border-color:rgba(196,82,74,.3)}.act-btn.a-cancel:hover{background:var(--red-bg)}
 .act-btn.a-gold{color:var(--gold);border-color:rgba(201,169,110,.3)}.act-btn.a-gold:hover{background:rgba(201,169,110,.08)}
 .act-btn.a-edit{color:var(--teal);border-color:rgba(58,172,168,.3)}.act-btn.a-edit:hover{background:var(--teal-bg)}
-/* activities */
-.activity-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:.5px solid var(--border);font-size:12px}
+.activity-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border);font-size:12px}
 .activity-item:last-child{border-bottom:none}
-.act-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+.act-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
 .act-text{flex:1;color:var(--text-m);line-height:1.5}
 .act-text strong{color:var(--text);font-weight:500}
 .act-time{font-size:10px;color:var(--text-d);white-space:nowrap}
-/* msg */
 .msg-tabs{display:flex;gap:2px;background:var(--surface2);border-radius:6px;padding:3px;margin-bottom:10px}
 .msg-tab{flex:1;padding:5px;border-radius:4px;font-size:12px;text-align:center;cursor:pointer;color:var(--text-m);transition:all .15s;border:none;background:transparent;font-family:'DM Sans',sans-serif}
 .msg-tab.active{background:var(--surface);color:var(--gold)}
@@ -143,13 +138,11 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .msg-textarea:focus{border-color:var(--gold)}
 .tmpl-chip{padding:4px 9px;border-radius:12px;background:var(--surface2);border:.5px solid var(--border);font-size:11px;color:var(--text-m);cursor:pointer;transition:all .15s;display:inline-block;margin:0 3px 4px 0}
 .tmpl-chip:hover{border-color:var(--gold);color:var(--gold)}
-/* MODALS */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
 .modal-overlay.show{opacity:1;pointer-events:all}
 .modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:520px;max-height:90vh;overflow-y:auto;padding:1.4rem;transform:translateY(8px);transition:transform .15s}
 .modal-overlay.show .modal{transform:translateY(0)}
 .modal-sm{width:420px}
-.modal-lg{width:600px}
 .modal-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:500;color:var(--gold);margin-bottom:1.1rem}
 .form-group{margin-bottom:12px}
 .form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px;letter-spacing:.03em}
@@ -159,34 +152,29 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .form-textarea{resize:vertical;min-height:70px;line-height:1.5}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.1rem}
-.required-note{font-size:11px;color:var(--red);margin-top:4px}
-/* receipt upload */
 .upload-zone{border:.5px dashed var(--border-s);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;position:relative}
 .upload-zone:hover{border-color:var(--gold);background:rgba(201,169,110,.04)}
 .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.upload-zone-icon{font-size:24px;margin-bottom:8px;opacity:.5}
-.upload-zone-text{font-size:12px;color:var(--text-m)}
+.upload-zone-text{font-size:12px;color:var(--text-m);margin-top:8px}
 .upload-preview{background:var(--surface2);border:.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--green);display:none;align-items:center;gap:8px}
-/* day popup */
 .day-popup{background:var(--surface);border:.5px solid var(--border-s);border-radius:10px;padding:1.1rem;max-height:80vh;overflow-y:auto;width:360px}
 .day-popup-title{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);margin-bottom:12px}
 .day-popup-card{padding:10px 12px;border-radius:7px;border:.5px solid var(--border);margin-bottom:8px;cursor:pointer;transition:all .12s}
 .day-popup-card:hover{border-color:var(--gold);background:var(--surface2)}
-/* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:9px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none;box-shadow:0 6px 28px rgba(0,0,0,.35)}
 .toast.show{transform:translateY(0) scale(1);opacity:1}
 .toast-icon{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.toast.success .toast-icon{background:var(--green)}
-.toast.info .toast-icon{background:var(--blue)}
-.toast.warning .toast-icon{background:var(--amber)}
+.toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}.toast.warning .toast-icon{background:var(--amber)}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;color:var(--text-d);text-align:center}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
-.divider{height:.5px;background:var(--border);margin:8px 0}
 .info-banner{background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);border-radius:6px;padding:8px 11px;font-size:12px;color:var(--blue);margin-bottom:10px;line-height:1.5}
 .warn-banner{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:6px;padding:8px 11px;font-size:12px;color:var(--amber);margin-bottom:10px;line-height:1.5}
+.sync-indicator{font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
 </style>
 </head>
 <body>
+
 <nav class="nav">
   <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
   <div class="nav-center">
@@ -195,10 +183,11 @@ tr:hover td{background:var(--surface2);cursor:pointer}
     <button class="view-tab" onclick="switchView('calendar',this)">Calendar</button>
   </div>
   <div class="nav-right">
-    <a href="floor.html" target="_blank" style="text-decoration:none">
+    <div class="sync-indicator" id="sync-ind"><div class="sync-dot"></div><span id="sync-lbl">Synced</span></div>
+    <a href="../floor-view/index.html" target="_blank" style="text-decoration:none">
       <button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.4)">🏠 Live Floor</button>
     </a>
-    <a href="admin.html" target="_blank" style="text-decoration:none">
+    <a href="../admin-dashboard/index.html" target="_blank" style="text-decoration:none">
       <button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)">⚙ Admin</button>
     </a>
     <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">
@@ -218,7 +207,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>All
       <span class="badge-n" id="cnt-all">0</span>
     </button>
-    <button class="sidebar-item" id="sb-today" onclick="setDateQ('today',this)">
+    <button class="sidebar-item" onclick="setDateQ('today',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Today
       <span class="badge-n live" id="cnt-today">0</span>
     </button>
@@ -228,61 +217,34 @@ tr:hover td{background:var(--surface2);cursor:pointer}
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">By Status</div>
-    <button class="sidebar-item" onclick="setFilter('RSVP Requested',this)">
-      <span class="s-dot" style="background:var(--amber)"></span>Requested
-      <span class="badge-n" id="cnt-req">0</span>
-    </button>
-    <button class="sidebar-item" onclick="setFilter('RSVP Confirmed',this)">
-      <span class="s-dot" style="background:var(--blue)"></span>Confirmed
-      <span class="badge-n" id="cnt-con">0</span>
-    </button>
-    <button class="sidebar-item" onclick="setFilter('Seated',this)">
-      <span class="s-dot" style="background:var(--purple)"></span>Seated
-      <span class="badge-n live" id="cnt-sea">0</span>
-    </button>
-    <button class="sidebar-item" onclick="setFilter('Completed',this)">
-      <span class="s-dot" style="background:var(--green)"></span>Completed
-      <span class="badge-n" id="cnt-com">0</span>
-    </button>
-    <button class="sidebar-item" onclick="setFilter('Cancelled',this)">
-      <span class="s-dot" style="background:var(--red)"></span>Cancelled
-      <span class="badge-n" id="cnt-can">0</span>
-    </button>
+    <button class="sidebar-item" onclick="setFilter('RSVP Requested',this)"><span class="s-dot" style="background:var(--amber)"></span>Requested<span class="badge-n" id="cnt-req">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('RSVP Confirmed',this)"><span class="s-dot" style="background:var(--blue)"></span>Confirmed<span class="badge-n" id="cnt-con">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('Seated',this)"><span class="s-dot" style="background:var(--purple)"></span>Seated<span class="badge-n live" id="cnt-sea">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('Table Available',this)"><span class="s-dot" style="background:var(--teal)"></span>Table Available<span class="badge-n" id="cnt-avail">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('Completed',this)"><span class="s-dot" style="background:var(--green)"></span>Completed<span class="badge-n" id="cnt-com">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('Cancelled',this)"><span class="s-dot" style="background:var(--red)"></span>Cancelled<span class="badge-n" id="cnt-can">0</span></button>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">By Server</div>
-    <button class="sidebar-item" onclick="filterServer('Ashley Smith',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Ashley Smith
-    </button>
-    <button class="sidebar-item" onclick="filterServer('Marcus Rivera',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Marcus Rivera
-    </button>
-    <button class="sidebar-item" onclick="filterServer('Jenna Park',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Jenna Park
-    </button>
-    <button class="sidebar-item" onclick="filterServer('Devon Harris',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Devon Harris
-    </button>
+    <button class="sidebar-item" onclick="filterServer('Ashley Smith',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Ashley Smith</button>
+    <button class="sidebar-item" onclick="filterServer('Marcus Rivera',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Marcus Rivera</button>
+    <button class="sidebar-item" onclick="filterServer('Jenna Park',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Jenna Park</button>
+    <button class="sidebar-item" onclick="filterServer('Devon Harris',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Devon Harris</button>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Reports</div>
-    <button class="sidebar-item" onclick="showToast('Opening Google Sheets…','info')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Master Sheet
-    </button>
-    <button class="sidebar-item" onclick="exportCSV()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV
-    </button>
-    <button class="sidebar-item" onclick="showToast('Syncing to ClickUp…','info')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ClickUp Sync
-    </button>
+    <button class="sidebar-item" onclick="showToast('Opening Google Sheets…','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Master Sheet</button>
+    <button class="sidebar-item" onclick="exportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+    <button class="sidebar-item" onclick="loadSample()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Load Sample Data</button>
+    <button class="sidebar-item" onclick="clearData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Clear All Data</button>
   </div>
 </aside>
 <div class="main" id="main-area">
   <div class="stats-bar">
-    <div class="stat-item"><div class="stat-label">Today's Reservations</div><div class="stat-value" style="color:var(--gold)" id="s-total">0</div><div class="stat-sub">all statuses</div></div>
-    <div class="stat-item"><div class="stat-label">Awaiting Confirm</div><div class="stat-value" style="color:var(--amber)" id="s-pend">0</div><div class="stat-sub">need action</div></div>
-    <div class="stat-item"><div class="stat-label">Seated Now</div><div class="stat-value" style="color:var(--purple)" id="s-seat">0</div><div class="stat-sub">active</div></div>
-    <div class="stat-item"><div class="stat-label">Covers Today</div><div class="stat-value" style="color:var(--green)" id="s-covers">0</div><div class="stat-sub">total guests</div></div>
+    <div class="stat-item"><div class="stat-label">Today's Reservations</div><div class="stat-value" style="color:var(--gold)" id="s-total">0</div></div>
+    <div class="stat-item"><div class="stat-label">Awaiting Confirm</div><div class="stat-value" style="color:var(--amber)" id="s-pend">0</div></div>
+    <div class="stat-item"><div class="stat-label">Seated Now</div><div class="stat-value" style="color:var(--purple)" id="s-seat">0</div></div>
+    <div class="stat-item"><div class="stat-label">Covers Today</div><div class="stat-value" style="color:var(--green)" id="s-covers">0</div></div>
   </div>
   <div class="toolbar">
     <div class="search-wrap">
@@ -290,10 +252,8 @@ tr:hover td{background:var(--surface2);cursor:pointer}
       <input class="search-input" type="text" placeholder="Search name, phone, RSVP #…" id="srch" oninput="renderView()">
     </div>
     <select class="flt" id="date-flt" onchange="renderView()">
-      <option value="">All Dates</option>
-      <option value="today">Today</option>
-      <option value="upcoming">Upcoming</option>
-      <option value="past">Past</option>
+      <option value="">All Dates</option><option value="today">Today</option>
+      <option value="upcoming">Upcoming</option><option value="past">Past</option>
     </select>
     <select class="flt" id="srv-flt" onchange="renderView()">
       <option value="">All Servers</option>
@@ -302,22 +262,12 @@ tr:hover td{background:var(--surface2);cursor:pointer}
     </select>
     <span style="font-size:11px;color:var(--text-d);margin-left:auto" id="res-count"></span>
   </div>
-  <!-- LIST VIEW -->
   <div id="view-list" class="view-wrap">
-    <table><thead><tr>
-      <th>Guest</th><th>Date & Time</th><th>Party</th><th>Status</th>
-      <th>Server</th><th>Table</th><th>Task ID / RSVP #</th><th>Order Total</th>
-    </tr></thead><tbody id="list-body"></tbody></table>
-    <div class="empty" id="list-empty" style="display:none">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:.2;margin-bottom:10px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="12" y2="13"/></svg>
-      <div style="font-size:13px">No reservations match your filters.</div>
-    </div>
+    <table><thead><tr><th>Guest</th><th>Date & Time</th><th>Party</th><th>Status</th><th>Server</th><th>Table</th><th>Task ID / RSVP #</th><th>Order Total</th></tr></thead>
+    <tbody id="list-body"></tbody></table>
+    <div class="empty" id="list-empty" style="display:none"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:.2;margin-bottom:10px"><rect x="3" y="3" width="18" height="18" rx="2"/></svg><div style="font-size:13px">No reservations match your filters.</div></div>
   </div>
-  <!-- KANBAN VIEW -->
-  <div id="view-kanban" style="display:none;flex:1;overflow:hidden">
-    <div class="kanban-wrap" id="kanban-wrap"></div>
-  </div>
-  <!-- CALENDAR VIEW -->
+  <div id="view-kanban" style="display:none;flex:1;overflow:hidden"><div class="kanban-wrap" id="kanban-wrap"></div></div>
   <div id="view-calendar" style="display:none;flex:1;overflow:hidden">
     <div class="cal-wrap">
       <div class="cal-nav">
@@ -328,80 +278,56 @@ tr:hover td{background:var(--surface2);cursor:pointer}
       <div class="cal-grid" id="cal-grid"></div>
     </div>
   </div>
-</div><!-- /main -->
+</div>
+
 <!-- DETAIL PANEL -->
 <div class="detail-panel hidden" id="detail-panel">
   <div class="panel-header">
-    <div>
-      <div class="panel-name" id="p-name">—</div>
-      <div class="panel-rsvp" id="p-rsvp">Task ID / RSVP # —</div>
-    </div>
-    <button class="panel-close" onclick="closePanel()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
+    <div><div class="panel-name" id="p-name">—</div><div class="panel-rsvp" id="p-rsvp">Task ID / RSVP # —</div></div>
+    <button class="panel-close" onclick="closePanel()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="panel-body">
-    <div class="ps">
-      <div class="ps-title">Reservation Details</div>
+    <div class="ps"><div class="ps-title">Reservation Details</div>
       <div class="dr"><span class="lbl">Date</span><span class="val" id="p-date">—</span></div>
       <div class="dr"><span class="lbl">Time</span><span class="val" id="p-time">—</span></div>
-      <div class="dr"><span class="lbl">Party Size</span><span class="val" id="p-party">—</span></div>
+      <div class="dr"><span class="lbl">Party</span><span class="val" id="p-party">—</span></div>
       <div class="dr"><span class="lbl">Phone</span><span class="val" id="p-phone">—</span></div>
       <div class="dr"><span class="lbl">Email</span><span class="val" id="p-email" style="font-size:11px">—</span></div>
       <div class="dr"><span class="lbl">Table</span><span class="val" id="p-table">—</span></div>
       <div class="dr"><span class="lbl">Status</span><span class="val" id="p-stat-badge">—</span></div>
       <div class="dr" id="p-total-row" style="display:none"><span class="lbl">Order Total</span><span class="val" id="p-total" style="color:var(--green)">—</span></div>
     </div>
-    <div class="ps">
-      <div class="ps-title">Notes</div>
-      <div class="notes-box" id="p-notes">—</div>
-    </div>
-    <div class="ps">
-      <div class="ps-title">Assign Server</div>
+    <div class="ps"><div class="ps-title">Notes</div><div class="notes-box" id="p-notes">—</div></div>
+    <div class="ps"><div class="ps-title">Assign Server</div>
       <select class="sel-input" id="p-server" onchange="updateServer()">
-        <option value="">Unassigned</option>
-        <option>Ashley Smith</option><option>Marcus Rivera</option>
-        <option>Jenna Park</option><option>Devon Harris</option>
+        <option value="">Unassigned</option><option>Ashley Smith</option><option>Marcus Rivera</option><option>Jenna Park</option><option>Devon Harris</option>
       </select>
     </div>
-    <div class="ps">
-      <div class="ps-title">Assign Table</div>
-      <select class="sel-input" id="p-table-sel" onchange="updateTable()">
-        <option value="">No table assigned</option>
-      </select>
+    <div class="ps"><div class="ps-title">Assign Table</div>
+      <select class="sel-input" id="p-table-sel" onchange="updateTable()"><option value="">No table assigned</option></select>
     </div>
-    <div class="ps">
-      <div class="ps-title">Actions</div>
-      <div id="p-actions"></div>
-    </div>
-    <div class="ps">
-      <div class="ps-title">Message Guest</div>
+    <div class="ps"><div class="ps-title">Actions</div><div id="p-actions"></div></div>
+    <div class="ps"><div class="ps-title">Message Guest</div>
       <div class="msg-tabs">
         <button class="msg-tab active" id="msg-tab-email" onclick="switchMsgTab('email')">✉ Email</button>
         <button class="msg-tab" id="msg-tab-sms" onclick="switchMsgTab('sms')">📱 SMS</button>
       </div>
       <div id="msg-templates" style="margin-bottom:8px"></div>
       <textarea class="msg-textarea" id="msg-body" placeholder="Type your message…"></textarea>
-      <div style="display:flex;gap:6px;margin-top:7px">
-        <button class="btn btn-sm ml-a" onclick="sendMsg()">Send Message</button>
-      </div>
+      <div style="display:flex;gap:6px;margin-top:7px"><button class="btn btn-sm ml-a" onclick="sendMsg()">Send Message</button></div>
     </div>
-    <div class="ps">
-      <div class="ps-title">Latest Activity</div>
-      <div id="p-activity"></div>
-    </div>
+    <div class="ps"><div class="ps-title">Latest Activity</div><div id="p-activity"></div></div>
   </div>
 </div>
 </div><!-- /layout -->
 
-<!-- NEW/EDIT RESERVATION MODAL -->
+<!-- NEW/EDIT MODAL -->
 <div class="modal-overlay" id="rsv-modal">
   <div class="modal">
     <div class="modal-title" id="modal-title">New Reservation</div>
     <input type="hidden" id="edit-id">
     <div style="padding:8px 11px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-m);margin-bottom:12px;display:flex;align-items:center;gap:8px">
-      <span>Task ID / RSVP #</span>
-      <span id="modal-task-id" style="color:var(--gold);font-weight:500;letter-spacing:.05em">Auto-assigned by ClickUp on creation</span>
+      <span>Task ID / RSVP #</span><span id="modal-task-id" style="color:var(--gold);font-weight:500">Auto-assigned by ClickUp on creation</span>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="f-first" placeholder="First"></div>
@@ -418,110 +344,63 @@ tr:hover td{background:var(--surface2);cursor:pointer}
     <div class="form-row">
       <div class="form-group"><label class="form-label">Party Size *</label><input class="form-input" id="f-party" type="number" min="1" max="40" placeholder="2"></div>
       <div class="form-group"><label class="form-label">Server</label>
-        <select class="form-select" id="f-server">
-          <option value="">Unassigned</option>
-          <option>Ashley Smith</option><option>Marcus Rivera</option>
-          <option>Jenna Park</option><option>Devon Harris</option>
-        </select>
+        <select class="form-select" id="f-server"><option value="">Unassigned</option><option>Ashley Smith</option><option>Marcus Rivera</option><option>Jenna Park</option><option>Devon Harris</option></select>
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Table</label>
-        <select class="form-select" id="f-table"><option value="">None</option></select>
-      </div>
+      <div class="form-group"><label class="form-label">Table</label><select class="form-select" id="f-table"><option value="">None</option></select></div>
       <div class="form-group"><label class="form-label">Status</label>
-        <select class="form-select" id="f-status">
-          <option value="RSVP Requested">RSVP Requested</option>
-          <option value="RSVP Confirmed">RSVP Confirmed</option>
-          <option value="Seated">Seated</option>
-        </select>
+        <select class="form-select" id="f-status"><option value="RSVP Requested">RSVP Requested</option><option value="RSVP Confirmed">RSVP Confirmed</option><option value="Seated">Seated</option></select>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Allergies, celebrations, special requests…"></textarea></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('rsv-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitRsv()">Save Reservation</button>
-    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('rsv-modal')">Cancel</button><button class="btn btn-primary" onclick="submitRsv()">Save Reservation</button></div>
   </div>
 </div>
 
-<!-- CLOSE TABLE MODAL (receipt + remarks) -->
+<!-- CLOSE TABLE MODAL -->
 <div class="modal-overlay" id="close-modal">
-  <div class="modal modal-lg">
+  <div class="modal" style="width:560px">
     <div class="modal-title">Close Table & Log Order</div>
-    <div class="info-banner">This will mark the table as Completed, notify the busser, and log the full order to ClickUp and Google Sheets.</div>
-    <div id="close-guest-info" style="padding:10px 12px;background:var(--surface2);border-radius:6px;margin-bottom:14px;font-size:13px;color:var(--text-m)"></div>
+    <div class="info-banner">This marks the reservation as Completed, flags the table for bussing, and logs the full order to ClickUp and Google Sheets.</div>
+    <div id="close-guest-info" style="padding:9px 11px;background:var(--surface2);border-radius:6px;margin-bottom:12px;font-size:13px;color:var(--text-m)"></div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Total Order Amount * <span style="color:var(--text-d)">(pre-tip)</span></label>
-        <input class="form-input" id="cl-total" type="number" step="0.01" placeholder="0.00">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Tip Amount</label>
-        <input class="form-input" id="cl-tip" type="number" step="0.01" placeholder="0.00">
-      </div>
+      <div class="form-group"><label class="form-label">Order Total * (pre-tip)</label><input class="form-input" id="cl-total" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="form-group"><label class="form-label">Tip Amount</label><input class="form-input" id="cl-tip" type="number" step="0.01" placeholder="0.00"></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Closing Remarks * <span style="color:var(--text-d)">(required — logged as ClickUp comment)</span></label>
-      <textarea class="form-textarea" id="cl-remarks" placeholder="Note anything relevant: how the dining experience went, special requests fulfilled, any issues, staff notes…" style="min-height:90px"></textarea>
+    <div class="form-group"><label class="form-label">Closing Remarks * (required — logged as ClickUp comment on Task ID)</label><textarea class="form-textarea" id="cl-remarks" placeholder="How the experience went, special requests fulfilled, issues, staff notes…" style="min-height:80px"></textarea></div>
+    <div class="form-group"><label class="form-label">Receipt (photo or scan)</label>
+      <div class="upload-zone" id="upload-zone"><input type="file" accept="image/*,application/pdf" onchange="handleReceiptUpload(this)"><div style="font-size:24px;opacity:.4">🧾</div><div class="upload-zone-text">Tap to upload receipt</div></div>
+      <div class="upload-preview" id="upload-preview"><span>✓</span><span id="upload-filename"></span><button onclick="clearUpload()" style="margin-left:auto;background:none;border:none;color:var(--text-d);cursor:pointer;font-size:12px">✕</button></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Receipt Image <span style="color:var(--text-d)">(photo or scan — attached to ClickUp task)</span></label>
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" accept="image/*,application/pdf" onchange="handleReceiptUpload(this)">
-        <div class="upload-zone-icon">🧾</div>
-        <div class="upload-zone-text">Tap to upload receipt photo or PDF</div>
-      </div>
-      <div class="upload-preview" id="upload-preview">
-        <span>✓</span><span id="upload-filename"></span>
-        <button onclick="clearUpload()" style="margin-left:auto;background:none;border:none;color:var(--text-d);cursor:pointer;font-size:12px">✕</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Additional Notes <span style="color:var(--text-d)">(optional)</span></label>
-      <textarea class="form-textarea" id="cl-extra" placeholder="Any other notes for records…"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('close-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitClose()">Complete & Log Order</button>
-    </div>
+    <div class="form-group"><label class="form-label">Additional Notes (optional)</label><textarea class="form-textarea" id="cl-extra"></textarea></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('close-modal')">Cancel</button><button class="btn btn-primary" onclick="submitClose()">Complete & Log Order</button></div>
   </div>
 </div>
 
-<!-- CANCEL REMARK MODAL -->
+<!-- CANCEL MODAL -->
 <div class="modal-overlay" id="cancel-modal">
   <div class="modal modal-sm">
     <div class="modal-title">Cancel Reservation</div>
-    <div class="warn-banner">A cancellation notice will be sent via SendGrid & Twilio. This action is logged to ClickUp.</div>
-    <div id="cancel-guest-info" style="padding:10px 12px;background:var(--surface2);border-radius:6px;margin-bottom:14px;font-size:13px;color:var(--text-m)"></div>
+    <div class="warn-banner">A cancellation notice will be sent via SendGrid & Twilio. This is logged to ClickUp as a comment.</div>
+    <div id="cancel-guest-info" style="padding:9px 11px;background:var(--surface2);border-radius:6px;margin-bottom:12px;font-size:13px;color:var(--text-m)"></div>
     <div class="form-group">
-      <label class="form-label">Cancellation Reason * <span style="color:var(--text-d)">(required — logged as ClickUp comment)</span></label>
+      <label class="form-label">Cancellation Reason *</label>
       <select class="form-select" id="cancel-reason" style="margin-bottom:8px">
-        <option value="">Select reason…</option>
-        <option>Guest requested cancellation</option>
-        <option>No show</option>
-        <option>Duplicate reservation</option>
-        <option>Capacity issue</option>
-        <option>Staff initiated</option>
-        <option>Other</option>
+        <option value="">Select reason…</option><option>Guest requested cancellation</option><option>No show</option><option>Duplicate reservation</option><option>Capacity issue</option><option>Staff initiated</option><option>Other</option>
       </select>
       <textarea class="form-textarea" id="cancel-remarks" placeholder="Additional remarks…"></textarea>
     </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('cancel-modal')">Go Back</button>
-      <button class="btn btn-danger" onclick="submitCancel()">Confirm Cancellation</button>
-    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('cancel-modal')">Go Back</button><button class="btn btn-danger" onclick="submitCancel()">Confirm Cancellation</button></div>
   </div>
 </div>
 
-<!-- DAY POPUP (calendar overflow) -->
+<!-- DAY POPUP -->
 <div class="modal-overlay" id="day-modal">
   <div class="day-popup">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="day-popup-title" id="day-modal-title">Thursday, Jun 5</div>
-      <button class="panel-close" onclick="closeModal('day-modal')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div class="day-popup-title" id="day-modal-title"></div>
+      <button class="panel-close" onclick="closeModal('day-modal')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div id="day-modal-cards"></div>
   </div>
@@ -537,72 +416,61 @@ tr:hover td{background:var(--surface2);cursor:pointer}
       <div class="dr"><span class="lbl">Zapier</span><span style="color:var(--green);font-size:12px">● 5 Zaps active</span></div>
       <div class="dr"><span class="lbl">SendGrid</span><span style="color:var(--green);font-size:12px">● Active</span></div>
       <div class="dr"><span class="lbl">Twilio / OpenPhone</span><span style="color:var(--green);font-size:12px">● Active</span></div>
+      <div class="dr"><span class="lbl">localStorage sync</span><span style="color:var(--green);font-size:12px">● Live</span></div>
       <div class="dr"><span class="lbl">Last sync</span><span class="val" id="sync-time">—</span></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('sync-modal')">Close</button>
-      <button class="btn btn-primary" onclick="doSync()">Sync Now</button>
-    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('sync-modal')">Close</button><button class="btn btn-primary" onclick="doSync()">Sync Now</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
-
 <script>
-const TODAY=new Date().toISOString().split('T')[0];
-const TABLES=[
-  {id:'T1',num:1,cap:2},{id:'T2',num:2,cap:2},{id:'T3',num:3,cap:4},{id:'T4',num:4,cap:4},
-  {id:'T5',num:5,cap:6},{id:'T6',num:6,cap:6},{id:'T7',num:7,cap:8},{id:'T8',num:8,cap:4},
-  {id:'T9',num:9,cap:2},{id:'T10',num:10,cap:10},{id:'T11',num:11,cap:4},{id:'T12',num:12,cap:6},
-  {id:'B1',num:'Bar 1',cap:2},{id:'B2',num:'Bar 2',cap:2},{id:'B3',num:'Bar 3',cap:2},
-  {id:'P1',num:'Patio 1',cap:4},{id:'P2',num:'Patio 2',cap:4},{id:'P3',num:'Patio 3',cap:6},
+const STORE_KEY="hive_buckhead_v1";
+const TODAY=new Date().toISOString().split("T")[0];
+const TOMORROW=new Date(Date.now()+86400000).toISOString().split("T")[0];
+
+const TABLES_DEF=[
+  {id:"T1",num:"T1",cap:4,section:"indoor"},{id:"T2",num:"T2",cap:4,section:"indoor"},{id:"T3",num:"T3",cap:4,section:"indoor"},{id:"T4",num:"T4",cap:4,section:"indoor"},
+  {id:"T5",num:"T5",cap:6,section:"indoor"},{id:"T6",num:"T6",cap:6,section:"indoor"},{id:"T7",num:"T7",cap:8,section:"indoor"},{id:"T8",num:"T8",cap:4,section:"indoor"},
+  {id:"T9",num:"T9",cap:4,section:"indoor"},{id:"T10",num:"T10",cap:4,section:"indoor"},{id:"T11",num:"T11",cap:4,section:"indoor"},{id:"T12",num:"T12",cap:4,section:"indoor"},
+  {id:"T13",num:"T13",cap:4,section:"den"},{id:"T14",num:"T14",cap:4,section:"den"},{id:"T15",num:"T15",cap:4,section:"den"},{id:"T16",num:"T16",cap:4,section:"den"},
+  {id:"T18",num:"T18",cap:4,section:"den"},{id:"T19",num:"T19",cap:4,section:"den"},{id:"T20",num:"T20",cap:4,section:"den"},
+  {id:"BAR1",num:"Main Bar",cap:8,section:"bar"},{id:"BAR2",num:"Service",cap:4,section:"bar"},{id:"BAR3",num:"Lounge",cap:8,section:"bar"},
+  {id:"P1",num:"P1",cap:4,section:"patio"},{id:"P2",num:"P2",cap:4,section:"patio"},{id:"P3",num:"P3",cap:4,section:"patio"},{id:"P4",num:"P4",cap:4,section:"patio"},{id:"P5",num:"P5",cap:4,section:"patio"},
 ];
-let reservations=[
-  {id:'86AH8ZMTA',first:'Matest',last:'Now',phone:'4702226558',email:'c1.jumpw@gmail.com',date:'2026-06-12',time:'15:15',party:2,status:'Seated',server:'Ashley Smith',table:'T3',notes:'Bringing confetti',requested:'2026-05-04',confirmed:'2026-06-13',orderTotal:null,receipt:null,activities:[
-    {type:'created',text:'RSVP received via forms.app',time:'May 4 5:23pm'},
-    {type:'email',text:'Confirmation email sent via SendGrid (Zapier trigger)',time:'May 13 5:28pm'},
-    {type:'sms',text:'SMS confirmation sent via Twilio/OpenPhone',time:'May 13 5:28pm'},
-    {type:'sync',text:'ClickUp task created — Task ID assigned: 86AH8ZMTA',time:'May 13 5:28pm'},
-    {type:'status',text:'Status updated to Seated by Ashley Smith',time:'Jun 12 3:18pm'},
-  ]},
-  {id:'9KF3PLMX',first:'Jordan',last:'Baptiste',phone:'4045552341',email:'jbaptiste@gmail.com',date:TODAY,time:'18:30',party:4,status:'RSVP Confirmed',server:'Marcus Rivera',table:'T5',notes:'Anniversary dinner',requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[
-    {type:'created',text:'RSVP received via forms.app',time:'Today 2:10pm'},
-    {type:'email',text:'Confirmation email sent via SendGrid',time:'Today 2:11pm'},
-    {type:'sms',text:'SMS sent via Twilio',time:'Today 2:11pm'},
-  ]},
-  {id:'7ZB2WNQR',first:'Priya',last:'Nair',phone:'6785553819',email:'priya.n@outlook.com',date:TODAY,time:'19:00',party:6,status:'RSVP Requested',server:'',table:'',notes:'Gluten allergy for 1 guest',requested:TODAY,confirmed:'',orderTotal:null,receipt:null,activities:[
-    {type:'created',text:'RSVP received via forms.app',time:'Today 3:45pm'},
-  ]},
-  {id:'4XC9JHTV',first:'Tyler',last:'Monroe',phone:'4045558823',email:'tmonroe@me.com',date:'2026-06-08',time:'20:00',party:2,status:'Completed',server:'Jenna Park',table:'T2',notes:'Birthday celebration',requested:'2026-06-07',confirmed:'2026-06-08',orderTotal:187.50,receipt:'receipt_4XC9JHTV.jpg',activities:[
-    {type:'created',text:'RSVP received',time:'Jun 7'},
-    {type:'status',text:'Confirmed by Jenna Park',time:'Jun 7'},
-    {type:'status',text:'Seated at Table 2',time:'Jun 8 8:02pm'},
-    {type:'close',text:'Table closed — Order logged. Total: $187.50',time:'Jun 8 9:48pm'},
-    {type:'email',text:'Thank-you email sent via SendGrid',time:'Jun 8 9:50pm'},
-    {type:'sms',text:'Thank-you SMS sent via Twilio',time:'Jun 8 9:50pm'},
-    {type:'sync',text:'Full order logged to Google Sheets',time:'Jun 8 9:50pm'},
-  ]},
-  {id:'2RM6DKPN',first:'Camille',last:'Osei',phone:'4042228811',email:'camille.o@gmail.com',date:TODAY,time:'17:30',party:3,status:'RSVP Requested',server:'',table:'',notes:'',requested:TODAY,confirmed:'',orderTotal:null,receipt:null,activities:[
-    {type:'created',text:'RSVP received',time:'Today 4:12pm'},
-  ]},
-  {id:'5TN1QABZ',first:'DeShawn',last:'Williams',phone:'6786663322',email:'dw@gmail.com',date:TODAY,time:'20:30',party:8,status:'RSVP Confirmed',server:'Devon Harris',table:'T7',notes:'Large group, need push tables',requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[
-    {type:'created',text:'RSVP received',time:'Today 9:00am'},
-    {type:'status',text:'Confirmed by Devon Harris',time:'Today 9:05am'},
-    {type:'email',text:'Confirmation email sent via SendGrid',time:'Today 9:05am'},
-  ]},
+const SAMPLE_RSV=[
+  {id:"86AH8ZMTA",first:"Matest",last:"Now",phone:"4702226558",email:"c1.jumpw@gmail.com",date:TODAY,time:"15:15",party:2,status:"Seated",server:"Ashley Smith",table:"T3",notes:"Bringing confetti",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received via forms.app",time:"May 4 5:23pm"},{type:"email",text:"Confirmation email sent via SendGrid",time:"May 13 5:28pm"},{type:"sms",text:"SMS sent via Twilio",time:"May 13 5:28pm"},{type:"sync",text:"ClickUp Task ID: 86AH8ZMTA",time:"May 13"},{type:"status",text:"Seated at T3",time:"Today 3:18pm"}]},
+  {id:"9KF3PLMX",first:"Jordan",last:"Baptiste",phone:"4045552341",email:"jbaptiste@gmail.com",date:TODAY,time:"18:30",party:4,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T5",notes:"Anniversary dinner",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 2:10pm"},{type:"email",text:"Confirmation sent",time:"Today 2:11pm"},{type:"sms",text:"SMS sent",time:"Today 2:11pm"}]},
+  {id:"7ZB2WNQR",first:"Priya",last:"Nair",phone:"6785553819",email:"priya.n@outlook.com",date:TODAY,time:"19:00",party:6,status:"RSVP Requested",server:"",table:"",notes:"Gluten allergy for 1 guest",requested:TODAY,confirmed:"",orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 3:45pm"}]},
+  {id:"4XC9JHTV",first:"Tyler",last:"Monroe",phone:"4045558823",email:"tmonroe@me.com",date:TODAY,time:"16:00",party:2,status:"Completed",server:"Jenna Park",table:"T2",notes:"Birthday celebration",requested:TODAY,confirmed:TODAY,orderTotal:187.50,receipt:"receipt_4XC9JHTV.jpg",activities:[{type:"created",text:"RSVP received",time:"Today"},{type:"status",text:"Confirmed",time:"Today"},{type:"status",text:"Seated at T2",time:"Today 4:02pm"},{type:"close",text:"Table closed - $187.50 logged",time:"Today 5:48pm"},{type:"sync",text:"Logged to Google Sheets",time:"Today 5:50pm"}]},
+  {id:"2RM6DKPN",first:"Camille",last:"Osei",phone:"4042228811",email:"camille.o@gmail.com",date:TODAY,time:"17:30",party:3,status:"RSVP Confirmed",server:"Devon Harris",table:"T8",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 4:12pm"}]},
+  {id:"5TN1QABZ",first:"DeShawn",last:"Williams",phone:"6786663322",email:"dw@gmail.com",date:TODAY,time:"20:30",party:8,status:"RSVP Confirmed",server:"Devon Harris",table:"T7",notes:"Large group - push tables",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 9:00am"},{type:"status",text:"Confirmed",time:"Today 9:05am"},{type:"email",text:"Confirmation sent",time:"Today 9:05am"}]},
+  {id:"3QP7MZNK",first:"Ava",last:"Thompson",phone:"4048887766",email:"ava.t@gmail.com",date:TOMORROW,time:"19:30",party:3,status:"RSVP Confirmed",server:"Ashley Smith",table:"T4",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today"}]},
+  {id:"8WX2RVCS",first:"Marcus",last:"Lee",phone:"6784443322",email:"mlee@me.com",date:TODAY,time:"21:00",party:5,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T6",notes:"Allergic to shellfish",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today"}]},
 ];
+
+function loadStore(){try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
+function saveStore(d){try{localStorage.setItem(STORE_KEY,JSON.stringify(d));}catch(e){}}
+let _store=loadStore();
+if(!_store){_store={reservations:JSON.parse(JSON.stringify(SAMPLE_RSV)),tableStates:{"T9":"dirty","T1":"available"},tables:TABLES_DEF,servers:[{id:"s1",name:"Ashley Smith",role:"Lead Server",color:"#C9A96E",initials:"AS"},{id:"s2",name:"Marcus Rivera",role:"Server",color:"#5B96C8",initials:"MR"},{id:"s3",name:"Jenna Park",role:"Server",color:"#9B7EC8",initials:"JP"},{id:"s4",name:"Devon Harris",role:"Server / Bar",color:"#3AACA8",initials:"DH"}]};saveStore(_store);}
+if(!_store.tables)_store.tables=TABLES_DEF;
+let reservations=_store.reservations;
+
+function persistRsv(){_store.reservations=reservations;saveStore(_store);document.getElementById('sync-lbl').textContent='Saved '+(new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));}
+window.addEventListener("storage",function(e){if(e.key===STORE_KEY&&e.newValue){try{_store=JSON.parse(e.newValue);reservations=_store.reservations;renderView();showToast("Synced from floor / admin tab","info");}catch(ex){}}});
+
 let closingId=null,cancellingId=null,receiptFile=null;
 let activeFilter=null,dateFilter='',selectedId=null,currentView='list';
 let calDate=new Date();calDate.setDate(1);
 let msgTab='email';
 
-function fmtDate(d){if(!d)return'—';const[y,m,dy]=d.split('-');return`${m}/${dy}/${y}`}
-function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
-function scls(s){return{RSVP_Requested:'p-req','RSVP Requested':'p-req','RSVP Confirmed':'p-con',Seated:'p-sea',Completed:'p-com',Cancelled:'p-can'}[s]||'p-req'}
+function fmtDate(d){if(!d)return'--';const[y,m,dy]=d.split('-');return`${m}/${dy}/${y}`}
+function fmtTime(t){if(!t)return'--';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
+function scls(s){return{'RSVP Requested':'p-req','RSVP Confirmed':'p-con','Seated':'p-sea','Table Available':'p-avail','Completed':'p-com','Cancelled':'p-can'}[s]||'p-req'}
 function pill(s){return`<span class="pill ${scls(s)}"><span class="dot"></span>${s}</span>`}
 function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('')}
-function actIcon(type){const m={created:'🆕',email:'✉️',sms:'📱',status:'🔄',close:'✅',cancel:'❌',sync:'🔗',note:'📝',walkin:'🚶'};return m[type]||'•'}
-function actColor(type){const m={created:'var(--blue-bg)',email:'var(--purple-bg)',sms:'var(--teal-bg)',status:'var(--amber-bg)',close:'var(--green-bg)',cancel:'var(--red-bg)',sync:'var(--surface3)',note:'var(--surface3)',walkin:'var(--amber-bg)'};return m[type]||'var(--surface3)'}
+function actIcon(t){return{created:'🆕',email:'✉️',sms:'📱',status:'🔄',close:'✅',cancel:'❌',sync:'🔗',note:'📝',walkin:'🚶'}[t]||'•'}
+function actColor(t){return{created:'var(--blue-bg)',email:'var(--purple-bg)',sms:'var(--teal-bg)',status:'var(--amber-bg)',close:'var(--green-bg)',cancel:'var(--red-bg)',sync:'var(--surface3)',note:'var(--surface3)'}[t]||'var(--surface3)'}
 
 function getFiltered(){
   const q=document.getElementById('srch').value.toLowerCase();
@@ -626,6 +494,7 @@ function updateCounts(){
   document.getElementById('cnt-req').textContent=c('RSVP Requested');
   document.getElementById('cnt-con').textContent=c('RSVP Confirmed');
   document.getElementById('cnt-sea').textContent=c('Seated');
+  document.getElementById('cnt-avail').textContent=c('Table Available');
   document.getElementById('cnt-com').textContent=c('Completed');
   document.getElementById('cnt-can').textContent=c('Cancelled');
   const tod=reservations.filter(r=>r.date===TODAY);
@@ -660,22 +529,18 @@ function renderList(){
   if(!f.length){tb.innerHTML='';return;}
   tb.innerHTML=f.map(r=>`
     <tr onclick="selectRow('${r.id}')" class="${selectedId===r.id?'sel-row':''}">
-      <td><div class="name-cell">${r.first} ${r.last}${r.notes&&r.notes.includes('walk-in')?` <span style="font-size:10px;color:var(--amber);background:var(--amber-bg);padding:1px 5px;border-radius:3px">walk-in</span>`:''}
-      </div><div class="sub-text">${r.phone}</div></td>
+      <td><div class="name-cell">${r.first} ${r.last}${r.notes&&r.notes.includes('walk-in')?` <span style="font-size:10px;color:var(--amber);background:var(--amber-bg);padding:1px 5px;border-radius:3px">walk-in</span>`:''}</div><div class="sub-text">${r.phone}</div></td>
       <td><div>${fmtDate(r.date)}</div><div class="sub-text">${fmtTime(r.time)}</div></td>
       <td style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px">${r.party}</td>
       <td>${pill(r.status)}</td>
-      <td style="color:var(--text-m);font-size:12px">${r.server||'—'}</td>
-      <td style="color:var(--text-m);font-size:12px">${r.table||'—'}</td>
+      <td style="color:var(--text-m);font-size:12px">${r.server||'--'}</td>
+      <td style="color:var(--text-m);font-size:12px">${r.table||'--'}</td>
       <td style="font-size:11px;color:var(--gold);letter-spacing:.05em;font-weight:500">${r.id}</td>
-      <td style="font-size:12px;color:var(--green)">${r.orderTotal?'$'+r.orderTotal.toFixed(2):'—'}</td>
+      <td style="font-size:12px;color:var(--green)">${r.orderTotal?'$'+r.orderTotal.toFixed(2):'--'}</td>
     </tr>`).join('');
 }
 
-const KB_COLS=[
-  {key:'RSVP Requested',color:'var(--amber)'},{key:'RSVP Confirmed',color:'var(--blue)'},
-  {key:'Seated',color:'var(--purple)'},{key:'Completed',color:'var(--green)'},{key:'Cancelled',color:'var(--red)'},
-];
+const KB_COLS=[{key:'RSVP Requested',color:'var(--amber)'},{key:'RSVP Confirmed',color:'var(--blue)'},{key:'Seated',color:'var(--purple)'},{key:'Table Available',color:'var(--teal)'},{key:'Completed',color:'var(--green)'},{key:'Cancelled',color:'var(--red)'}];
 function renderKanban(){
   const f=getFiltered();
   document.getElementById('kanban-wrap').innerHTML=KB_COLS.map(col=>{
@@ -686,41 +551,36 @@ function renderKanban(){
         <div class="kb-name">${r.first} ${r.last}</div>
         <div class="kb-meta">${fmtDate(r.date)} · ${fmtTime(r.time)}</div>
         ${r.server?`<div class="kb-meta">${r.server}</div>`:''}
-        ${r.notes?`<div class="kb-meta" style="font-style:italic;color:var(--text-d)">"${r.notes.substring(0,35)}${r.notes.length>35?'…':''}"</div>`:''}
+        ${r.notes?`<div class="kb-meta" style="font-style:italic;color:var(--text-d)">"${r.notes.substring(0,35)}${r.notes.length>35?'...':''}"</div>`:''}
         <div class="kb-footer"><span style="font-size:11px;color:var(--text-d)">👥 ${r.party}</span><span style="font-size:10px;color:var(--gold)">${r.id}</span></div>
       </div>`).join('')}
-      ${col.key!=='Completed'&&col.key!=='Cancelled'?`<button class="add-card" onclick="openNewModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button>`:''}
+      ${col.key!=='Completed'&&col.key!=='Cancelled'&&col.key!=='Table Available'?`<button class="add-card" onclick="openNewModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button>`:''}
     </div>`;
   }).join('');
 }
 
 let calY,calM;
 function renderCalendar(){
-  const d=calDate;calY=d.getFullYear();calM=d.getMonth();
+  calY=calDate.getFullYear();calM=calDate.getMonth();
   document.getElementById('cal-label').textContent=new Date(calY,calM,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
   const dows=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let html=dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  const first=new Date(calY,calM,1).getDay();
-  const dim=new Date(calY,calM+1,0).getDate();
-  const prev=new Date(calY,calM,0).getDate();
+  const first=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate(),prev=new Date(calY,calM,0).getDate();
   let cells=[];
   for(let i=first-1;i>=0;i--)cells.push({d:prev-i,cur:false});
   for(let i=1;i<=dim;i++)cells.push({d:i,cur:true});
   while(cells.length<42)cells.push({d:cells.length-dim-first+1,cur:false});
-  const bgMap={'RSVP Requested':'var(--amber-bg)','RSVP Confirmed':'var(--blue-bg)','Seated':'var(--purple-bg)','Completed':'var(--green-bg)','Cancelled':'var(--red-bg)'};
-  const cMap={'RSVP Requested':'var(--amber)','RSVP Confirmed':'var(--blue)','Seated':'var(--purple)','Completed':'var(--green)','Cancelled':'var(--red)'};
+  const bgM={'RSVP Requested':'var(--amber-bg)','RSVP Confirmed':'var(--blue-bg)','Seated':'var(--purple-bg)','Table Available':'var(--teal-bg)','Completed':'var(--green-bg)','Cancelled':'var(--red-bg)'};
+  const cM={'RSVP Requested':'var(--amber)','RSVP Confirmed':'var(--blue)','Seated':'var(--purple)','Table Available':'var(--teal)','Completed':'var(--green)','Cancelled':'var(--red)'};
   html+=cells.map(cell=>{
     const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(cell.d).padStart(2,'0')}`;
-    const dayRes=reservations.filter(r=>r.date===ds);
+    const dayR=reservations.filter(r=>r.date===ds);
     const isToday=ds===TODAY;
-    const show=dayRes.slice(0,2);
-    const extra=dayRes.slice(2);
-    const chips=show.map(r=>`<div class="cal-chip" style="background:${bgMap[r.status]};color:${cMap[r.status]}" onclick="event.stopPropagation();selectRow('${r.id}')">${r.first} ${r.last.charAt(0)}. ${fmtTime(r.time)}</div>`).join('');
+    const show=dayR.slice(0,2);
+    const extra=dayR.slice(2);
+    const chips=show.map(r=>`<div class="cal-chip" style="background:${bgM[r.status]};color:${cM[r.status]}" onclick="event.stopPropagation();selectRow('${r.id}')">${r.first} ${r.last.charAt(0)}. ${fmtTime(r.time)}</div>`).join('');
     const more=extra.length?`<div class="cal-more-btn" onclick="event.stopPropagation();openDayModal('${ds}')">+${extra.length} more</div>`:'';
-    return`<div class="cal-day ${cell.cur?'':'other-month'} ${isToday?'is-today':''}">
-      <span class="cal-dn">${cell.d}</span>
-      <div class="cal-chips">${chips}${more}</div>
-    </div>`;
+    return`<div class="cal-day ${cell.cur?'':'other-month'} ${isToday?'is-today':''}"><span class="cal-dn">${cell.d}</span><div class="cal-chips">${chips}${more}</div></div>`;
   }).join('');
   document.getElementById('cal-grid').innerHTML=html;
 }
@@ -729,21 +589,15 @@ function calNext(){calDate.setMonth(calDate.getMonth()+1);renderCalendar()}
 
 function openDayModal(ds){
   const[y,m,d]=ds.split('-');
-  const label=new Date(+y,+m-1,+d).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  document.getElementById('day-modal-title').textContent=label;
-  const dayRes=reservations.filter(r=>r.date===ds).sort((a,b)=>a.time.localeCompare(b.time));
-  const bgMap={'RSVP Requested':'var(--amber-bg)','RSVP Confirmed':'var(--blue-bg)','Seated':'var(--purple-bg)','Completed':'var(--green-bg)','Cancelled':'var(--red-bg)'};
-  const cMap={'RSVP Requested':'var(--amber)','RSVP Confirmed':'var(--blue)','Seated':'var(--purple)','Completed':'var(--green)','Cancelled':'var(--red)'};
-  document.getElementById('day-modal-cards').innerHTML=dayRes.map(r=>`
+  document.getElementById('day-modal-title').textContent=new Date(+y,+m-1,+d).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const dayR=reservations.filter(r=>r.date===ds).sort((a,b)=>a.time.localeCompare(b.time));
+  document.getElementById('day-modal-cards').innerHTML=dayR.map(r=>`
     <div class="day-popup-card" onclick="closeModal('day-modal');selectRow('${r.id}')">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-weight:500;font-size:13px">${r.first} ${r.last}</span>
-        <span class="pill ${scls(r.status)}" style="font-size:10px"><span class="dot"></span>${r.status}</span>
-      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-weight:500;font-size:13px">${r.first} ${r.last}</span>${pill(r.status)}</div>
       <div style="font-size:12px;color:var(--text-m)">${fmtTime(r.time)} · Party of ${r.party} · ${r.server||'No server'}</div>
       ${r.notes?`<div style="font-size:11px;color:var(--text-d);margin-top:4px;font-style:italic">${r.notes}</div>`:''}
       <div style="font-size:10px;color:var(--gold);margin-top:5px">${r.id}</div>
-    </div>`).join('')||'<div style="color:var(--text-d);font-size:13px;text-align:center;padding:16px">No reservations this day.</div>';
+    </div>`).join('')||'<div style="color:var(--text-d);font-size:13px;padding:16px;text-align:center">No reservations this day.</div>';
   document.getElementById('day-modal').classList.add('show');
 }
 
@@ -756,16 +610,16 @@ function selectRow(id){
   document.getElementById('p-time').textContent=fmtTime(r.time);
   document.getElementById('p-party').textContent=`${r.party} guest${r.party>1?'s':''}`;
   document.getElementById('p-phone').textContent=r.phone;
-  document.getElementById('p-email').textContent=r.email||'—';
-  document.getElementById('p-table').textContent=r.table||'—';
+  document.getElementById('p-email').textContent=r.email||'--';
+  document.getElementById('p-table').textContent=r.table||'--';
   document.getElementById('p-notes').textContent=r.notes||'No notes.';
   document.getElementById('p-stat-badge').innerHTML=pill(r.status);
   document.getElementById('p-server').value=r.server||'';
+  populateTables();
   document.getElementById('p-table-sel').value=r.table||'';
   const tr=document.getElementById('p-total-row');
   if(r.orderTotal){tr.style.display='flex';document.getElementById('p-total').textContent=`$${r.orderTotal.toFixed(2)}`;}
   else tr.style.display='none';
-  // actions
   let acts='';
   if(r.status==='RSVP Requested'){
     acts+=`<button class="act-btn a-confirm" onclick="advance('${id}','RSVP Confirmed')">✉ Confirm & Send Notification</button>`;
@@ -781,13 +635,15 @@ function selectRow(id){
     acts+=`<button class="act-btn a-close" onclick="openCloseModal('${id}')">🧾 Close Table & Log Order</button>`;
     acts+=`<button class="act-btn a-edit" onclick="openEditModal('${id}')">✎ Update Details</button>`;
   }
+  if(r.status==='Table Available'){
+    acts+=`<div class="info-banner" style="margin:0">Table has been flagged for bussing. Once clean, it will show as Available on the floor map.</div>`;
+  }
   if(r.status==='Completed'||r.status==='Cancelled'){
     acts+=`<div class="info-banner" style="margin:0">This reservation is ${r.status.toLowerCase()}. ${r.orderTotal?`Order total: <strong>$${r.orderTotal.toFixed(2)}</strong>.`:''}</div>`;
     acts+=`<button class="act-btn a-gold" style="margin-top:8px" onclick="showToast('Re-synced to Google Sheets & ClickUp','success')">↗ Re-sync to Records</button>`;
   }
   document.getElementById('p-actions').innerHTML=acts;
   renderMsgTemplates(r);
-  // activities
   document.getElementById('p-activity').innerHTML=(r.activities||[]).slice().reverse().map(a=>`
     <div class="activity-item">
       <div class="act-icon" style="background:${actColor(a.type)}">${actIcon(a.type)}</div>
@@ -804,45 +660,35 @@ function advance(id,newStatus){
   const now=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   if(newStatus==='RSVP Confirmed'){
     r.confirmed=TODAY;
+    r.activities=r.activities||[];
     r.activities.push({type:'status',text:'Status updated to Confirmed',time:'Just now'});
-    r.activities.push({type:'email',text:'Confirmation email sent via SendGrid (Zapier trigger)',time:'Just now'});
-    r.activities.push({type:'sms',text:'Confirmation SMS sent via Twilio/OpenPhone (Zapier trigger)',time:'Just now'});
+    r.activities.push({type:'email',text:'Confirmation email sent via SendGrid (Zapier)',time:'Just now'});
+    r.activities.push({type:'sms',text:'Confirmation SMS sent via Twilio/OpenPhone (Zapier)',time:'Just now'});
     r.activities.push({type:'sync',text:'ClickUp task status updated',time:'Just now'});
-    showToast(`Confirmed — email & SMS sent to ${r.first}`,'success');
+    persistRsv();
+    showToast(`Confirmed -- email & SMS sent to ${r.first}`,'success');
   }
   if(newStatus==='Seated'){
-    r.activities.push({type:'status',text:`Seated at table ${r.table||'—'}`,time:'Just now'});
+    r.activities=r.activities||[];
+    r.activities.push({type:'status',text:`Seated at table ${r.table||'--'}`,time:'Just now'});
     r.activities.push({type:'sync',text:'ClickUp status updated to Seated',time:'Just now'});
+    persistRsv();
     showToast(`${r.first} ${r.last} seated`,'success');
   }
   selectRow(id);
 }
 
 function openCloseModal(id){
-  closingId=id;
-  const r=reservations.find(x=>x.id===id);if(!r)return;
-  document.getElementById('close-guest-info').innerHTML=`<strong>${r.first} ${r.last}</strong> · Party of ${r.party} · Table ${r.table||'—'} · ${fmtDate(r.date)} ${fmtTime(r.time)}`;
-  document.getElementById('cl-total').value='';
-  document.getElementById('cl-tip').value='';
-  document.getElementById('cl-remarks').value='';
-  document.getElementById('cl-extra').value='';
-  clearUpload();
-  document.getElementById('close-modal').classList.add('show');
+  closingId=id;const r=reservations.find(x=>x.id===id);if(!r)return;
+  document.getElementById('close-guest-info').innerHTML=`<strong>${r.first} ${r.last}</strong> · Party of ${r.party} · Table ${r.table||'--'} · ${fmtDate(r.date)} ${fmtTime(r.time)}`;
+  document.getElementById('cl-total').value='';document.getElementById('cl-tip').value='';
+  document.getElementById('cl-remarks').value='';document.getElementById('cl-extra').value='';
+  clearUpload();document.getElementById('close-modal').classList.add('show');
 }
 function handleReceiptUpload(input){
-  if(input.files[0]){
-    receiptFile=input.files[0];
-    document.getElementById('upload-zone').style.display='none';
-    const prev=document.getElementById('upload-preview');
-    prev.style.display='flex';
-    document.getElementById('upload-filename').textContent=receiptFile.name;
-  }
+  if(input.files[0]){receiptFile=input.files[0];document.getElementById('upload-zone').style.display='none';const p=document.getElementById('upload-preview');p.style.display='flex';document.getElementById('upload-filename').textContent=receiptFile.name;}
 }
-function clearUpload(){
-  receiptFile=null;
-  document.getElementById('upload-zone').style.display='block';
-  document.getElementById('upload-preview').style.display='none';
-}
+function clearUpload(){receiptFile=null;document.getElementById('upload-zone').style.display='block';document.getElementById('upload-preview').style.display='none';}
 function submitClose(){
   const total=document.getElementById('cl-total').value;
   const remarks=document.getElementById('cl-remarks').value.trim();
@@ -851,28 +697,27 @@ function submitClose(){
   const r=reservations.find(x=>x.id===closingId);if(!r)return;
   const tip=parseFloat(document.getElementById('cl-tip').value)||0;
   const extra=document.getElementById('cl-extra').value;
-  r.status='Completed';
-  r.orderTotal=parseFloat(total);
-  r.receipt=receiptFile?receiptFile.name:null;
-  const now=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-  r.activities.push({type:'close',text:`Table closed. Order: $${parseFloat(total).toFixed(2)} + tip $${tip.toFixed(2)}. Remarks: "${remarks.substring(0,60)}${remarks.length>60?'…':''}"`,time:'Just now'});
+  r.status='Completed';r.orderTotal=parseFloat(total);r.receipt=receiptFile?receiptFile.name:null;
+  r.activities=r.activities||[];
+  r.activities.push({type:'close',text:`Table closed. Order: $${parseFloat(total).toFixed(2)} + tip $${tip.toFixed(2)}. "${remarks.substring(0,60)}"`,time:'Just now'});
   if(receiptFile)r.activities.push({type:'note',text:`Receipt attached: ${receiptFile.name}`,time:'Just now'});
   if(extra)r.activities.push({type:'note',text:`Additional notes: ${extra}`,time:'Just now'});
-  r.activities.push({type:'sync',text:`ClickUp task updated — comment logged with order details (Task ${r.id})`,time:'Just now'});
-  r.activities.push({type:'sync',text:`Row logged to Google Sheets master with order total`,time:'Just now'});
-  r.activities.push({type:'email',text:`Thank-you email sent via SendGrid (Zapier trigger)`,time:'Just now'});
-  r.activities.push({type:'sms',text:`Thank-you SMS sent via Twilio/OpenPhone`,time:'Just now'});
+  r.activities.push({type:'sync',text:`ClickUp comment logged on Task ${r.id}: order details + receipt`,time:'Just now'});
+  r.activities.push({type:'sync',text:'Google Sheets master row updated with order total',time:'Just now'});
+  r.activities.push({type:'email',text:'Thank-you email sent via SendGrid (Zapier)',time:'Just now'});
+  r.activities.push({type:'sms',text:'Thank-you SMS sent via Twilio/OpenPhone (Zapier)',time:'Just now'});
+  // Flag table for bussing in shared store
+  if(r.table){_store.tableStates=_store.tableStates||{};_store.tableStates[r.table]='dirty';}
+  persistRsv();
   closeModal('close-modal');
-  showToast(`Order logged — $${parseFloat(total).toFixed(2)} · Table needs bussing`,'success');
+  showToast(`Order logged -- $${parseFloat(total).toFixed(2)} · Table flagged for bussing`,'success');
   selectRow(closingId);
 }
 
 function openCancelModal(id){
-  cancellingId=id;
-  const r=reservations.find(x=>x.id===id);if(!r)return;
+  cancellingId=id;const r=reservations.find(x=>x.id===id);if(!r)return;
   document.getElementById('cancel-guest-info').innerHTML=`<strong>${r.first} ${r.last}</strong> · ${fmtDate(r.date)} at ${fmtTime(r.time)} · Party of ${r.party}`;
-  document.getElementById('cancel-reason').value='';
-  document.getElementById('cancel-remarks').value='';
+  document.getElementById('cancel-reason').value='';document.getElementById('cancel-remarks').value='';
   document.getElementById('cancel-modal').classList.add('show');
 }
 function submitCancel(){
@@ -880,52 +725,110 @@ function submitCancel(){
   const remarks=document.getElementById('cancel-remarks').value.trim();
   if(!reason){showToast('Please select a cancellation reason','warning');return;}
   const r=reservations.find(x=>x.id===cancellingId);if(!r)return;
-  r.status='Cancelled';
-  r.activities.push({type:'cancel',text:`Cancelled — Reason: ${reason}${remarks?'. '+remarks:''}`,time:'Just now'});
-  r.activities.push({type:'email',text:'Cancellation email sent via SendGrid (Zapier trigger)',time:'Just now'});
-  r.activities.push({type:'sms',text:'Cancellation SMS sent via Twilio/OpenPhone',time:'Just now'});
-  r.activities.push({type:'sync',text:`ClickUp task updated — cancellation comment logged (Task ${r.id})`,time:'Just now'});
-  closeModal('cancel-modal');
-  showToast(`Reservation cancelled — ${reason}`,'info');
-  selectRow(cancellingId);
+  r.status='Cancelled';r.activities=r.activities||[];
+  r.activities.push({type:'cancel',text:`Cancelled -- Reason: ${reason}${remarks?'. '+remarks:''}`,time:'Just now'});
+  r.activities.push({type:'email',text:'Cancellation email sent via SendGrid (Zapier)',time:'Just now'});
+  r.activities.push({type:'sms',text:'Cancellation SMS sent via Twilio/OpenPhone (Zapier)',time:'Just now'});
+  r.activities.push({type:'sync',text:`ClickUp comment logged on Task ${r.id}`,time:'Just now'});
+  persistRsv();
+  closeModal('cancel-modal');showToast(`Reservation cancelled -- ${reason}`,'info');selectRow(cancellingId);
 }
 
-function updateServer(){
-  if(!selectedId)return;
-  const r=reservations.find(x=>x.id===selectedId);
-  if(r){r.server=document.getElementById('p-server').value;r.activities.push({type:'note',text:`Server assigned: ${r.server||'Unassigned'}`,time:'Just now'});renderView();}
-  showToast('Server assigned','info');
-}
-function updateTable(){
-  if(!selectedId)return;
-  const r=reservations.find(x=>x.id===selectedId);
-  if(r){r.table=document.getElementById('p-table-sel').value;r.activities.push({type:'note',text:`Table assigned: ${r.table||'None'}`,time:'Just now'});renderView();}
-  showToast('Table assigned','info');
-}
+function updateServer(){if(!selectedId)return;const r=reservations.find(x=>x.id===selectedId);if(r){r.server=document.getElementById('p-server').value;r.activities=r.activities||[];r.activities.push({type:'note',text:`Server assigned: ${r.server||'Unassigned'}`,time:'Just now'});persistRsv();renderView();}showToast('Server assigned','info');}
+function updateTable(){if(!selectedId)return;const r=reservations.find(x=>x.id===selectedId);if(r){r.table=document.getElementById('p-table-sel').value;r.activities=r.activities||[];r.activities.push({type:'note',text:`Table assigned: ${r.table||'None'}`,time:'Just now'});persistRsv();renderView();}showToast('Table assigned','info');}
 function closePanel(){selectedId=null;document.getElementById('detail-panel').classList.add('hidden');renderView();}
 
-// FILTER
 function setFilter(s,el){activeFilter=s;dateFilter='';document.getElementById('date-flt').value='';document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
 function setDateQ(d,el){dateFilter=d;activeFilter=null;document.getElementById('date-flt').value=d;document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
 function filterServer(s,el){activeFilter=null;document.getElementById('srv-flt').value=s;document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
 
-// MSG
 const ETMPL=[
-  {label:'Confirm RSVP',body:r=>`Hi ${r.first},\n\nYour reservation at Hive Buckhead is confirmed!\n\nDate: ${fmtDate(r.date)}\nTime: ${fmtTime(r.time)}\nParty of: ${r.party}\n\nWe look forward to seeing you.\n\nHive Buckhead`},
-  {label:'Reminder',body:r=>`Hi ${r.first},\n\nReminder: your reservation is tonight at ${fmtTime(r.time)} for ${r.party}. See you soon!\n\nHive Buckhead`},
-  {label:'Cancellation',body:r=>`Hi ${r.first},\n\nYour reservation on ${fmtDate(r.date)} has been cancelled.\n\nWe hope to see you again soon.\n\nHive Buckhead`},
-  {label:'Thank You',body:r=>`Hi ${r.first},\n\nThank you for dining with us at Hive Buckhead! We hope you had a wonderful experience.\n\nHive Buckhead`},
+  {label:'Confirm RSVP',body:r=>`Hi ${r.first},\n\nYour reservation at Hive Buckhead is confirmed!\n\nDate: ${fmtDate(r.date)}\nTime: ${fmtTime(r.time)}\nParty of: ${r.party}\nRSVP #: ${r.id}\n\nWe look forward to seeing you.\n\nHive Buckhead`},
+  {label:'Reminder',body:r=>`Hi ${r.first},\n\nReminder: your reservation is ${r.date===TODAY?'today':'tomorrow'} at ${fmtTime(r.time)} for ${r.party}. See you soon!\n\nHive Buckhead`},
+  {label:'Cancellation',body:r=>`Hi ${r.first},\n\nYour reservation on ${fmtDate(r.date)} has been cancelled.\n\nHive Buckhead`},
+  {label:'Thank You',body:r=>`Hi ${r.first},\n\nThank you for dining with us at Hive Buckhead!\n\nHive Buckhead`},
 ];
 const STMPL=[
-  {label:'Confirm',body:r=>`Hi ${r.first}! Your Hive Buckhead reservation is confirmed for ${fmtDate(r.date)} at ${fmtTime(r.time)}, party of ${r.party}. See you then!`},
-  {label:'Reminder',body:r=>`Hi ${r.first}, reminder: your Hive Buckhead table is tonight at ${fmtTime(r.time)} for ${r.party}. 🍸`},
+  {label:'Confirm',body:r=>`Hi ${r.first}! Hive Buckhead reservation confirmed for ${fmtDate(r.date)} at ${fmtTime(r.time)}, party of ${r.party}. RSVP #${r.id}. See you then!`},
+  {label:'Reminder',body:r=>`Hi ${r.first}, your Hive Buckhead table is ${r.date===TODAY?'today':'tomorrow'} at ${fmtTime(r.time)} for ${r.party}. 🍸`},
   {label:'Cancel',body:r=>`Hi ${r.first}, your Hive Buckhead reservation on ${fmtDate(r.date)} has been cancelled. Questions? Call us.`},
   {label:'Thank You',body:r=>`Hi ${r.first}! Thank you for dining at Hive Buckhead — hope to see you again soon! 🥂`},
 ];
 function switchMsgTab(t){msgTab=t;document.getElementById('msg-tab-email').classList.toggle('active',t==='email');document.getElementById('msg-tab-sms').classList.toggle('active',t==='sms');if(selectedId)renderMsgTemplates(reservations.find(x=>x.id===selectedId));}
-function renderMsgTemplates(r){
-  const t=msgTab==='email'?ETMPL:STMPL;
-  document.getElementById('msg-templates').innerHTML=t.map((tmpl,i)=>`<span class="tmpl-chip" onclick="applyTmpl(${i})">${tmpl.label}</span>`).join('');
-  document.getElementById('msg-body').value='';
+function renderMsgTemplates(r){const t=msgTab==='email'?ETMPL:STMPL;document.getElementById('msg-templates').innerHTML=t.map((tmpl,i)=>`<span class="tmpl-chip" onclick="applyTmpl(${i})">${tmpl.label}</span>`).join('');document.getElementById('msg-body').value='';}
+function applyTmpl(i){const r=reservations.find(x=>x.id===selectedId);if(!r)return;const t=msgTab==='email'?ETMPL:STMPL;document.getElementById('msg-body').value=t[i].body(r);}
+function sendMsg(){
+  const r=reservations.find(x=>x.id===selectedId);if(!r)return;
+  const body=document.getElementById('msg-body').value.trim();
+  if(!body){showToast('Message is empty','warning');return;}
+  r.activities=r.activities||[];
+  r.activities.push({type:msgTab==='email'?'email':'sms',text:`${msgTab==='email'?'Email':'SMS'} sent: "${body.substring(0,50)}..."`,time:'Just now'});
+  persistRsv();document.getElementById('msg-body').value='';
+  showToast(`${msgTab==='email'?'Email':'SMS'} sent to ${r.first} via ${msgTab==='email'?'SendGrid':'Twilio'}`,'success');
+  selectRow(selectedId);
 }
-function applyTmpl(i){const r=reservations.find(x=>x.id=
+
+function populateTables(){
+  ['f-table','p-table-sel'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const v=el.value;
+    const tables=(_store.tables||TABLES_DEF);
+    el.innerHTML=(id==='p-table-sel'?'<option value="">No table assigned</option>':'<option value="">None</option>')+tables.map(t=>`<option value="${t.id}">Table ${t.num} (${t.cap})</option>`).join('');
+    el.value=v;
+  });
+}
+function openNewModal(){
+  document.getElementById('modal-title').textContent='New Reservation';document.getElementById('edit-id').value='';
+  document.getElementById('modal-task-id').textContent='Auto-assigned by ClickUp on creation';
+  ['f-first','f-last','f-phone','f-email','f-time','f-party','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-date').value=TODAY;document.getElementById('f-server').value='';document.getElementById('f-status').value='RSVP Requested';
+  populateTables();document.getElementById('f-table').value='';
+  document.getElementById('rsv-modal').classList.add('show');
+}
+function openEditModal(id){
+  const r=reservations.find(x=>x.id===id);if(!r)return;
+  document.getElementById('modal-title').textContent='Edit Reservation';document.getElementById('edit-id').value=id;
+  document.getElementById('modal-task-id').textContent=id;
+  document.getElementById('f-first').value=r.first;document.getElementById('f-last').value=r.last;
+  document.getElementById('f-phone').value=r.phone;document.getElementById('f-email').value=r.email||'';
+  document.getElementById('f-date').value=r.date;document.getElementById('f-time').value=r.time;
+  document.getElementById('f-party').value=r.party;document.getElementById('f-server').value=r.server||'';
+  document.getElementById('f-status').value=r.status;document.getElementById('f-notes').value=r.notes||'';
+  populateTables();document.getElementById('f-table').value=r.table||'';
+  document.getElementById('rsv-modal').classList.add('show');
+}
+function submitRsv(){
+  const first=document.getElementById('f-first').value.trim();const last=document.getElementById('f-last').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();const date=document.getElementById('f-date').value;
+  const time=document.getElementById('f-time').value;const party=document.getElementById('f-party').value;
+  if(!first||!last||!phone||!date||!time||!party){showToast('Please fill required fields','warning');return;}
+  const editId=document.getElementById('edit-id').value;
+  if(editId){
+    const r=reservations.find(x=>x.id===editId);
+    if(r){
+      Object.assign(r,{first,last,phone,email:document.getElementById('f-email').value,date,time,party:+party,server:document.getElementById('f-server').value,table:document.getElementById('f-table').value,status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value});
+      r.activities=r.activities||[];r.activities.push({type:'note',text:'Reservation updated by staff',time:'Just now'});
+      persistRsv();showToast(`Updated -- ${first} ${last}`,'success');closeModal('rsv-modal');renderView();selectRow(editId);
+    }
+  }else{
+    const newId=genId();
+    reservations.push({id:newId,first,last,phone,email:document.getElementById('f-email').value,date,time,party:+party,status:document.getElementById('f-status').value,server:document.getElementById('f-server').value,table:document.getElementById('f-table').value,notes:document.getElementById('f-notes').value,requested:TODAY,confirmed:'',orderTotal:null,receipt:null,activities:[{type:'created',text:'Reservation created manually by staff',time:'Just now'}]});
+    persistRsv();showToast(`Created -- Task ID: ${newId}`,'success');closeModal('rsv-modal');renderView();selectRow(newId);
+  }
+}
+
+function showSync(){document.getElementById('sync-time').textContent=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});document.getElementById('sync-modal').classList.add('show');}
+function doSync(){closeModal('sync-modal');persistRsv();showToast('Synced -- ClickUp, Google Sheets & Zapier','success')}
+function loadSample(){if(!confirm('Replace current data with sample data?'))return;_store={reservations:JSON.parse(JSON.stringify(SAMPLE_RSV)),tableStates:{"T9":"dirty","T1":"available"},tables:TABLES_DEF,servers:_store.servers};saveStore(_store);reservations=_store.reservations;renderView();showToast('Sample data loaded','success');}
+function clearData(){if(!confirm('Clear all reservation data?'))return;reservations=[];_store.reservations=[];_store.tableStates={};saveStore(_store);renderView();closePanel();showToast('All data cleared','info');}
+function exportCSV(){const rows=[['Task ID','First','Last','Phone','Email','Date','Time','Party','Status','Server','Table','Order Total','Notes']];reservations.forEach(r=>rows.push([r.id,r.first,r.last,r.phone,r.email,r.date,r.time,r.party,r.status,r.server,r.table,r.orderTotal||'',r.notes]));const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='hive-reservations.csv';a.click();}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')})});
+let dark=true;
+function toggleTheme(){dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');}
+let toastT;
+function showToast(msg,type='success'){const el=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;el.className=`toast ${type} show`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
+populateTables();renderView();
+</script>
+</body>
+</html>
