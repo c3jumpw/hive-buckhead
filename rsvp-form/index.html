@@ -7,250 +7,750 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--border:rgba(201,169,110,.2);--border-s:rgba(201,169,110,.4);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.12);--red:#C4524A;--red-bg:rgba(196,82,74,.12);--amber:#D4A020;--amber-bg:rgba(212,160,32,.12)}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 60px}
-.header{width:100%;max-width:560px;padding:40px 0 32px;text-align:center;border-bottom:.5px solid var(--border);margin-bottom:32px}
-.logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--gold);letter-spacing:.12em}
+:root{
+  --gold:#C9A96E;--gold-light:#E8D4B0;--gold-dark:#8B6E3E;
+  --bg:#0B0907;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;
+  --border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.38);
+  --text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;
+  --green:#4CAF82;--green-bg:rgba(76,175,130,.12);
+  --red:#C4524A;--red-bg:rgba(196,82,74,.12);
+  --amber:#D4A020;--amber-bg:rgba(212,160,32,.12);
+  --blue:#5B96C8;--blue-bg:rgba(91,150,200,.12);
+}
+html,body{height:100%}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;overflow-x:hidden;
+}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(201,169,110,.07) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 40% at 80% 80%,rgba(201,169,110,.04) 0%,transparent 60%);
+  pointer-events:none;
+}
+
+/* ── HEADER ── */
+.header{
+  width:100%;padding:40px 20px 28px;text-align:center;
+  position:relative;z-index:1;
+}
+.logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--gold);letter-spacing:.14em;line-height:1}
 .logo span{color:var(--text-m);font-weight:300}
-.tagline{font-size:13px;color:var(--text-m);margin-top:8px;letter-spacing:.04em}
-.form-card{width:100%;max-width:560px;background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:28px 28px 32px}
-.section-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--gold);margin-bottom:18px}
-.form-group{margin-bottom:15px}
-.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px;letter-spacing:.04em}
+.tagline{font-size:13px;color:var(--text-m);margin-top:9px;letter-spacing:.06em}
+
+/* ── PROGRESS ── */
+.progress-wrap{
+  width:100%;max-width:520px;padding:0 20px 28px;
+  position:relative;z-index:1;
+}
+.progress-steps{display:flex;align-items:center;gap:0;position:relative}
+.progress-steps::before{
+  content:'';position:absolute;top:50%;left:0;right:0;height:1px;
+  background:var(--border);transform:translateY(-50%);z-index:0;
+}
+.prog-step{
+  display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;
+  position:relative;z-index:1;
+}
+.prog-dot{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:500;
+  background:var(--surface);border:1.5px solid var(--border);
+  color:var(--text-d);transition:all .35s ease;
+}
+.prog-label{font-size:10px;color:var(--text-d);letter-spacing:.04em;transition:color .35s;white-space:nowrap}
+.prog-step.active .prog-dot{background:var(--gold);border-color:var(--gold);color:#0B0907;box-shadow:0 0 0 4px rgba(201,169,110,.2)}
+.prog-step.active .prog-label{color:var(--gold)}
+.prog-step.done .prog-dot{background:rgba(201,169,110,.15);border-color:var(--gold-dark);color:var(--gold)}
+.prog-step.done .prog-label{color:var(--text-m)}
+.prog-line{flex:1;height:1.5px;background:var(--border);transition:background .35s;position:relative;z-index:0;margin:0 2px;transform:translateY(-10px)}
+.prog-line.done{background:var(--gold-dark)}
+
+/* ── FORM WRAPPER ── */
+.form-outer{
+  width:100%;max-width:520px;padding:0 20px 60px;
+  position:relative;z-index:1;
+}
+.step{display:none;animation:stepIn .35s ease forwards}
+.step.active{display:block}
+@keyframes stepIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes stepOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-28px)}}
+.step.leaving{animation:stepOut .25s ease forwards;pointer-events:none}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);
+  border:.5px solid var(--border);
+  border-radius:14px;padding:30px 28px 28px;
+}
+.step-title{
+  font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;
+  color:var(--gold);margin-bottom:4px;line-height:1.2;
+}
+.step-sub{font-size:12.5px;color:var(--text-m);margin-bottom:22px;line-height:1.6}
+
+/* ── FORM ELEMENTS ── */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:5px;letter-spacing:.04em}
 .form-label .req{color:var(--gold)}
-.form-input,.form-select,.form-textarea{width:100%;padding:10px 13px;background:var(--surface2);border:.5px solid var(--border);border-radius:7px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s,-webkit-appearance 0}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:11px 14px;
+  background:var(--surface2);border:.5px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:14px;
+  font-family:'DM Sans',sans-serif;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,110,.1);
+}
 .form-input::placeholder,.form-textarea::placeholder{color:var(--text-d)}
-.form-textarea{resize:vertical;min-height:80px;line-height:1.5}
+.form-textarea{resize:vertical;min-height:88px;line-height:1.6}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.form-row{grid-template-columns:1fr}}
-.section-divider{height:.5px;background:var(--border);margin:22px 0}
-.section-sub{font-size:12px;color:var(--text-m);margin-bottom:14px;line-height:1.6;padding:10px 13px;background:var(--surface2);border-radius:6px;border:.5px solid var(--border)}
-.section-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.section-card{padding:14px;border-radius:8px;border:.5px solid var(--border);cursor:pointer;transition:all .15s;background:var(--surface2)}
-.section-card:hover{border-color:var(--gold)}
-.section-card.selected{border-color:var(--gold);background:rgba(201,169,110,.08)}
-.section-card-name{font-weight:500;font-size:13px;margin-bottom:3px}
-.section-card-detail{font-size:11px;color:var(--text-m)}
-.submit-btn{width:100%;padding:14px;background:var(--gold);color:#0E0C0A;border:none;border-radius:8px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;letter-spacing:.06em;cursor:pointer;transition:background .15s;margin-top:6px}
-.submit-btn:hover{background:var(--gold-light)}
-.submit-btn:disabled{opacity:.5;cursor:not-allowed}
-.success-screen{display:none;text-align:center;padding:32px 0}
-.success-icon{font-size:48px;margin-bottom:16px}
-.success-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--gold);margin-bottom:10px}
-.success-detail{font-size:13px;color:var(--text-m);line-height:1.8}
-.rsvp-badge{display:inline-block;background:rgba(201,169,110,.15);border:.5px solid var(--border-s);color:var(--gold);font-weight:500;font-size:14px;padding:8px 20px;border-radius:20px;margin:14px 0;letter-spacing:.08em}
-.error-msg{font-size:11px;color:var(--red);margin-top:4px;display:none}
-.capacity-note{font-size:11px;color:var(--text-d);margin-top:5px}
-.back-link{margin-top:24px;text-align:center}
-.back-link a{color:var(--text-m);font-size:12px;text-decoration:none;border-bottom:.5px solid var(--border)}
-.back-link a:hover{color:var(--gold)}
-.party-note{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--amber);margin-bottom:14px;line-height:1.5;display:none}
+.field-hint{font-size:10.5px;color:var(--text-d);margin-top:4px;line-height:1.4}
+
+/* ── SECTION CARDS ── */
+.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+@media(max-width:420px){.section-grid{grid-template-columns:1fr}}
+.section-card{
+  padding:14px 14px 12px;border-radius:10px;border:.5px solid var(--border);
+  cursor:pointer;transition:all .2s;background:var(--surface2);
+  display:flex;flex-direction:column;gap:4px;
+}
+.section-card:hover{border-color:var(--gold-dark);background:rgba(201,169,110,.04)}
+.section-card.selected{
+  border-color:var(--gold);background:rgba(201,169,110,.08);
+  box-shadow:0 0 0 3px rgba(201,169,110,.12);
+}
+.sc-icon{font-size:20px;margin-bottom:4px}
+.sc-name{font-weight:500;font-size:13.5px;color:var(--text)}
+.sc-detail{font-size:11px;color:var(--text-m);line-height:1.4}
+.sc-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);margin-left:auto;margin-top:auto;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;transition:all .2s}
+.section-card.selected .sc-check{background:var(--gold);border-color:var(--gold);color:#0B0907}
+
+/* ── NOTE BOXES ── */
+.note-box{border-radius:7px;padding:10px 13px;font-size:12px;line-height:1.6;margin-bottom:14px}
+.note-amber{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);color:var(--amber)}
+.note-blue{background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);color:var(--blue)}
+.note-green{background:var(--green-bg);border:.5px solid rgba(76,175,130,.3);color:var(--green)}
+
+/* ── OCCASION GRID ── */
+.occasion-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.occ-chip{
+  padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;
+  background:var(--surface2);border:.5px solid var(--border);color:var(--text-m);
+  transition:all .18s;
+}
+.occ-chip:hover{border-color:var(--gold-dark);color:var(--text)}
+.occ-chip.selected{background:rgba(201,169,110,.12);border-color:var(--gold);color:var(--gold)}
+
+/* ── REVIEW ROWS ── */
+.review-block{margin-bottom:16px}
+.review-label{font-size:10px;color:var(--text-d);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.review-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px;gap:8px;
+}
+.review-row:last-child{border-bottom:none}
+.review-row .rl{color:var(--text-m);flex-shrink:0}
+.review-row .rv{color:var(--text);font-weight:500;text-align:right;word-break:break-word}
+.edit-link{font-size:11px;color:var(--gold);cursor:pointer;border-bottom:.5px solid rgba(201,169,110,.3);flex-shrink:0;margin-left:8px}
+.edit-link:hover{color:var(--gold-light)}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:10px;margin-top:22px}
+.btn{
+  padding:13px 22px;border-radius:8px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  border:.5px solid var(--border-s);background:transparent;color:var(--text);
+  transition:all .15s;flex-shrink:0;
+}
+.btn:hover{background:var(--surface2);border-color:var(--gold)}
+.btn-primary{
+  flex:1;background:var(--gold);color:#0B0907;border-color:var(--gold);
+  font-family:'Cormorant Garamond',serif;font-size:17px;letter-spacing:.04em;
+}
+.btn-primary:hover{background:var(--gold-light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── SUCCESS ── */
+.success-wrap{display:none;text-align:center;padding:10px 0 20px}
+.success-icon{font-size:52px;margin-bottom:18px}
+.success-title{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);margin-bottom:12px}
+.rsvp-badge{
+  display:inline-block;background:rgba(201,169,110,.12);
+  border:.5px solid var(--border-s);color:var(--gold);
+  font-weight:500;font-size:15px;padding:9px 22px;
+  border-radius:22px;margin:14px 0;letter-spacing:.1em;
+}
+.success-detail{font-size:13px;color:var(--text-m);line-height:1.9;margin-bottom:20px}
+.next-steps{
+  background:var(--surface2);border:.5px solid var(--border);
+  border-radius:9px;padding:16px 18px;font-size:12.5px;color:var(--text-m);
+  line-height:1.9;text-align:left;margin-bottom:20px;
+}
+.next-steps strong{color:var(--text)}
+
+/* ── ERROR ── */
+.field-error{font-size:11px;color:var(--red);margin-top:4px;display:none}
+.form-input.error,.form-select.error{border-color:var(--red)!important}
+
+/* ── FOOTER LINKS ── */
+.footer-links{
+  text-align:center;font-size:12px;color:var(--text-d);
+  padding:20px 0 32px;position:relative;z-index:1;
+}
+.footer-links a{color:var(--text-m);text-decoration:none;border-bottom:.5px solid var(--border)}
+.footer-links a:hover{color:var(--gold)}
+
+/* ── TIME SLOTS ── */
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:4px}
+@media(max-width:380px){.time-grid{grid-template-columns:repeat(2,1fr)}}
+.time-slot{
+  padding:9px 6px;border-radius:7px;border:.5px solid var(--border);
+  text-align:center;cursor:pointer;font-size:13px;color:var(--text-m);
+  background:var(--surface2);transition:all .18s;
+}
+.time-slot:hover{border-color:var(--gold-dark);color:var(--text)}
+.time-slot.selected{background:rgba(201,169,110,.1);border-color:var(--gold);color:var(--gold);font-weight:500}
 </style>
 </head>
 <body>
+
 <div class="header">
   <div class="logo">HIVE <span>BUCKHEAD</span></div>
   <div class="tagline">Reserve Your Table</div>
 </div>
 
-<div class="form-card" id="form-card">
-  <div class="section-title">Guest Information</div>
-  <div class="form-row">
-    <div class="form-group"><label class="form-label">First Name <span class="req">*</span></label><input class="form-input" id="f-first" placeholder="First name" maxlength="50"></div>
-    <div class="form-group"><label class="form-label">Last Name <span class="req">*</span></label><input class="form-input" id="f-last" placeholder="Last name" maxlength="50"></div>
-  </div>
-  <div class="form-row">
-    <div class="form-group"><label class="form-label">Phone Number <span class="req">*</span></label><input class="form-input" id="f-phone" type="tel" placeholder="(404) 555-0000"></div>
-    <div class="form-group"><label class="form-label">Email Address <span class="req">*</span></label><input class="form-input" id="f-email" type="email" placeholder="your@email.com"></div>
-  </div>
-
-  <div class="section-divider"></div>
-  <div class="section-title">Reservation Details</div>
-  <div class="form-row">
-    <div class="form-group"><label class="form-label">Date <span class="req">*</span></label><input class="form-input" id="f-date" type="date"></div>
-    <div class="form-group"><label class="form-label">Preferred Arrival Time <span class="req">*</span></label>
-      <select class="form-select" id="f-time">
-        <option value="">Select time…</option>
-        <option value="17:00">5:00 PM</option><option value="17:30">5:30 PM</option>
-        <option value="18:00">6:00 PM</option><option value="18:30">6:30 PM</option>
-        <option value="19:00">7:00 PM</option><option value="19:30">7:30 PM</option>
-        <option value="20:00">8:00 PM</option><option value="20:30">8:30 PM</option>
-        <option value="21:00">9:00 PM</option><option value="21:30">9:30 PM</option>
-        <option value="22:00">10:00 PM</option>
-      </select>
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Party Size <span class="req">*</span></label>
-    <input class="form-input" id="f-party" type="number" min="1" max="50" placeholder="How many guests?">
-    <div class="capacity-note">Fine Dining: up to 38 · Bar: up to 20 · Den: up to 52 · Patio: up to 48</div>
-  </div>
-
-  <div class="section-divider"></div>
-  <div class="section-title">Preferred Seating</div>
-  <div class="section-sub">All seating requests are subject to availability. Our team will confirm your preferred section when approving your reservation.</div>
-  <div class="section-select-grid">
-    <div class="section-card" onclick="selectSection('fine_dining',this)">
-      <div class="section-card-name">🍽 Fine Dining</div>
-      <div class="section-card-detail">19 tables · 2–6 seats · Indoor intimate setting</div>
-    </div>
-    <div class="section-card" onclick="selectSection('bar',this)">
-      <div class="section-card-name">🍸 Bar</div>
-      <div class="section-card-detail">20 bar stools · Within Fine Dining · Individual seats</div>
-    </div>
-    <div class="section-card" onclick="selectSection('den',this)">
-      <div class="section-card-name">🪑 Den</div>
-      <div class="section-card-detail">13 tables · 4–12 seats · Casual, cozy lounge</div>
-    </div>
-    <div class="section-card" onclick="selectSection('patio',this)">
-      <div class="section-card-name">☀️ Patio</div>
-      <div class="section-card-detail">12 tables · 4–10 seats · Outdoor seating</div>
-    </div>
-  </div>
-  <div class="party-note" id="party-note"></div>
-
-  <div class="section-divider"></div>
-  <div class="section-title">Additional Notes</div>
-  <div class="form-group">
-    <textarea class="form-textarea" id="f-notes" placeholder="Dietary restrictions, allergies, celebrations, accessibility needs, special requests…"></textarea>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Occasion (optional)</label>
-    <select class="form-select" id="f-occasion">
-      <option value="">None / Not specified</option>
-      <option>Birthday</option><option>Anniversary</option><option>Business Dinner</option>
-      <option>Date Night</option><option>Family Gathering</option><option>Celebration</option><option>Other</option>
-    </select>
-  </div>
-
-  <div style="margin-top:20px;font-size:11px;color:var(--text-d);line-height:1.7;margin-bottom:16px">
-    By submitting this form, you consent to receive a confirmation email and SMS from Hive Buckhead. Your RSVP is <strong style="color:var(--text-m)">pending</strong> until confirmed by our team — you'll receive a confirmation message once approved.
-  </div>
-  <button class="submit-btn" id="submit-btn" onclick="submitForm()">Request Reservation</button>
-</div>
-
-<!-- SUCCESS SCREEN -->
-<div class="form-card" id="success-card" style="display:none">
-  <div class="success-screen" style="display:block">
-    <div class="success-icon">🥂</div>
-    <div class="success-title">Request Received!</div>
-    <div class="rsvp-badge" id="success-rsvp-id">RSVP # —</div>
-    <div class="success-detail" id="success-detail"></div>
-    <div style="margin-top:24px;padding:14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-m);line-height:1.7">
-      📧 A confirmation email has been sent to your inbox.<br>
-      📱 A confirmation text has been sent to your phone.<br><br>
-      <strong style="color:var(--text)">Next step:</strong> Our team will review and confirm your reservation — watch for a confirmation message. Average response time is under 30 minutes during business hours.
-    </div>
-    <div style="margin-top:20px">
-      <button class="submit-btn" style="font-size:14px;padding:12px" onclick="resetForm()">Make Another Reservation</button>
-    </div>
+<!-- PROGRESS BAR -->
+<div class="progress-wrap" id="progress-wrap">
+  <div class="progress-steps">
+    <div class="prog-step active" id="ps-1"><div class="prog-dot">1</div><div class="prog-label">Guest</div></div>
+    <div class="prog-line" id="pl-1"></div>
+    <div class="prog-step" id="ps-2"><div class="prog-dot">2</div><div class="prog-label">Details</div></div>
+    <div class="prog-line" id="pl-2"></div>
+    <div class="prog-step" id="ps-3"><div class="prog-dot">3</div><div class="prog-label">Seating</div></div>
+    <div class="prog-line" id="pl-3"></div>
+    <div class="prog-step" id="ps-4"><div class="prog-dot">4</div><div class="prog-label">Extras</div></div>
+    <div class="prog-line" id="pl-4"></div>
+    <div class="prog-step" id="ps-5"><div class="prog-dot">5</div><div class="prog-label">Review</div></div>
   </div>
 </div>
 
-<div class="back-link">
-  <a href="../rsvp-mgnt/">← Staff Management</a>
+<div class="form-outer">
+
+  <!-- STEP 1: GUEST INFO -->
+  <div class="step active" id="step-1">
+    <div class="card">
+      <div class="step-title">Welcome — Let's Start with You</div>
+      <div class="step-sub">We'll use this to send your confirmation and keep you updated on your reservation.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name <span class="req">*</span></label>
+          <input class="form-input" id="f-first" placeholder="First name" autocomplete="given-name">
+          <div class="field-error" id="err-first">Please enter your first name.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name <span class="req">*</span></label>
+          <input class="form-input" id="f-last" placeholder="Last name" autocomplete="family-name">
+          <div class="field-error" id="err-last">Please enter your last name.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number <span class="req">*</span></label>
+        <input class="form-input" id="f-phone" type="tel" placeholder="(404) 555-0000" autocomplete="tel">
+        <div class="field-error" id="err-phone">Please enter a valid phone number.</div>
+        <div class="field-hint">We'll send your confirmation and any updates via text.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address <span class="req">*</span></label>
+        <input class="form-input" id="f-email" type="email" placeholder="your@email.com" autocomplete="email">
+        <div class="field-error" id="err-email">Please enter a valid email address.</div>
+        <div class="field-hint">A confirmation email will be sent here.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep(2)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: DATE, TIME, PARTY -->
+  <div class="step" id="step-2">
+    <div class="card">
+      <div class="step-title">When Are You Joining Us?</div>
+      <div class="step-sub">Choose your preferred date, time, and how many guests will be joining.</div>
+      <div class="form-group">
+        <label class="form-label">Date <span class="req">*</span></label>
+        <input class="form-input" id="f-date" type="date">
+        <div class="field-error" id="err-date">Please select a date.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Arrival Time <span class="req">*</span></label>
+        <div class="time-grid" id="time-grid">
+          <div class="time-slot" onclick="selectTime('17:00',this)">5:00 PM</div>
+          <div class="time-slot" onclick="selectTime('17:30',this)">5:30 PM</div>
+          <div class="time-slot" onclick="selectTime('18:00',this)">6:00 PM</div>
+          <div class="time-slot" onclick="selectTime('18:30',this)">6:30 PM</div>
+          <div class="time-slot" onclick="selectTime('19:00',this)">7:00 PM</div>
+          <div class="time-slot" onclick="selectTime('19:30',this)">7:30 PM</div>
+          <div class="time-slot" onclick="selectTime('20:00',this)">8:00 PM</div>
+          <div class="time-slot" onclick="selectTime('20:30',this)">8:30 PM</div>
+          <div class="time-slot" onclick="selectTime('21:00',this)">9:00 PM</div>
+          <div class="time-slot" onclick="selectTime('21:30',this)">9:30 PM</div>
+          <div class="time-slot" onclick="selectTime('22:00',this)">10:00 PM</div>
+          <div class="time-slot" onclick="selectTime('22:30',this)">10:30 PM</div>
+        </div>
+        <div class="field-error" id="err-time">Please select an arrival time.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Party Size <span class="req">*</span></label>
+        <input class="form-input" id="f-party" type="number" min="1" max="50" placeholder="How many guests?" oninput="updatePartyHint()">
+        <div class="field-error" id="err-party">Please enter a party size between 1 and 50.</div>
+        <div class="field-hint" id="party-hint">Fine Dining (up to 38) · Bar (up to 20) · Den (up to 52) · Patio (up to 48) · Total venue: 158</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: SECTION PREFERENCE -->
+  <div class="step" id="step-3">
+    <div class="card">
+      <div class="step-title">Where Would You Like to Sit?</div>
+      <div class="step-sub">Select your preferred section. All requests are subject to availability — our team will confirm when approving your reservation.</div>
+      <div class="section-grid" id="section-grid">
+        <div class="section-card" onclick="selectSection('fine_dining',this)">
+          <div class="sc-icon">🍽</div>
+          <div class="sc-name">Fine Dining</div>
+          <div class="sc-detail">Tables 200–218 · 2 seats each · Intimate, elegant atmosphere</div>
+          <div class="sc-check">✓</div>
+        </div>
+        <div class="section-card" onclick="selectSection('bar',this)">
+          <div class="sc-icon">🍸</div>
+          <div class="sc-name">Bar</div>
+          <div class="sc-detail">Stools B1–B20 · Individual seats · Within Fine Dining</div>
+          <div class="sc-check">✓</div>
+        </div>
+        <div class="section-card" onclick="selectSection('den',this)">
+          <div class="sc-icon">🪑</div>
+          <div class="sc-name">Den</div>
+          <div class="sc-detail">Tables 11–23 · 4 seats each · Cozy, casual lounge feel</div>
+          <div class="sc-check">✓</div>
+        </div>
+        <div class="section-card" onclick="selectSection('patio',this)">
+          <div class="sc-icon">☀️</div>
+          <div class="sc-name">Patio</div>
+          <div class="sc-detail">Tables 101–112 · 4 seats each · Outdoor seating</div>
+          <div class="sc-check">✓</div>
+        </div>
+      </div>
+      <div class="note-box note-blue" style="margin-top:10px">
+        <strong>No preference?</strong> Skip this step — our team will assign the best available section for your party size.
+      </div>
+      <div class="note-box note-amber" id="large-party-note" style="display:none"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: EXTRAS -->
+  <div class="step" id="step-4">
+    <div class="card">
+      <div class="step-title">Any Special Details?</div>
+      <div class="step-sub">Help us make your visit memorable. All fields are optional.</div>
+      <div class="form-group">
+        <label class="form-label">Are you celebrating something?</label>
+        <div class="occasion-grid">
+          <div class="occ-chip" onclick="selectOccasion('',this)">None</div>
+          <div class="occ-chip" onclick="selectOccasion('Birthday',this)">🎂 Birthday</div>
+          <div class="occ-chip" onclick="selectOccasion('Anniversary',this)">💍 Anniversary</div>
+          <div class="occ-chip" onclick="selectOccasion('Business Dinner',this)">💼 Business Dinner</div>
+          <div class="occ-chip" onclick="selectOccasion('Date Night',this)">🕯 Date Night</div>
+          <div class="occ-chip" onclick="selectOccasion('Family Gathering',this)">👨‍👩‍👧 Family</div>
+          <div class="occ-chip" onclick="selectOccasion('Celebration',this)">🥂 Celebration</div>
+          <div class="occ-chip" onclick="selectOccasion('Other',this)">✨ Other</div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:18px">
+        <label class="form-label">Dietary Restrictions or Allergies</label>
+        <input class="form-input" id="f-dietary" placeholder="e.g. Gluten-free, nut allergy, vegan…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Notes for Our Team</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="Accessibility needs, seating preferences, special requests, anything else we should know…"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(3)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(5)">Review Reservation →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: REVIEW -->
+  <div class="step" id="step-5">
+    <div class="card">
+      <div class="step-title">Review Your Reservation</div>
+      <div class="step-sub">Everything look right? You can go back and edit any section before submitting.</div>
+
+      <div class="review-block">
+        <div class="review-label">Guest</div>
+        <div class="review-row">
+          <span class="rl">Name</span>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+            <span class="rv" id="rv-name">—</span>
+            <span class="edit-link" onclick="goStep(1)">Edit</span>
+          </div>
+        </div>
+        <div class="review-row">
+          <span class="rl">Phone</span><span class="rv" id="rv-phone">—</span>
+        </div>
+        <div class="review-row">
+          <span class="rl">Email</span><span class="rv" id="rv-email">—</span>
+        </div>
+      </div>
+
+      <div class="review-block">
+        <div class="review-label">Reservation</div>
+        <div class="review-row">
+          <span class="rl">Date</span>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+            <span class="rv" id="rv-date">—</span>
+            <span class="edit-link" onclick="goStep(2)">Edit</span>
+          </div>
+        </div>
+        <div class="review-row"><span class="rl">Time</span><span class="rv" id="rv-time">—</span></div>
+        <div class="review-row"><span class="rl">Party Size</span><span class="rv" id="rv-party">—</span></div>
+      </div>
+
+      <div class="review-block">
+        <div class="review-label">Seating</div>
+        <div class="review-row">
+          <span class="rl">Section Preference</span>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+            <span class="rv" id="rv-section">—</span>
+            <span class="edit-link" onclick="goStep(3)">Edit</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-block" id="rv-extras-block">
+        <div class="review-label">Extras</div>
+        <div class="review-row" id="rv-occ-row" style="display:none">
+          <span class="rl">Occasion</span><span class="rv" id="rv-occasion">—</span>
+        </div>
+        <div class="review-row" id="rv-diet-row" style="display:none">
+          <span class="rl">Dietary</span><span class="rv" id="rv-dietary">—</span>
+        </div>
+        <div class="review-row" id="rv-notes-row" style="display:none">
+          <span class="rl">Notes</span><span class="rv" id="rv-notes">—</span>
+        </div>
+        <div class="review-row" id="rv-no-extras" style="display:none">
+          <span class="rl">None added</span>
+          <span class="edit-link" onclick="goStep(4)">Add details</span>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;font-size:11.5px;color:var(--text-d);line-height:1.7;padding:12px 14px;background:var(--surface2);border-radius:7px;border:.5px solid var(--border)">
+        By submitting, you consent to receive a confirmation email and text from Hive Buckhead. Your RSVP is <strong style="color:var(--text-m)">pending</strong> until our team approves it — confirmation messages will follow within 30 minutes during business hours.
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goStep(4)">← Back</button>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitForm()">Request Reservation 🥂</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step" id="step-success">
+    <div class="card">
+      <div class="success-wrap" style="display:block">
+        <div class="success-icon">🥂</div>
+        <div class="success-title">Reservation Request Sent!</div>
+        <div class="rsvp-badge" id="success-id">RSVP # —</div>
+        <div class="success-detail" id="success-detail"></div>
+        <div class="next-steps">
+          📧 <strong>Confirmation email</strong> sent to your inbox via SendGrid.<br>
+          📱 <strong>Confirmation text</strong> sent to your phone via Quo.<br><br>
+          <strong>What happens next:</strong> Our team reviews your request and confirms within 30 minutes during business hours. Watch for a second message once confirmed.
+        </div>
+        <div style="font-size:12px;color:var(--text-d);margin-bottom:18px">
+          Need to modify or cancel? <a href="cancel.html" style="color:var(--gold);text-decoration:none;border-bottom:.5px solid rgba(201,169,110,.3)">Visit the reservation management page</a> and enter your RSVP #.
+        </div>
+        <button class="btn btn-primary" onclick="resetForm()">Make Another Reservation</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /form-outer -->
+
+<div class="footer-links" id="footer-links">
+  <a href="../rsvp-mgnt/">Staff Portal</a>
   &nbsp;·&nbsp;
-  <a href="cancel.html">Modify or Cancel a Reservation</a>
+  <a href="cancel.html">Modify or Cancel</a>
 </div>
 
 <script>
 const STORE_KEY = "hive_buckhead_v2";
 const TODAY = new Date().toISOString().split("T")[0];
-let selectedSection = '';
 
-// Set min date to today
+// State
+let state = {
+  first:'', last:'', phone:'', email:'',
+  date:'', time:'', party:'',
+  section:'', occasion:'',
+  dietary:'', notes:'',
+};
+let selectedTime = '';
+let selectedSection = '';
+let selectedOccasion = '';
+let currentStep = 1;
+const TOTAL_STEPS = 5;
+
+// Init date
 document.getElementById('f-date').min = TODAY;
 document.getElementById('f-date').value = TODAY;
 
-function selectSection(sec, el){
-  selectedSection = sec;
-  document.querySelectorAll('.section-card').forEach(c=>c.classList.remove('selected'));
+// ── TIME SELECTION ──
+function selectTime(val, el){
+  selectedTime = val;
+  document.querySelectorAll('.time-slot').forEach(t=>t.classList.remove('selected'));
   el.classList.add('selected');
-  checkPartyNote();
+  document.getElementById('err-time').style.display = 'none';
 }
 
-function checkPartyNote(){
-  const party = parseInt(document.getElementById('f-party').value)||0;
-  const note = document.getElementById('party-note');
+// ── SECTION SELECTION ──
+function selectSection(val, el){
+  selectedSection = val;
+  document.querySelectorAll('.section-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  updateLargePartyNote();
+}
+
+function updateLargePartyNote(){
+  const party = parseInt(document.getElementById('f-party')?.value)||0;
+  const note = document.getElementById('large-party-note');
+  if(!note) return;
   const msgs = {
-    fine_dining: party>6?`Party of ${party} in Fine Dining will require multiple joined tables. Our team will confirm configuration.`:'',
-    bar: party>4?`Bar seating accommodates individual guests. For parties over 4, consider Fine Dining or Den.`:'',
-    den: party>12?`Large party of ${party} in the Den will require multiple table extensions. Confirm with staff.`:'',
-    patio: party>10?`Party of ${party} on the Patio will require multiple joined tables. Our team will confirm.`:'',
+    fine_dining: party>6 ? `Party of ${party} in Fine Dining will require joined tables (extensions). Our team will confirm the configuration.`:'',
+    bar: party>4 ? `Bar seating is best for parties up to 4. For ${party} guests, we recommend Fine Dining or Den.`:'',
+    den: party>12 ? `Party of ${party} in the Den will need multiple table extensions. We'll confirm availability.`:'',
+    patio: party>10 ? `Party of ${party} on the Patio will require joined tables. We'll confirm configuration.`:'',
   };
-  const msg = msgs[selectedSection]||'';
+  const msg = selectedSection ? (msgs[selectedSection]||'') : '';
   note.style.display = msg ? 'block' : 'none';
   note.textContent = msg;
 }
-document.getElementById('f-party').addEventListener('input', checkPartyNote);
 
-function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('')}
-function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
-
-function submitForm(){
-  const first=document.getElementById('f-first').value.trim();
-  const last=document.getElementById('f-last').value.trim();
-  const phone=document.getElementById('f-phone').value.trim();
-  const email=document.getElementById('f-email').value.trim();
-  const date=document.getElementById('f-date').value;
-  const time=document.getElementById('f-time').value;
-  const party=document.getElementById('f-party').value;
-  const notes=document.getElementById('f-notes').value.trim();
-  const occasion=document.getElementById('f-occasion').value;
-
-  if(!first||!last||!phone||!email||!date||!time||!party){
-    alert('Please fill in all required fields.');return;
-  }
-  if(!email.includes('@')){alert('Please enter a valid email address.');return;}
-
-  const btn=document.getElementById('submit-btn');
-  btn.disabled=true;btn.textContent='Submitting…';
-
-  const newId=genId();
-  const rsv={
-    id:newId,first,last,phone,email,date,time,party:+party,
-    status:'RSVP Requested',server:'',tables:[],
-    notes:notes+(occasion?` | Occasion: ${occasion}`:''),
-    requested:TODAY,confirmed:'',orderTotal:null,receipt:null,
-    section:selectedSection,
-    activities:[{type:'created',text:`RSVP submitted via web form. Section preference: ${selectedSection||'No preference'}`,time:'Just now'}]
-  };
-
-  // Write to shared store
-  try{
-    const raw=localStorage.getItem(STORE_KEY);
-    const store=raw?JSON.parse(raw):{reservations:[],tableStates:{},tables:[],servers:[]};
-    if(!store.reservations)store.reservations=[];
-    store.reservations.push(rsv);
-    localStorage.setItem(STORE_KEY,JSON.stringify(store));
-  }catch(e){console.error('Store write failed',e);}
-
-  // Simulate SendGrid + Quo webhooks
-  console.log(`[SendGrid] Confirmation email to ${email} for RSVP ${newId}`);
-  console.log(`[Quo SMS] Confirmation SMS to ${phone} for RSVP ${newId}`);
-
-  setTimeout(()=>{
-    document.getElementById('form-card').style.display='none';
-    document.getElementById('success-card').style.display='block';
-    document.getElementById('success-rsvp-id').textContent=`RSVP # ${newId}`;
-    document.getElementById('success-detail').innerHTML=
-      `<strong style="color:var(--text)">${first} ${last}</strong><br>
-       ${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})} at ${fmtTime(time)}<br>
-       Party of ${party}${selectedSection?' · '+selectedSection.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase()):''}`;
-    btn.disabled=false;btn.textContent='Request Reservation';
-  },800);
+function updatePartyHint(){
+  updateLargePartyNote();
 }
 
+// ── OCCASION SELECTION ──
+function selectOccasion(val, el){
+  selectedOccasion = val;
+  document.querySelectorAll('.occ-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── VALIDATION ──
+function validateStep(step){
+  let ok = true;
+  const show = (id, msg) => {
+    const el = document.getElementById('err-'+id);
+    if(el){ el.textContent = msg||el.textContent; el.style.display = 'block'; }
+    const inp = document.getElementById('f-'+id);
+    if(inp) inp.classList.add('error');
+    ok = false;
+  };
+  const clear = (...ids) => ids.forEach(id=>{
+    const el = document.getElementById('err-'+id);
+    if(el) el.style.display = 'none';
+    const inp = document.getElementById('f-'+id);
+    if(inp) inp.classList.remove('error');
+  });
+
+  if(step === 1){
+    clear('first','last','phone','email');
+    if(!document.getElementById('f-first').value.trim()) show('first');
+    if(!document.getElementById('f-last').value.trim()) show('last');
+    const phone = document.getElementById('f-phone').value.replace(/\D/g,'');
+    if(phone.length < 10) show('phone','Please enter a valid 10-digit phone number.');
+    const email = document.getElementById('f-email').value.trim();
+    if(!email || !email.includes('@') || !email.includes('.')) show('email');
+  }
+  if(step === 2){
+    clear('date','time','party');
+    if(!document.getElementById('f-date').value) show('date','Please select a date.');
+    if(!selectedTime){ const el=document.getElementById('err-time');if(el)el.style.display='block';ok=false;}
+    const party = parseInt(document.getElementById('f-party').value);
+    if(!party || party < 1 || party > 50) show('party');
+  }
+  return ok;
+}
+
+// ── STEP NAVIGATION ──
+function goStep(to){
+  if(to > currentStep){
+    if(!validateStep(currentStep)) return;
+  }
+  const current = document.getElementById(`step-${currentStep}`);
+  const next = document.getElementById(`step-${to}`);
+  if(!next) return;
+
+  // Animate out
+  current.classList.add('leaving');
+  setTimeout(()=>{
+    current.classList.remove('active','leaving');
+    next.classList.add('active');
+    if(to === 5) populateReview();
+    updateProgress(to);
+    currentStep = to;
+    window.scrollTo({top:0, behavior:'smooth'});
+  }, 250);
+}
+
+function updateProgress(step){
+  for(let i=1; i<=TOTAL_STEPS; i++){
+    const ps = document.getElementById(`ps-${i}`);
+    if(!ps) continue;
+    ps.classList.remove('active','done');
+    if(i < step) ps.classList.add('done');
+    else if(i === step) ps.classList.add('active');
+    const pl = document.getElementById(`pl-${i}`);
+    if(pl){ pl.classList.toggle('done', i < step); }
+    // Update dot icon
+    const dot = ps.querySelector('.prog-dot');
+    if(dot) dot.textContent = i < step ? '✓' : String(i);
+  }
+}
+
+// ── REVIEW POPULATION ──
+function fmtDate(d){
+  if(!d) return '—';
+  try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+  catch(e){return d;}
+}
+function fmtTime(t){
+  if(!t) return '—';
+  const[h,m]=t.split(':');const hr=+h;
+  return `${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`;
+}
+
+function populateReview(){
+  const first = document.getElementById('f-first').value.trim();
+  const last = document.getElementById('f-last').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const date = document.getElementById('f-date').value;
+  const party = document.getElementById('f-party').value;
+  const dietary = document.getElementById('f-dietary').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+  const secLabels = {fine_dining:'Fine Dining',bar:'Bar',den:'Den',patio:'Patio','':"No preference"};
+
+  document.getElementById('rv-name').textContent = `${first} ${last}`;
+  document.getElementById('rv-phone').textContent = phone;
+  document.getElementById('rv-email').textContent = email;
+  document.getElementById('rv-date').textContent = fmtDate(date);
+  document.getElementById('rv-time').textContent = fmtTime(selectedTime);
+  document.getElementById('rv-party').textContent = `${party} guest${party==1?'':'s'}`;
+  document.getElementById('rv-section').textContent = secLabels[selectedSection]||'No preference';
+
+  const occRow = document.getElementById('rv-occ-row');
+  const dietRow = document.getElementById('rv-diet-row');
+  const notesRow = document.getElementById('rv-notes-row');
+  const noExtras = document.getElementById('rv-no-extras');
+  let hasExtras = false;
+  if(selectedOccasion){ occRow.style.display='flex'; document.getElementById('rv-occasion').textContent=selectedOccasion; hasExtras=true;} else occRow.style.display='none';
+  if(dietary){ dietRow.style.display='flex'; document.getElementById('rv-dietary').textContent=dietary; hasExtras=true;} else dietRow.style.display='none';
+  if(notes){ notesRow.style.display='flex'; document.getElementById('rv-notes').textContent=notes; hasExtras=true;} else notesRow.style.display='none';
+  noExtras.style.display = hasExtras?'none':'flex';
+}
+
+// ── SUBMIT ──
+function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+
+function submitForm(){
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const first = document.getElementById('f-first').value.trim();
+  const last = document.getElementById('f-last').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const date = document.getElementById('f-date').value;
+  const party = parseInt(document.getElementById('f-party').value);
+  const dietary = document.getElementById('f-dietary').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+  const newId = genId();
+
+  const rsv = {
+    id: newId, first, last, phone, email,
+    date, time: selectedTime, party,
+    status: 'RSVP Requested', server: '', tables: [],
+    notes: [dietary?`Dietary: ${dietary}`:'', notes].filter(Boolean).join(' | '),
+    requested: TODAY, confirmed: '', orderTotal: null, receipt: null,
+    section: selectedSection, occasion: selectedOccasion,
+    source: 'web_form',
+    activities:[{type:'created',text:`RSVP submitted via web form. Section: ${selectedSection||'No preference'}${selectedOccasion?'. Occasion: '+selectedOccasion:''}`,time:'Just now'}]
+  };
+
+  // Write to shared localStorage store
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    const store = raw ? JSON.parse(raw) : {reservations:[],tableStates:{},tables:[],servers:[]};
+    store.reservations = store.reservations||[];
+    store.reservations.push(rsv);
+    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  } catch(e){ console.error('Store write failed', e); }
+
+  // Simulate SendGrid + Quo webhooks
+  console.log(`[SendGrid] To: ${email} | Subject: Your Hive Buckhead Reservation is Pending | RSVP: ${newId}`);
+  console.log(`[Quo SMS] To: ${phone} | Hi ${first}! RSVP ${newId} received. We'll confirm shortly.`);
+
+  setTimeout(()=>{
+    // Transition to success
+    const current = document.getElementById('step-5');
+    const success = document.getElementById('step-success');
+    current.classList.add('leaving');
+    setTimeout(()=>{
+      current.classList.remove('active','leaving');
+      success.classList.add('active');
+      document.getElementById('progress-wrap').style.display = 'none';
+      document.getElementById('footer-links').style.marginTop = '0';
+      document.getElementById('success-id').textContent = `RSVP # ${newId}`;
+      document.getElementById('success-detail').innerHTML =
+        `<strong style="color:var(--text)">${first} ${last}</strong><br>` +
+        `${fmtDate(date)} at ${fmtTime(selectedTime)}<br>` +
+        `Party of ${party}${selectedSection?' · '+(selectedSection.charAt(0).toUpperCase()+selectedSection.slice(1).replace('_',' ')):''}` +
+        `${selectedOccasion?'<br>'+selectedOccasion:''}`;
+      window.scrollTo({top:0, behavior:'smooth'});
+    }, 250);
+    btn.disabled = false; btn.textContent = 'Request Reservation 🥂';
+  }, 900);
+}
+
+// ── RESET ──
 function resetForm(){
-  document.getElementById('form-card').style.display='block';
-  document.getElementById('success-card').style.display='none';
-  ['f-first','f-last','f-phone','f-email','f-party','f-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-time').value='';
-  document.getElementById('f-date').value=TODAY;
-  document.getElementById('f-occasion').value='';
-  document.querySelectorAll('.section-card').forEach(c=>c.classList.remove('selected'));
-  selectedSection='';
+  selectedTime=''; selectedSection=''; selectedOccasion=''; currentStep=1;
+  ['f-first','f-last','f-phone','f-email','f-party','f-dietary','f-notes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('f-date').value = TODAY;
+  document.querySelectorAll('.time-slot,.section-card,.occ-chip').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('step-success').classList.remove('active');
+  document.getElementById('step-1').classList.add('active');
+  document.getElementById('progress-wrap').style.display = 'block';
+  updateProgress(1);
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 </script>
 </body>
