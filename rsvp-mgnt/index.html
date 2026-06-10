@@ -69,6 +69,8 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 .p-sea{background:var(--purple-bg);color:var(--purple)}.p-sea .dot{background:var(--purple);animation:pulse 1.5s infinite}
 .p-com{background:var(--green-bg);color:var(--green)}.p-com .dot{background:var(--green)}
 .p-can{background:var(--red-bg);color:var(--red)}.p-can .dot{background:var(--red)}
+.p-change{background:var(--teal-bg);color:var(--teal)}.p-change .dot{background:var(--teal)}
+.p-cancel-req{background:var(--amber-bg);color:var(--amber)}.p-cancel-req .dot{background:var(--amber);animation:pulse 1s infinite}
 .p-avail{background:var(--teal-bg);color:var(--teal)}.p-avail .dot{background:var(--teal)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .kanban-wrap{flex:1;overflow-x:auto;overflow-y:hidden;padding:16px;display:flex;gap:12px}
@@ -184,11 +186,14 @@ tr:hover td{background:var(--surface2);cursor:pointer}
   </div>
   <div class="nav-right">
     <div class="sync-indicator" id="sync-ind"><div class="sync-dot"></div><span id="sync-lbl">Synced</span></div>
-    <a href="../floor-view/index.html" target="_blank" style="text-decoration:none">
-      <button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.4)">🏠 Live Floor</button>
+    <a href="../floor-view/" target="_blank" style="text-decoration:none">
+      <button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.4)">🏠 Floor</button>
     </a>
-    <a href="../admin-dashboard/index.html" target="_blank" style="text-decoration:none">
+    <a href="../admin-dashboard/" target="_blank" style="text-decoration:none">
       <button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)">⚙ Admin</button>
+    </a>
+    <a href="../rsvp-form/index.html" target="_blank" style="text-decoration:none">
+      <button class="btn btn-sm" style="color:var(--green);border-color:rgba(76,175,130,.3)">📋 RSVP Form</button>
     </a>
     <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -223,6 +228,8 @@ tr:hover td{background:var(--surface2);cursor:pointer}
     <button class="sidebar-item" onclick="setFilter('Table Available',this)"><span class="s-dot" style="background:var(--teal)"></span>Table Available<span class="badge-n" id="cnt-avail">0</span></button>
     <button class="sidebar-item" onclick="setFilter('Completed',this)"><span class="s-dot" style="background:var(--green)"></span>Completed<span class="badge-n" id="cnt-com">0</span></button>
     <button class="sidebar-item" onclick="setFilter('Cancelled',this)"><span class="s-dot" style="background:var(--red)"></span>Cancelled<span class="badge-n" id="cnt-can">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('Change Requested',this)"><span class="s-dot" style="background:var(--teal);animation:pulse 1s infinite"></span>Change Req.<span class="badge-n live" id="cnt-change-req">0</span></button>
+    <button class="sidebar-item" onclick="setFilter('Cancellation Requested',this)"><span class="s-dot" style="background:var(--amber);animation:pulse 1s infinite"></span>Cancel Req.<span class="badge-n live" id="cnt-cancel-req">0</span></button>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">By Server</div>
@@ -439,14 +446,15 @@ const TABLES_DEF=[
   {id:"P1",num:"P1",cap:4,section:"patio"},{id:"P2",num:"P2",cap:4,section:"patio"},{id:"P3",num:"P3",cap:4,section:"patio"},{id:"P4",num:"P4",cap:4,section:"patio"},{id:"P5",num:"P5",cap:4,section:"patio"},
 ];
 const SAMPLE_RSV=[
-  {id:"86AH8ZMTA",first:"Matest",last:"Now",phone:"4702226558",email:"c1.jumpw@gmail.com",date:TODAY,time:"15:15",party:2,status:"Seated",server:"Ashley Smith",table:"T3",notes:"Bringing confetti",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received via forms.app",time:"May 4 5:23pm"},{type:"email",text:"Confirmation email sent via SendGrid",time:"May 13 5:28pm"},{type:"sms",text:"SMS sent via Twilio",time:"May 13 5:28pm"},{type:"sync",text:"ClickUp Task ID: 86AH8ZMTA",time:"May 13"},{type:"status",text:"Seated at T3",time:"Today 3:18pm"}]},
-  {id:"9KF3PLMX",first:"Jordan",last:"Baptiste",phone:"4045552341",email:"jbaptiste@gmail.com",date:TODAY,time:"18:30",party:4,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T5",notes:"Anniversary dinner",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 2:10pm"},{type:"email",text:"Confirmation sent",time:"Today 2:11pm"},{type:"sms",text:"SMS sent",time:"Today 2:11pm"}]},
-  {id:"7ZB2WNQR",first:"Priya",last:"Nair",phone:"6785553819",email:"priya.n@outlook.com",date:TODAY,time:"19:00",party:6,status:"RSVP Requested",server:"",table:"",notes:"Gluten allergy for 1 guest",requested:TODAY,confirmed:"",orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 3:45pm"}]},
-  {id:"4XC9JHTV",first:"Tyler",last:"Monroe",phone:"4045558823",email:"tmonroe@me.com",date:TODAY,time:"16:00",party:2,status:"Completed",server:"Jenna Park",table:"T2",notes:"Birthday celebration",requested:TODAY,confirmed:TODAY,orderTotal:187.50,receipt:"receipt_4XC9JHTV.jpg",activities:[{type:"created",text:"RSVP received",time:"Today"},{type:"status",text:"Confirmed",time:"Today"},{type:"status",text:"Seated at T2",time:"Today 4:02pm"},{type:"close",text:"Table closed - $187.50 logged",time:"Today 5:48pm"},{type:"sync",text:"Logged to Google Sheets",time:"Today 5:50pm"}]},
-  {id:"2RM6DKPN",first:"Camille",last:"Osei",phone:"4042228811",email:"camille.o@gmail.com",date:TODAY,time:"17:30",party:3,status:"RSVP Confirmed",server:"Devon Harris",table:"T8",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 4:12pm"}]},
-  {id:"5TN1QABZ",first:"DeShawn",last:"Williams",phone:"6786663322",email:"dw@gmail.com",date:TODAY,time:"20:30",party:8,status:"RSVP Confirmed",server:"Devon Harris",table:"T7",notes:"Large group - push tables",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today 9:00am"},{type:"status",text:"Confirmed",time:"Today 9:05am"},{type:"email",text:"Confirmation sent",time:"Today 9:05am"}]},
-  {id:"3QP7MZNK",first:"Ava",last:"Thompson",phone:"4048887766",email:"ava.t@gmail.com",date:TOMORROW,time:"19:30",party:3,status:"RSVP Confirmed",server:"Ashley Smith",table:"T4",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today"}]},
-  {id:"8WX2RVCS",first:"Marcus",last:"Lee",phone:"6784443322",email:"mlee@me.com",date:TODAY,time:"21:00",party:5,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T6",notes:"Allergic to shellfish",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[{type:"created",text:"RSVP received",time:"Today"}]},
+  {id:"86AH8ZMTA",first:"Matest",last:"Now",phone:"4702226558",email:"c1.jumpw@gmail.com",date:TODAY,time:"15:15",party:2,status:"Seated",server:"Ashley Smith",tables:["T203"],table:"T203",notes:"Bringing confetti",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",activities:[{type:"created",text:"RSVP received via web form",time:"Today 2:00pm"},{type:"status",text:"Confirmed",time:"Today 2:01pm"},{type:"status",text:"Seated at T203",time:"Today 3:15pm"}]},
+  {id:"9KF3PLMX",first:"Jordan",last:"Baptiste",phone:"4045552341",email:"jbaptiste@gmail.com",date:TODAY,time:"18:30",party:6,status:"RSVP Confirmed",server:"Marcus Rivera",tables:["T205","T205A","T206"],table:"T205",notes:"Anniversary dinner",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",activities:[{type:"created",text:"RSVP received",time:"Today 2:10pm"},{type:"email",text:"Confirmation email sent via SendGrid",time:"Today 2:11pm"},{type:"sms",text:"SMS sent via Quo",time:"Today 2:11pm"}]},
+  {id:"7ZB2WNQR",first:"Priya",last:"Nair",phone:"6785553819",email:"priya.n@outlook.com",date:TODAY,time:"19:00",party:8,status:"RSVP Requested",server:"",tables:[],table:"",notes:"Gluten allergy for 1 guest",requested:TODAY,confirmed:"",orderTotal:null,receipt:null,section:"",activities:[{type:"created",text:"RSVP received via web form",time:"Today 3:45pm"}]},
+  {id:"4XC9JHTV",first:"Tyler",last:"Monroe",phone:"4045558823",email:"tmonroe@me.com",date:TODAY,time:"16:00",party:2,status:"Completed",server:"Jenna Park",tables:["T15"],table:"T15",notes:"Birthday celebration",requested:TODAY,confirmed:TODAY,orderTotal:187.50,receipt:"receipt_4XC9JHTV.jpg",section:"den",activities:[{type:"created",text:"RSVP received",time:"Today"},{type:"close",text:"Table closed - $187.50 logged",time:"Today 5:48pm"}]},
+  {id:"2RM6DKPN",first:"Camille",last:"Osei",phone:"4042228811",email:"camille.o@gmail.com",date:TODAY,time:"17:30",party:4,status:"RSVP Confirmed",server:"Devon Harris",tables:["T18"],table:"T18",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"den",activities:[{type:"created",text:"RSVP received",time:"Today 4:12pm"}]},
+  {id:"5TN1QABZ",first:"DeShawn",last:"Williams",phone:"6786663322",email:"dw@gmail.com",date:TODAY,time:"20:30",party:16,status:"RSVP Confirmed",server:"Devon Harris",tables:["T11","T11B","T11C","T12","T12B"],table:"T11",notes:"Large group - need all extensions",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"den",activities:[{type:"created",text:"RSVP received",time:"Today 9:00am"},{type:"status",text:"Confirmed",time:"Today 9:05am"}]},
+  {id:"3QP7MZNK",first:"Ava",last:"Thompson",phone:"4048887766",email:"ava.t@gmail.com",date:TOMORROW,time:"19:30",party:4,status:"RSVP Confirmed",server:"Ashley Smith",tables:["T104"],table:"T104",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"patio",activities:[{type:"created",text:"RSVP received",time:"Today"}]},
+  {id:"8WX2RVCS",first:"Marcus",last:"Lee",phone:"6784443322",email:"mlee@me.com",date:TODAY,time:"21:00",party:3,status:"Cancellation Requested",server:"Marcus Rivera",tables:["T201"],table:"T201",notes:"Change request: wants to move to patio",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",changeRequest:{type:"cancellation",reason:"Plans changed",submittedAt:TODAY,message:"Sorry we need to cancel."},activities:[{type:"created",text:"RSVP received",time:"Today"},{type:"change",text:"Cancellation requested by guest",time:"Today 6:12pm"}]},
+  {id:"RQ9ZXBMN",first:"Serena",last:"Walsh",phone:"4044449912",email:"swalsh@gmail.com",date:TODAY,time:"19:30",party:2,status:"Change Requested",server:"Ashley Smith",tables:["T210"],table:"T210",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",changeRequest:{type:"change",reason:"Different time",newTime:"20:00",submittedAt:TODAY,message:"Can we move to 8pm?"},activities:[{type:"created",text:"RSVP received",time:"Today"},{type:"change",text:"Time change requested: 7:30pm to 8:00pm",time:"Today 5:30pm"}]},
 ];
 
 function loadStore(){try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
@@ -466,10 +474,10 @@ let msgTab='email';
 
 function fmtDate(d){if(!d)return'--';const[y,m,dy]=d.split('-');return`${m}/${dy}/${y}`}
 function fmtTime(t){if(!t)return'--';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
-function scls(s){return{'RSVP Requested':'p-req','RSVP Confirmed':'p-con','Seated':'p-sea','Table Available':'p-avail','Completed':'p-com','Cancelled':'p-can'}[s]||'p-req'}
+function scls(s){return{'RSVP Requested':'p-req','RSVP Confirmed':'p-con','Seated':'p-sea','Table Available':'p-avail','Completed':'p-com','Cancelled':'p-can','Change Requested':'p-change','Cancellation Requested':'p-cancel-req'}[s]||'p-req'}
 function pill(s){return`<span class="pill ${scls(s)}"><span class="dot"></span>${s}</span>`}
 function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('')}
-function actIcon(t){return{created:'🆕',email:'✉️',sms:'📱',status:'🔄',close:'✅',cancel:'❌',sync:'🔗',note:'📝',walkin:'🚶'}[t]||'•'}
+function actIcon(t){return{created:'🆕',email:'✉️',sms:'📱',status:'🔄',close:'✅',cancel:'❌',sync:'🔗',note:'📝',walkin:'🚶',change:'✏️'}[t]||'•'}
 function actColor(t){return{created:'var(--blue-bg)',email:'var(--purple-bg)',sms:'var(--teal-bg)',status:'var(--amber-bg)',close:'var(--green-bg)',cancel:'var(--red-bg)',sync:'var(--surface3)',note:'var(--surface3)'}[t]||'var(--surface3)'}
 
 function getFiltered(){
@@ -497,6 +505,8 @@ function updateCounts(){
   document.getElementById('cnt-avail').textContent=c('Table Available');
   document.getElementById('cnt-com').textContent=c('Completed');
   document.getElementById('cnt-can').textContent=c('Cancelled');
+  const changeReqEl=document.getElementById('cnt-change-req');if(changeReqEl)changeReqEl.textContent=c('Change Requested');
+  const cancelReqEl=document.getElementById('cnt-cancel-req');if(cancelReqEl)cancelReqEl.textContent=c('Cancellation Requested');
   const tod=reservations.filter(r=>r.date===TODAY);
   document.getElementById('s-total').textContent=tod.length;
   document.getElementById('s-pend').textContent=c('RSVP Requested');
@@ -534,7 +544,7 @@ function renderList(){
       <td style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px">${r.party}</td>
       <td>${pill(r.status)}</td>
       <td style="color:var(--text-m);font-size:12px">${r.server||'--'}</td>
-      <td style="color:var(--text-m);font-size:12px">${r.table||'--'}</td>
+      <td style="color:var(--text-m);font-size:12px">${(r.tables&&r.tables.length?r.tables.join(', '):r.table)||'--'}${r.tables&&r.tables.length>1?`<span style="font-size:10px;color:var(--text-d)"> (${r.tables.length} tables)</span>`:''}</td>
       <td style="font-size:11px;color:var(--gold);letter-spacing:.05em;font-weight:500">${r.id}</td>
       <td style="font-size:12px;color:var(--green)">${r.orderTotal?'$'+r.orderTotal.toFixed(2):'--'}</td>
     </tr>`).join('');
@@ -611,7 +621,7 @@ function selectRow(id){
   document.getElementById('p-party').textContent=`${r.party} guest${r.party>1?'s':''}`;
   document.getElementById('p-phone').textContent=r.phone;
   document.getElementById('p-email').textContent=r.email||'--';
-  document.getElementById('p-table').textContent=r.table||'--';
+  document.getElementById('p-table').textContent=(r.tables&&r.tables.length?r.tables.join(', '):r.table)||'--';
   document.getElementById('p-notes').textContent=r.notes||'No notes.';
   document.getElementById('p-stat-badge').innerHTML=pill(r.status);
   document.getElementById('p-server').value=r.server||'';
@@ -637,6 +647,18 @@ function selectRow(id){
   }
   if(r.status==='Table Available'){
     acts+=`<div class="info-banner" style="margin:0">Table has been flagged for bussing. Once clean, it will show as Available on the floor map.</div>`;
+  }
+  if(r.status==='Change Requested'){
+    const cr=r.changeRequest||{};
+    acts+=`<div class="warn-banner" style="margin:0 0 8px 0">⚠ Guest has requested a change.<br><strong>${cr.changeType||'Details'}:</strong> ${cr.message||'—'}</div>`;
+    acts+=`<button class="act-btn a-confirm" onclick="approveChange('${id}')">✓ Approve & Confirm Change</button>`;
+    acts+=`<button class="act-btn a-cancel" onclick="denyChange('${id}')">✕ Deny Change Request</button>`;
+  }
+  if(r.status==='Cancellation Requested'){
+    const cr=r.changeRequest||{};
+    acts+=`<div class="warn-banner" style="margin:0 0 8px 0">⚠ Guest has requested cancellation.<br><strong>Reason:</strong> ${cr.reason||'Not specified'}<br>${cr.message?`"${cr.message}"`:''}</div>`;
+    acts+=`<button class="act-btn a-cancel" onclick="openCancelModal('${id}')">✓ Confirm Cancellation</button>`;
+    acts+=`<button class="act-btn a-confirm" onclick="denyChange('${id}')">✕ Deny — Keep Reservation Active</button>`;
   }
   if(r.status==='Completed'||r.status==='Cancelled'){
     acts+=`<div class="info-banner" style="margin:0">This reservation is ${r.status.toLowerCase()}. ${r.orderTotal?`Order total: <strong>$${r.orderTotal.toFixed(2)}</strong>.`:''}</div>`;
@@ -736,6 +758,29 @@ function submitCancel(){
 
 function updateServer(){if(!selectedId)return;const r=reservations.find(x=>x.id===selectedId);if(r){r.server=document.getElementById('p-server').value;r.activities=r.activities||[];r.activities.push({type:'note',text:`Server assigned: ${r.server||'Unassigned'}`,time:'Just now'});persistRsv();renderView();}showToast('Server assigned','info');}
 function updateTable(){if(!selectedId)return;const r=reservations.find(x=>x.id===selectedId);if(r){r.table=document.getElementById('p-table-sel').value;r.activities=r.activities||[];r.activities.push({type:'note',text:`Table assigned: ${r.table||'None'}`,time:'Just now'});persistRsv();renderView();}showToast('Table assigned','info');}
+function approveChange(id){
+  const r=reservations.find(x=>x.id===id);if(!r)return;
+  const cr=r.changeRequest||{};
+  if(cr.newTime) r.time=cr.newTime;
+  if(cr.newDate) r.date=cr.newDate;
+  if(cr.newParty) r.party=+cr.newParty;
+  if(cr.newSection) r.section=cr.newSection;
+  r.status='RSVP Confirmed';
+  r.activities=r.activities||[];
+  r.activities.push({type:'status',text:`Change approved by staff: ${cr.changeType||'change'}`,time:'Just now'});
+  r.activities.push({type:'email',text:'Change confirmation email sent via SendGrid',time:'Just now'});
+  r.activities.push({type:'sms',text:'Change confirmation SMS sent via Quo',time:'Just now'});
+  persistRsv();showToast(`Change approved — ${r.first} notified via email & SMS`,'success');selectRow(id);
+}
+function denyChange(id){
+  const r=reservations.find(x=>x.id===id);if(!r)return;
+  r.status='RSVP Confirmed';
+  r.changeRequest=null;
+  r.activities=r.activities||[];
+  r.activities.push({type:'status',text:'Change/cancellation request denied — reservation kept active',time:'Just now'});
+  r.activities.push({type:'sms',text:'Guest notified of decision via SMS',time:'Just now'});
+  persistRsv();showToast(`Request denied — reservation remains active`,'info');selectRow(id);
+}
 function closePanel(){selectedId=null;document.getElementById('detail-panel').classList.add('hidden');renderView();}
 
 function setFilter(s,el){activeFilter=s;dateFilter='';document.getElementById('date-flt').value='';document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
