@@ -126,7 +126,7 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     <div class="sync-tag"><div class="rt-dot"></div>Live sync via localStorage</div>
     <span id="sync-label" style="font-size:10px;color:var(--text-d)">—</span>
     <button class="btn btn-sm" onclick="toggleTheme()">🌓</button>
-    <a href="../rsvp-mgnt/index.html"><button class="btn btn-sm">← Reservations</button></a>
+    <a href="../rsvp-mgnt/"><button class="btn btn-sm">← Reservations</button></a>
     <a href="../floor-view/index.html"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
   </div>
 </nav>
@@ -238,6 +238,14 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     <div class="card-title">Server Leaderboard</div>
     <table class="dt"><thead><tr><th>Server</th><th>Reservations</th><th>Covers</th><th>Avg Order</th><th>Revenue</th><th>Cancellations</th><th>Show Rate</th></tr></thead>
     <tbody id="staff-table"></tbody></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Section Performance — Today</div>
+    <div id="section-today"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pending Review <span class="card-sub" id="review-count"></span></div>
+    <div id="review-queue"></div>
   </div>
   <div class="two-col">
     <div class="card">
@@ -443,14 +451,15 @@ const SERVERS_DEF=[
   {id:"s4",name:"Devon Harris",role:"Server / Bar",color:"#3AACA8",initials:"DH"},
 ];
 const SAMPLE_RSV=[
-  {id:"86AH8ZMTA",first:"Matest",last:"Now",phone:"4702226558",email:"c1.jumpw@gmail.com",date:TODAY,time:"15:15",party:2,status:"Seated",server:"Ashley Smith",table:"T3",notes:"Bringing confetti",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
-  {id:"9KF3PLMX",first:"Jordan",last:"Baptiste",phone:"4045552341",email:"jbaptiste@gmail.com",date:TODAY,time:"18:30",party:4,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T5",notes:"Anniversary dinner",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
-  {id:"7ZB2WNQR",first:"Priya",last:"Nair",phone:"6785553819",email:"priya.n@outlook.com",date:TODAY,time:"19:00",party:6,status:"RSVP Requested",server:"",table:"",notes:"Gluten allergy",requested:TODAY,confirmed:"",orderTotal:null,receipt:null,activities:[]},
-  {id:"4XC9JHTV",first:"Tyler",last:"Monroe",phone:"4045558823",email:"tmonroe@me.com",date:TODAY,time:"16:00",party:2,status:"Completed",server:"Jenna Park",table:"T2",notes:"Birthday celebration",requested:TODAY,confirmed:TODAY,orderTotal:187.50,receipt:"receipt_4XC9JHTV.jpg",activities:[]},
-  {id:"2RM6DKPN",first:"Camille",last:"Osei",phone:"4042228811",email:"camille.o@gmail.com",date:TODAY,time:"17:30",party:3,status:"RSVP Confirmed",server:"Devon Harris",table:"T8",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
-  {id:"5TN1QABZ",first:"DeShawn",last:"Williams",phone:"6786663322",email:"dw@gmail.com",date:TODAY,time:"20:30",party:8,status:"RSVP Confirmed",server:"Devon Harris",table:"T7",notes:"Large group",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
-  {id:"3QP7MZNK",first:"Ava",last:"Thompson",phone:"4048887766",email:"ava.t@gmail.com",date:TOMORROW,time:"19:30",party:3,status:"RSVP Confirmed",server:"Ashley Smith",table:"T4",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
-  {id:"8WX2RVCS",first:"Marcus",last:"Lee",phone:"6784443322",email:"mlee@me.com",date:TODAY,time:"21:00",party:5,status:"RSVP Confirmed",server:"Marcus Rivera",table:"T6",notes:"Allergic to shellfish",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,activities:[]},
+  {id:"86AH8ZMTA",first:"Matest",last:"Now",phone:"4702226558",email:"c1.jumpw@gmail.com",date:TODAY,time:"15:15",party:2,status:"Seated",server:"Ashley Smith",tables:["T203"],table:"T203",notes:"Bringing confetti",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",activities:[]},
+  {id:"9KF3PLMX",first:"Jordan",last:"Baptiste",phone:"4045552341",email:"jbaptiste@gmail.com",date:TODAY,time:"18:30",party:6,status:"RSVP Confirmed",server:"Marcus Rivera",tables:["T205","T205A","T206"],table:"T205",notes:"Anniversary dinner",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",activities:[]},
+  {id:"7ZB2WNQR",first:"Priya",last:"Nair",phone:"6785553819",email:"priya.n@outlook.com",date:TODAY,time:"19:00",party:8,status:"RSVP Requested",server:"",tables:[],table:"",notes:"Gluten allergy",requested:TODAY,confirmed:"",orderTotal:null,receipt:null,section:"",activities:[]},
+  {id:"4XC9JHTV",first:"Tyler",last:"Monroe",phone:"4045558823",email:"tmonroe@me.com",date:TODAY,time:"16:00",party:2,status:"Completed",server:"Jenna Park",tables:["T15"],table:"T15",notes:"Birthday",requested:TODAY,confirmed:TODAY,orderTotal:187.50,receipt:"receipt_4XC9JHTV.jpg",section:"den",activities:[]},
+  {id:"2RM6DKPN",first:"Camille",last:"Osei",phone:"4042228811",email:"camille.o@gmail.com",date:TODAY,time:"17:30",party:4,status:"RSVP Confirmed",server:"Devon Harris",tables:["T18"],table:"T18",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"den",activities:[]},
+  {id:"5TN1QABZ",first:"DeShawn",last:"Williams",phone:"6786663322",email:"dw@gmail.com",date:TODAY,time:"20:30",party:16,status:"RSVP Confirmed",server:"Devon Harris",tables:["T11","T11B","T11C","T12","T12B"],table:"T11",notes:"Large group",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"den",activities:[]},
+  {id:"3QP7MZNK",first:"Ava",last:"Thompson",phone:"4048887766",email:"ava.t@gmail.com",date:TOMORROW,time:"19:30",party:4,status:"RSVP Confirmed",server:"Ashley Smith",tables:["T104"],table:"T104",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"patio",activities:[]},
+  {id:"8WX2RVCS",first:"Marcus",last:"Lee",phone:"6784443322",email:"mlee@me.com",date:TODAY,time:"21:00",party:3,status:"Cancellation Requested",server:"Marcus Rivera",tables:["T201"],table:"T201",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",changeRequest:{type:"cancellation",reason:"Plans changed"},activities:[]},
+  {id:"RQ9ZXBMN",first:"Serena",last:"Walsh",phone:"4044449912",email:"swalsh@gmail.com",date:TODAY,time:"19:30",party:2,status:"Change Requested",server:"Ashley Smith",tables:["T210"],table:"T210",notes:"",requested:TODAY,confirmed:TODAY,orderTotal:null,receipt:null,section:"fine_dining",changeRequest:{type:"change",newTime:"20:00",message:"Can we move to 8pm?"},activities:[]},
 ];
 
 function loadStore(){try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
@@ -646,6 +655,34 @@ function renderStaff(){
   document.getElementById('staff-covers-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.cov/maxCov*100),3)}%;background:var(--purple-bg);color:var(--purple)">${s.cov}</div></div></div>`).join('');
   const maxRev=Math.max(...perf.map(s=>s.rev),1);
   document.getElementById('staff-rev-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.rev/maxRev*100),3)}%;background:var(--green-bg);color:var(--green)">$${s.rev.toFixed(0)}</div></div></div>`).join('');
+  // Section performance today
+  const sections=[{key:'fine_dining',label:'Fine Dining',color:'var(--gold)'},{key:'den',label:'Den',color:'var(--blue)'},{key:'patio',label:'Patio',color:'var(--teal)'},{key:'bar',label:'Bar',color:'var(--purple)'}];
+  const secEl=document.getElementById('section-today');
+  if(secEl){
+    const todayRsv=(_store.reservations||[]).filter(r=>r.date===TODAY&&r.status!=='Cancelled');
+    secEl.innerHTML=sections.map(sec=>{
+      const sRsv=todayRsv.filter(r=>r.section===sec.key);
+      const covers=sRsv.reduce((a,r)=>a+r.party,0);
+      const seated=sRsv.filter(r=>r.status==='Seated').length;
+      return`<div class="bar-row"><span class="bar-lbl">${sec.label}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(sRsv.length/Math.max(todayRsv.length,1)*100,3)}%;background:${sec.color}22;color:${sec.color}">${sRsv.length} rsvp · ${covers} covers</div></div><span class="bar-val">${seated} seated</span></div>`;
+    }).join('');
+  }
+  // Review queue
+  const reviewEl=document.getElementById('review-queue');
+  const reviewCountEl=document.getElementById('review-count');
+  if(reviewEl){
+    const needsReview=(_store.reservations||[]).filter(r=>r.status==='Change Requested'||r.status==='Cancellation Requested');
+    if(reviewCountEl) reviewCountEl.textContent=`${needsReview.length} pending`;
+    if(!needsReview.length){reviewEl.innerHTML='<div style="color:var(--text-d);font-size:12px;padding:8px 0">No pending requests.</div>';}
+    else{reviewEl.innerHTML=needsReview.map(r=>`
+      <div style="padding:9px 0;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12.5px">
+        <div style="flex:1"><strong style="color:var(--text)">${r.first} ${r.last}</strong><br>
+          <span style="color:var(--text-m)">${r.status} · ${r.date} ${fmtTime(r.time)} · Party ${r.party}</span><br>
+          <span style="font-size:11px;color:var(--text-d)">${(r.changeRequest||{}).message||''}</span>
+        </div>
+        <span style="font-size:10px;color:var(--gold)">${r.id}</span>
+      </div>`).join('');}
+  }
 }
 
 // ── TABLES ──
