@@ -1,1 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hive Buckhead — Reserve a Table</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--border:rgba(201,169,110,.2);--border-s:rgba(201,169,110,.4);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.12);--red:#C4524A;--red-bg:rgba(196,82,74,.12);--amber:#D4A020;--amber-bg:rgba(212,160,32,.12)}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 60px}
+.header{width:100%;max-width:560px;padding:40px 0 32px;text-align:center;border-bottom:.5px solid var(--border);margin-bottom:32px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--gold);letter-spacing:.12em}
+.logo span{color:var(--text-m);font-weight:300}
+.tagline{font-size:13px;color:var(--text-m);margin-top:8px;letter-spacing:.04em}
+.form-card{width:100%;max-width:560px;background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:28px 28px 32px}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--gold);margin-bottom:18px}
+.form-group{margin-bottom:15px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px;letter-spacing:.04em}
+.form-label .req{color:var(--gold)}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 13px;background:var(--surface2);border:.5px solid var(--border);border-radius:7px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s,-webkit-appearance 0}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text-d)}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.section-divider{height:.5px;background:var(--border);margin:22px 0}
+.section-sub{font-size:12px;color:var(--text-m);margin-bottom:14px;line-height:1.6;padding:10px 13px;background:var(--surface2);border-radius:6px;border:.5px solid var(--border)}
+.section-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.section-card{padding:14px;border-radius:8px;border:.5px solid var(--border);cursor:pointer;transition:all .15s;background:var(--surface2)}
+.section-card:hover{border-color:var(--gold)}
+.section-card.selected{border-color:var(--gold);background:rgba(201,169,110,.08)}
+.section-card-name{font-weight:500;font-size:13px;margin-bottom:3px}
+.section-card-detail{font-size:11px;color:var(--text-m)}
+.submit-btn{width:100%;padding:14px;background:var(--gold);color:#0E0C0A;border:none;border-radius:8px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;letter-spacing:.06em;cursor:pointer;transition:background .15s;margin-top:6px}
+.submit-btn:hover{background:var(--gold-light)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.success-screen{display:none;text-align:center;padding:32px 0}
+.success-icon{font-size:48px;margin-bottom:16px}
+.success-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--gold);margin-bottom:10px}
+.success-detail{font-size:13px;color:var(--text-m);line-height:1.8}
+.rsvp-badge{display:inline-block;background:rgba(201,169,110,.15);border:.5px solid var(--border-s);color:var(--gold);font-weight:500;font-size:14px;padding:8px 20px;border-radius:20px;margin:14px 0;letter-spacing:.08em}
+.error-msg{font-size:11px;color:var(--red);margin-top:4px;display:none}
+.capacity-note{font-size:11px;color:var(--text-d);margin-top:5px}
+.back-link{margin-top:24px;text-align:center}
+.back-link a{color:var(--text-m);font-size:12px;text-decoration:none;border-bottom:.5px solid var(--border)}
+.back-link a:hover{color:var(--gold)}
+.party-note{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:6px;padding:9px 13px;font-size:12px;color:var(--amber);margin-bottom:14px;line-height:1.5;display:none}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">HIVE <span>BUCKHEAD</span></div>
+  <div class="tagline">Reserve Your Table</div>
+</div>
 
+<div class="form-card" id="form-card">
+  <div class="section-title">Guest Information</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">First Name <span class="req">*</span></label><input class="form-input" id="f-first" placeholder="First name" maxlength="50"></div>
+    <div class="form-group"><label class="form-label">Last Name <span class="req">*</span></label><input class="form-input" id="f-last" placeholder="Last name" maxlength="50"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Phone Number <span class="req">*</span></label><input class="form-input" id="f-phone" type="tel" placeholder="(404) 555-0000"></div>
+    <div class="form-group"><label class="form-label">Email Address <span class="req">*</span></label><input class="form-input" id="f-email" type="email" placeholder="your@email.com"></div>
+  </div>
+
+  <div class="section-divider"></div>
+  <div class="section-title">Reservation Details</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Date <span class="req">*</span></label><input class="form-input" id="f-date" type="date"></div>
+    <div class="form-group"><label class="form-label">Preferred Arrival Time <span class="req">*</span></label>
+      <select class="form-select" id="f-time">
+        <option value="">Select time…</option>
+        <option value="17:00">5:00 PM</option><option value="17:30">5:30 PM</option>
+        <option value="18:00">6:00 PM</option><option value="18:30">6:30 PM</option>
+        <option value="19:00">7:00 PM</option><option value="19:30">7:30 PM</option>
+        <option value="20:00">8:00 PM</option><option value="20:30">8:30 PM</option>
+        <option value="21:00">9:00 PM</option><option value="21:30">9:30 PM</option>
+        <option value="22:00">10:00 PM</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Party Size <span class="req">*</span></label>
+    <input class="form-input" id="f-party" type="number" min="1" max="50" placeholder="How many guests?">
+    <div class="capacity-note">Fine Dining: up to 38 · Bar: up to 20 · Den: up to 52 · Patio: up to 48</div>
+  </div>
+
+  <div class="section-divider"></div>
+  <div class="section-title">Preferred Seating</div>
+  <div class="section-sub">All seating requests are subject to availability. Our team will confirm your preferred section when approving your reservation.</div>
+  <div class="section-select-grid">
+    <div class="section-card" onclick="selectSection('fine_dining',this)">
+      <div class="section-card-name">🍽 Fine Dining</div>
+      <div class="section-card-detail">19 tables · 2–6 seats · Indoor intimate setting</div>
+    </div>
+    <div class="section-card" onclick="selectSection('bar',this)">
+      <div class="section-card-name">🍸 Bar</div>
+      <div class="section-card-detail">20 bar stools · Within Fine Dining · Individual seats</div>
+    </div>
+    <div class="section-card" onclick="selectSection('den',this)">
+      <div class="section-card-name">🪑 Den</div>
+      <div class="section-card-detail">13 tables · 4–12 seats · Casual, cozy lounge</div>
+    </div>
+    <div class="section-card" onclick="selectSection('patio',this)">
+      <div class="section-card-name">☀️ Patio</div>
+      <div class="section-card-detail">12 tables · 4–10 seats · Outdoor seating</div>
+    </div>
+  </div>
+  <div class="party-note" id="party-note"></div>
+
+  <div class="section-divider"></div>
+  <div class="section-title">Additional Notes</div>
+  <div class="form-group">
+    <textarea class="form-textarea" id="f-notes" placeholder="Dietary restrictions, allergies, celebrations, accessibility needs, special requests…"></textarea>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Occasion (optional)</label>
+    <select class="form-select" id="f-occasion">
+      <option value="">None / Not specified</option>
+      <option>Birthday</option><option>Anniversary</option><option>Business Dinner</option>
+      <option>Date Night</option><option>Family Gathering</option><option>Celebration</option><option>Other</option>
+    </select>
+  </div>
+
+  <div style="margin-top:20px;font-size:11px;color:var(--text-d);line-height:1.7;margin-bottom:16px">
+    By submitting this form, you consent to receive a confirmation email and SMS from Hive Buckhead. Your RSVP is <strong style="color:var(--text-m)">pending</strong> until confirmed by our team — you'll receive a confirmation message once approved.
+  </div>
+  <button class="submit-btn" id="submit-btn" onclick="submitForm()">Request Reservation</button>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="form-card" id="success-card" style="display:none">
+  <div class="success-screen" style="display:block">
+    <div class="success-icon">🥂</div>
+    <div class="success-title">Request Received!</div>
+    <div class="rsvp-badge" id="success-rsvp-id">RSVP # —</div>
+    <div class="success-detail" id="success-detail"></div>
+    <div style="margin-top:24px;padding:14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-m);line-height:1.7">
+      📧 A confirmation email has been sent to your inbox.<br>
+      📱 A confirmation text has been sent to your phone.<br><br>
+      <strong style="color:var(--text)">Next step:</strong> Our team will review and confirm your reservation — watch for a confirmation message. Average response time is under 30 minutes during business hours.
+    </div>
+    <div style="margin-top:20px">
+      <button class="submit-btn" style="font-size:14px;padding:12px" onclick="resetForm()">Make Another Reservation</button>
+    </div>
+  </div>
+</div>
+
+<div class="back-link">
+  <a href="../rsvp-mgnt/">← Staff Management</a>
+  &nbsp;·&nbsp;
+  <a href="cancel.html">Modify or Cancel a Reservation</a>
+</div>
+
+<script>
+const STORE_KEY = "hive_buckhead_v2";
+const TODAY = new Date().toISOString().split("T")[0];
+let selectedSection = '';
+
+// Set min date to today
+document.getElementById('f-date').min = TODAY;
+document.getElementById('f-date').value = TODAY;
+
+function selectSection(sec, el){
+  selectedSection = sec;
+  document.querySelectorAll('.section-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  checkPartyNote();
+}
+
+function checkPartyNote(){
+  const party = parseInt(document.getElementById('f-party').value)||0;
+  const note = document.getElementById('party-note');
+  const msgs = {
+    fine_dining: party>6?`Party of ${party} in Fine Dining will require multiple joined tables. Our team will confirm configuration.`:'',
+    bar: party>4?`Bar seating accommodates individual guests. For parties over 4, consider Fine Dining or Den.`:'',
+    den: party>12?`Large party of ${party} in the Den will require multiple table extensions. Confirm with staff.`:'',
+    patio: party>10?`Party of ${party} on the Patio will require multiple joined tables. Our team will confirm.`:'',
+  };
+  const msg = msgs[selectedSection]||'';
+  note.style.display = msg ? 'block' : 'none';
+  note.textContent = msg;
+}
+document.getElementById('f-party').addEventListener('input', checkPartyNote);
+
+function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('')}
+function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`}
+
+function submitForm(){
+  const first=document.getElementById('f-first').value.trim();
+  const last=document.getElementById('f-last').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const date=document.getElementById('f-date').value;
+  const time=document.getElementById('f-time').value;
+  const party=document.getElementById('f-party').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  const occasion=document.getElementById('f-occasion').value;
+
+  if(!first||!last||!phone||!email||!date||!time||!party){
+    alert('Please fill in all required fields.');return;
+  }
+  if(!email.includes('@')){alert('Please enter a valid email address.');return;}
+
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='Submitting…';
+
+  const newId=genId();
+  const rsv={
+    id:newId,first,last,phone,email,date,time,party:+party,
+    status:'RSVP Requested',server:'',tables:[],
+    notes:notes+(occasion?` | Occasion: ${occasion}`:''),
+    requested:TODAY,confirmed:'',orderTotal:null,receipt:null,
+    section:selectedSection,
+    activities:[{type:'created',text:`RSVP submitted via web form. Section preference: ${selectedSection||'No preference'}`,time:'Just now'}]
+  };
+
+  // Write to shared store
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    const store=raw?JSON.parse(raw):{reservations:[],tableStates:{},tables:[],servers:[]};
+    if(!store.reservations)store.reservations=[];
+    store.reservations.push(rsv);
+    localStorage.setItem(STORE_KEY,JSON.stringify(store));
+  }catch(e){console.error('Store write failed',e);}
+
+  // Simulate SendGrid + Quo webhooks
+  console.log(`[SendGrid] Confirmation email to ${email} for RSVP ${newId}`);
+  console.log(`[Quo SMS] Confirmation SMS to ${phone} for RSVP ${newId}`);
+
+  setTimeout(()=>{
+    document.getElementById('form-card').style.display='none';
+    document.getElementById('success-card').style.display='block';
+    document.getElementById('success-rsvp-id').textContent=`RSVP # ${newId}`;
+    document.getElementById('success-detail').innerHTML=
+      `<strong style="color:var(--text)">${first} ${last}</strong><br>
+       ${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})} at ${fmtTime(time)}<br>
+       Party of ${party}${selectedSection?' · '+selectedSection.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase()):''}`;
+    btn.disabled=false;btn.textContent='Request Reservation';
+  },800);
+}
+
+function resetForm(){
+  document.getElementById('form-card').style.display='block';
+  document.getElementById('success-card').style.display='none';
+  ['f-first','f-last','f-phone','f-email','f-party','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-time').value='';
+  document.getElementById('f-date').value=TODAY;
+  document.getElementById('f-occasion').value='';
+  document.querySelectorAll('.section-card').forEach(c=>c.classList.remove('selected'));
+  selectedSection='';
+}
+</script>
+</body>
+</html>
