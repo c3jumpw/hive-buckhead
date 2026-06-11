@@ -178,20 +178,23 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 <body>
 
 <nav class="nav">
-  <div class="nav-brand">HIVE <span>BUCKHEAD</span></div>
+  <div class="nav-brand" style="display:flex;align-items:center;gap:7px">
+      <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="" style="width:26px;height:26px;object-fit:contain;border-radius:4px" onerror="this.style.display='none'">
+      HIVE <span>BUCKHEAD</span>
+    </div>
   <div class="nav-center">
     <button class="view-tab active" id="nav-tab-list" onclick="switchView('list',this)">List</button>
     <button class="view-tab" id="nav-tab-kanban" onclick="switchView('kanban',this)">Board</button>
   </div>
   <div class="nav-right">
     <div class="sync-indicator" id="sync-ind"><div class="sync-dot"></div><span id="sync-lbl">Synced</span></div>
-    <a href="../floor-view/" target="_blank" style="text-decoration:none">
+    <a href="../floor-view/" target="_blank" rel="noopener" style="text-decoration:none">
       <button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.4)">🏠 Floor</button>
     </a>
-    <a href="../admin-dashboard/" target="_blank" style="text-decoration:none">
+    <a href="../admin-dashboard/" target="_blank" rel="noopener" style="text-decoration:none">
       <button class="btn btn-sm" style="color:var(--gold);border-color:rgba(201,169,110,.3)">⚙ Admin</button>
     </a>
-    <a href="../rsvp-form/index.html" target="_blank" style="text-decoration:none">
+    <a href="../rsvp-form/" target="_blank" rel="noopener" style="text-decoration:none">
       <button class="btn btn-sm" style="color:var(--green);border-color:rgba(76,175,130,.3)">📋 RSVP Form</button>
     </a>
     <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">
@@ -254,10 +257,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Reports</div>
-    <button class="sidebar-item" onclick="showToast('Opening Google Sheets…','info')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Master Sheet</button>
     <button class="sidebar-item" onclick="exportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
-    <button class="sidebar-item" onclick="loadSample()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Load Sample Data</button>
-    <button class="sidebar-item" onclick="clearData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Clear All Data</button>
   </div>
 </aside>
 <div class="main" id="main-area">
@@ -503,9 +503,11 @@ tr:hover td{background:var(--surface2);cursor:pointer}
     <div style="font-size:11px;color:#6B5E4A;margin-bottom:32px;letter-spacing:.06em">RESERVATIONS — STAFF ACCESS</div>
     <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:26px 22px">
       <div style="font-size:12px;color:#A89B84;margin-bottom:16px">Staff ID & PIN required</div>
-      <input id="lg-id" type="text" placeholder="Staff ID (S001)"
-        style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px"
-        onkeydown="if(event.key==='Enter')document.getElementById('lg-pin').focus()">
+      <select id="lg-id"
+        style="width:100%;padding:11px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none"
+        onchange="document.getElementById('lg-pin').focus()">
+        <option value="">Select staff member…</option>
+      </select>
       <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN"
         style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:20px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px"
         onkeydown="if(event.key==='Enter')doLogin()">
@@ -515,7 +517,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
   </div>
 </div>
 <script>
-const STORE_KEY="hive_buckhead_v1";
+const STORE_KEY="hive_buckhead_v2";
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
 const TODAY=new Date().toISOString().split("T")[0];
 const TOMORROW=new Date(Date.now()+86400000).toISOString().split("T")[0];
@@ -548,6 +550,17 @@ if(!_store){_store={reservations:JSON.parse(JSON.stringify(SAMPLE_RSV)),tableSta
 if(!_store.tables)_store.tables=TABLES_DEF;
 let reservations=_store.reservations;
 
+async function syncFromSheets(){
+  try{
+    const r = await sheetsGet({action:'getReservations'});
+    if(r&&r.reservations&&r.reservations.length>0){
+      reservations=r.reservations;
+      persistRsv();
+      renderView();
+      document.getElementById('sync-lbl').textContent='Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    }
+  }catch(e){console.warn('Sync failed:',e);}
+}
 function persistRsv(){_store.reservations=reservations;saveStore(_store);document.getElementById('sync-lbl').textContent='Saved '+(new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));}
 window.addEventListener("storage",function(e){if(e.key===STORE_KEY&&e.newValue){try{_store=JSON.parse(e.newValue);reservations=_store.reservations;renderView();showToast("Synced from floor / admin tab","info");}catch(ex){}}});
 
@@ -586,7 +599,7 @@ function updateCounts(){
   document.getElementById('cnt-req').textContent=c('RSVP Requested');
   document.getElementById('cnt-con').textContent=c('RSVP Confirmed');
   document.getElementById('cnt-sea').textContent=c('Seated');
-  document.getElementById('cnt-avail').textContent=c('Table Available');
+  // Table Available removed from status list
   document.getElementById('cnt-com').textContent=c('Completed');
   document.getElementById('cnt-can').textContent=c('Cancelled');
   const changeReqEl=document.getElementById('cnt-change-req');if(changeReqEl)changeReqEl.textContent=c('Change Requested');
@@ -978,6 +991,18 @@ const LOCAL_STAFF_MGMT=[
   {id:'S005',name:'Devon Harris',role:'Server / Bar',accessLevel:2,passcode:'5678'},
 ];
 
+function populateMgmtStaffDropdown(){
+  const sel=document.getElementById('lg-id');
+  if(!sel) return;
+  const existing=sel.innerHTML;
+  if(existing.includes('Ashley')) return;
+  sel.innerHTML='<option value="">Select staff member…</option>'+LOCAL_STAFF_MGMT.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  sheetsGet({action:'getStaff'}).then(r=>{
+    if(r?.staff&&r.staff.length){
+      sel.innerHTML='<option value="">Select staff member…</option>'+r.staff.filter(s=>s.active!==false&&parseInt(s.accessLevel)<=2).map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+    }
+  }).catch(()=>{});
+}
 function initMgmtPage(){
   let sess=null;
   try{sess=JSON.parse(sessionStorage.getItem('hive_session'));}catch(e){}
@@ -989,7 +1014,7 @@ function initMgmtPage(){
 }
 
 function doLogin(){
-  const id=document.getElementById('lg-id').value.trim().toUpperCase();
+  const id=document.getElementById('lg-id').value.trim();
   const pin=document.getElementById('lg-pin').value.trim();
   const err=document.getElementById('lg-err');
   const btn=document.getElementById('lg-btn');
@@ -1122,7 +1147,7 @@ function selectRow(id){
   },50);
 }
 
-window.addEventListener('DOMContentLoaded',initMgmtPage);
+window.addEventListener('DOMContentLoaded',()=>{populateMgmtStaffDropdown();initMgmtPage();});
 </script>
 </body>
 </html>
