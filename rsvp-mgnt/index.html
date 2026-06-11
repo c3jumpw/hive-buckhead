@@ -516,6 +516,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 </div>
 <script>
 const STORE_KEY="hive_buckhead_v1";
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
 const TODAY=new Date().toISOString().split("T")[0];
 const TOMORROW=new Date(Date.now()+86400000).toISOString().split("T")[0];
 
@@ -777,6 +778,7 @@ function advance(id,newStatus){
     r.activities.push({type:'sms',text:'Confirmation SMS sent via Twilio/OpenPhone (Zapier)',time:'Just now'});
     r.activities.push({type:'sync',text:'ClickUp task status updated',time:'Just now'});
     persistRsv();
+    pushStatusToSheets(id,'RSVP Confirmed',`Confirmed by ${JSON.parse(sessionStorage.getItem('hive_session')||'{}')?.staff?.name||'Staff'}`);
     showToast(`Confirmed -- email & SMS sent to ${r.first}`,'success');
   }
   if(newStatus==='Seated'){
@@ -784,6 +786,7 @@ function advance(id,newStatus){
     r.activities.push({type:'status',text:`Seated at table ${r.table||'--'}`,time:'Just now'});
     r.activities.push({type:'sync',text:'ClickUp status updated to Seated',time:'Just now'});
     persistRsv();
+    pushStatusToSheets(id,'Seated',`Seated at table ${r.table||'—'}`);
     showToast(`${r.first} ${r.last} seated`,'success');
   }
   selectRow(id);
@@ -820,6 +823,7 @@ function submitClose(){
   // Flag table for bussing in shared store
   if(r.table){_store.tableStates=_store.tableStates||{};_store.tableStates[r.table]='dirty';}
   persistRsv();
+  pushCloseTableToSheets({id:closingId,orderTotal:parseFloat(document.getElementById('cl-total').value),tipAmount:parseFloat(document.getElementById('cl-tip').value)||0,closingRemarks:document.getElementById('cl-remarks').value,receiptUrl:receiptFile?receiptFile.name:''});
   closeModal('close-modal');
   showToast(`Order logged -- $${parseFloat(total).toFixed(2)} · Table flagged for bussing`,'success');
   selectRow(closingId);
@@ -842,6 +846,7 @@ function submitCancel(){
   r.activities.push({type:'sms',text:'Cancellation SMS sent via Twilio/OpenPhone (Zapier)',time:'Just now'});
   r.activities.push({type:'sync',text:`ClickUp comment logged on Task ${r.id}`,time:'Just now'});
   persistRsv();
+  pushCancelToSheets(cancellingId,reason,remarks);
   closeModal('cancel-modal');showToast(`Reservation cancelled -- ${reason}`,'info');selectRow(cancellingId);
 }
 
@@ -859,7 +864,7 @@ function approveChange(id){
   r.activities.push({type:'status',text:`Change approved by staff: ${cr.changeType||'change'}`,time:'Just now'});
   r.activities.push({type:'email',text:'Change confirmation email sent via SendGrid',time:'Just now'});
   r.activities.push({type:'sms',text:'Change confirmation SMS sent via Quo',time:'Just now'});
-  persistRsv();showToast(`Change approved — ${r.first} notified via email & SMS`,'success');selectRow(id);
+  persistRsv();pushApproveChangeToSheets(id,cr);showToast(`Change approved — ${r.first} notified via email & SMS`,'success');selectRow(id);
 }
 function denyChange(id){
   const r=reservations.find(x=>x.id===id);if(!r)return;
@@ -947,7 +952,7 @@ function submitRsv(){
   }else{
     const newId=genId();
     reservations.push({id:newId,first,last,phone,email:document.getElementById('f-email').value,date,time,party:+party,status:document.getElementById('f-status').value,server:document.getElementById('f-server').value,table:document.getElementById('f-table').value,notes:document.getElementById('f-notes').value,requested:TODAY,confirmed:'',orderTotal:null,receipt:null,activities:[{type:'created',text:'Reservation created manually by staff',time:'Just now'}]});
-    persistRsv();showToast(`Created -- Task ID: ${newId}`,'success');closeModal('rsv-modal');renderView();selectRow(newId);
+    persistRsv();pushNewReservationToSheets(reservations[reservations.length-1]);showToast(`Created -- Task ID: ${newId}`,'success');closeModal('rsv-modal');renderView();selectRow(newId);
   }
 }
 
@@ -997,6 +1002,7 @@ function doLogin(){
     document.getElementById('login-gate').style.display='none';
     showLoggedInMgmt(staff);
     renderView();
+    setTimeout(syncFromSheets, 500);
   } else if(staff&&staff.accessLevel>2){
     err.textContent='Access denied — your role cannot access reservations.';err.style.display='block';
   } else {
