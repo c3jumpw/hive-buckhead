@@ -127,7 +127,9 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     <span id="sync-label" style="font-size:10px;color:var(--text-d)">—</span>
     <button class="btn btn-sm" onclick="toggleTheme()">🌓</button>
     <a href="../rsvp-mgnt/"><button class="btn btn-sm">← Reservations</button></a>
-    <a href="../floor-view/index.html"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
+    <a href="../floor-view/"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
+    <a href="../rsvp-form/"><button class="btn btn-sm" style="color:var(--green);border-color:rgba(76,175,130,.3)">📝 RSVP Form</button></a>
+    <a href="../cancel/"><button class="btn btn-sm" style="color:var(--blue);border-color:rgba(91,150,200,.3)">✎ Modify/Cancel</button></a>
   </div>
 </nav>
 <div class="layout">
@@ -166,6 +168,12 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     </button>
     <button class="sb" onclick="showPage('integrations',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Integrations
+    </button>
+    <button class="sb" onclick="showPage('hours',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Operating Hours
+    </button>
+    <button class="sb" onclick="showPage('sheetsync',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Sheets & API
     </button>
     <div class="sidebar-section">
     <div class="sidebar-label">Data</div>
@@ -403,6 +411,60 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     </div>
   </div>
 </div>
+
+<!-- OPERATING HOURS PAGE -->
+<div class="page" id="page-hours">
+  <h2>Operating Hours</h2>
+  <div class="page-sub">Set daily open/close times and special holiday dates. Changes sync to the RSVP form availability.</div>
+  <div id="hours-banner" style="background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:7px;padding:10px 13px;font-size:12px;color:var(--amber);margin-bottom:16px;display:none">⚠ Unsaved changes. Click Save Hours to apply.</div>
+  <div class="card">
+    <div class="card-title">Weekly Schedule <button class="btn btn-sm btn-primary" onclick="saveHours()">Save Hours</button></div>
+    <div id="hours-grid"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Special Hours & Closures <button class="btn btn-sm btn-primary" onclick="addSpecialHours()">+ Add Special Date</button></div>
+    <div id="specials-list"></div>
+    <div id="no-specials" style="color:var(--text-d);font-size:12px;padding:8px 0">No special hours set.</div>
+  </div>
+</div>
+
+<!-- SHEETS & API PAGE -->
+<div class="page" id="page-sheetsync">
+  <h2>Google Sheets & API</h2>
+  <div class="page-sub">Configure the Apps Script connection that enables cross-device data access.</div>
+  <div class="card">
+    <div class="card-title">Apps Script Web App URL</div>
+    <div class="form-group">
+      <label class="form-label">Deployed URL (from Extensions → Apps Script → Deploy)</label>
+      <input class="form-input" id="api-url-input" placeholder="https://script.google.com/macros/s/YOUR_ID/exec" style="font-size:12px">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary btn-sm" onclick="saveApiUrl()">Save URL</button>
+      <button class="btn btn-sm" onclick="testApiConnection()">Test Connection</button>
+    </div>
+    <div id="api-test-result" style="margin-top:10px;font-size:12px;display:none;padding:8px;border-radius:5px;background:var(--surface2)"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Setup Instructions</div>
+    <div style="font-size:12.5px;color:var(--text-m);line-height:2">
+      1. Open your Google Sheet → <strong style="color:var(--text)">Extensions → Apps Script</strong><br>
+      2. Paste the contents of <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">apps_script.js</code> into the editor<br>
+      3. Run <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">setupSheets()</code> once to create all required tabs<br>
+      4. Click <strong style="color:var(--text)">Deploy → New Deployment → Web App</strong><br>
+      5. Set Execute as: <strong style="color:var(--text)">Me</strong> · Who has access: <strong style="color:var(--text)">Anyone</strong><br>
+      6. Copy the Web App URL and paste it above
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Manual Sync</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn" style="text-align:left" onclick="showToast('Push triggered','info')">↑ Push local data → Google Sheets</button>
+      <button class="btn" style="text-align:left" onclick="showToast('Pull triggered','info')">↓ Pull latest ← Google Sheets</button>
+    </div>
+  </div>
+</div>
+
+
 
 </div>
 </div>
@@ -844,6 +906,366 @@ function showToast(msg,type='success'){const el=document.getElementById('toast')
 
 // Initial render
 renderOverview();
+
+// ── ADMIN LOGIN ──
+function initAdminPage(){
+  let sess=null;
+  try{sess=JSON.parse(sessionStorage.getItem('hive_session'));}catch(e){}
+  if(sess&&sess.staff&&sess.staff.accessLevel===1){
+    document.getElementById('login-gate').style.display='none';
+    updateAdminBadge(sess.staff.name);
+  }
+}
+function doLoginAdmin(){
+  const id=document.getElementById('lg-id').value.trim().toUpperCase();
+  const pin=document.getElementById('lg-pin').value.trim();
+  const err=document.getElementById('lg-err');
+  const btn=document.getElementById('lg-btn');
+  err.style.display='none';
+  if(!id||pin.length<4){err.textContent='Enter Staff ID and 4-digit PIN.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Verifying…';
+  // Check against staff in store
+  const allStaff=[
+    {id:'S001',name:'Admin User',role:'Admin',accessLevel:1,passcode:'1234'},
+    ...(_store.servers||[])
+  ];
+  const found=allStaff.find(s=>String(s.id).toUpperCase()===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
+  if(found){
+    sessionStorage.setItem('hive_session',JSON.stringify({staff:found,loginTime:Date.now()}));
+    document.getElementById('login-gate').style.display='none';
+    updateAdminBadge(found.name);
+    renderPage('overview');
+  }else{
+    err.textContent='Incorrect credentials or insufficient access level.';
+    err.style.display='block';
+  }
+  btn.disabled=false;btn.textContent='Sign In';
+}
+function updateAdminBadge(name){
+  const tag=document.querySelector('.sync-tag');
+  if(tag)tag.innerHTML=`<div class="rt-dot"></div>${name}&nbsp;<span style="cursor:pointer;opacity:.7;font-size:10px" onclick="adminLogout()">· sign out</span>`;
+}
+function adminLogout(){if(confirm('Sign out of admin?')){sessionStorage.removeItem('hive_session');location.reload();}}
+
+// ── OPERATING HOURS ──
+const DAYS=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+let hoursData={},specialsData=[];
+
+function initHoursPage(){
+  const defaults={
+    monday:{open:'17:00',close:'22:00',closed:false},
+    tuesday:{open:'17:00',close:'22:00',closed:false},
+    wednesday:{open:'17:00',close:'22:00',closed:false},
+    thursday:{open:'17:00',close:'22:00',closed:false},
+    friday:{open:'17:00',close:'23:00',closed:false},
+    saturday:{open:'16:00',close:'23:00',closed:false},
+    sunday:{open:'',close:'',closed:true},
+  };
+  hoursData=Object.assign({},defaults,_store.hours||{});
+  specialsData=[...(_store.specials||[])];
+  renderHoursGrid();renderSpecials();
+}
+
+function renderHoursGrid(){
+  const grid=document.getElementById('hours-grid');if(!grid)return;
+  grid.innerHTML=DAYS.map(d=>{
+    const h=hoursData[d]||{open:'17:00',close:'22:00',closed:false};
+    const cap=d.charAt(0).toUpperCase()+d.slice(1);
+    return`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border)">
+      <div style="width:95px;font-size:13px;font-weight:500;color:var(--text)">${cap}</div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-m);cursor:pointer">
+        <input type="checkbox" id="closed-${d}" ${h.closed?'checked':''} onchange="toggleClosed('${d}')" style="accent-color:var(--red)"> Closed
+      </label>
+      <div id="time-row-${d}" style="display:${h.closed?'none':'flex'};align-items:center;gap:8px">
+        <input type="time" id="open-${d}" value="${h.open||'17:00'}" onchange="markHoursUnsaved()"
+          style="padding:6px 9px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+        <span style="color:var(--text-d)">to</span>
+        <input type="time" id="close-${d}" value="${h.close||'22:00'}" onchange="markHoursUnsaved()"
+          style="padding:6px 9px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      ${h.closed?'<span style="font-size:12px;color:var(--red)">Closed all day</span>':''}
+    </div>`;
+  }).join('');
+}
+function toggleClosed(day){
+  const cb=document.getElementById('closed-'+day);
+  const tr=document.getElementById('time-row-'+day);
+  if(tr)tr.style.display=cb.checked?'none':'flex';
+  markHoursUnsaved();
+}
+function markHoursUnsaved(){
+  const b=document.getElementById('hours-banner');if(b)b.style.display='block';
+}
+function saveHours(){
+  DAYS.forEach(d=>{
+    const closed=document.getElementById('closed-'+d)?.checked||false;
+    hoursData[d]={open:document.getElementById('open-'+d)?.value||'',close:document.getElementById('close-'+d)?.value||'',closed};
+  });
+  _store.hours=hoursData;_store.specials=specialsData;saveStore(_store);
+  const b=document.getElementById('hours-banner');if(b)b.style.display='none';
+  showToast('Operating hours saved and synced','success');
+}
+function renderSpecials(){
+  const el=document.getElementById('specials-list');const ne=document.getElementById('no-specials');
+  if(!el)return;
+  if(!specialsData.length){if(ne)ne.style.display='block';el.innerHTML='';return;}
+  if(ne)ne.style.display='none';
+  el.innerHTML=specialsData.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border);font-size:13px">
+      <span style="font-weight:500;color:var(--text);width:110px">${s.date}</span>
+      <span style="color:var(--text-m)">${s.closed?'CLOSED':((s.open||'?')+' – '+(s.close||'?'))}</span>
+      ${s.note?`<span style="color:var(--text-d);font-style:italic">${s.note}</span>`:''}
+      <button onclick="removeSpecial(${i})" style="margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">✕</button>
+    </div>`).join('');
+}
+function addSpecialHours(){
+  document.getElementById('sh-date').value='';
+  document.getElementById('sh-open').value='17:00';
+  document.getElementById('sh-close').value='22:00';
+  document.getElementById('sh-closed').checked=false;
+  document.getElementById('sh-note').value='';
+  document.getElementById('special-hours-modal').classList.add('show');
+}
+function saveSpecialHours(){
+  const date=document.getElementById('sh-date').value;
+  if(!date){showToast('Select a date','warning');return;}
+  specialsData.push({
+    date,open:document.getElementById('sh-open').value,
+    close:document.getElementById('sh-close').value,
+    closed:document.getElementById('sh-closed').checked,
+    note:document.getElementById('sh-note').value
+  });
+  _store.specials=specialsData;saveStore(_store);
+  closeModal('special-hours-modal');renderSpecials();
+  showToast('Special hours added','success');
+}
+function removeSpecial(i){
+  specialsData.splice(i,1);_store.specials=specialsData;saveStore(_store);renderSpecials();
+}
+
+// ── STAFF — extend existing renderServers + add passcode ──
+const _origRenderServers=renderServers;
+function renderServers(){
+  _origRenderServers();
+  setTimeout(()=>{
+    document.querySelectorAll('[onclick*="openEditServer"]').forEach(btn=>{
+      const row=btn.closest('.sv-row');
+      if(!row||row.querySelector('.pin-btn'))return;
+      const id=btn.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+      if(!id)return;
+      const pb=document.createElement('button');
+      pb.className='btn btn-sm pin-btn';pb.textContent='PIN';
+      pb.style.cssText='color:var(--amber);border-color:rgba(212,160,32,.35)';
+      pb.onclick=()=>openPasscodeModal(id);
+      btn.parentElement.insertBefore(pb,btn);
+    });
+  },80);
+}
+
+function openAddServer(){
+  document.getElementById('sv-modal-title').textContent='Add Staff Member';
+  document.getElementById('sv-edit-id').value='';
+  ['sv-first','sv-last','sv-role','sv-passcode'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('sv-level').value='2';
+  document.getElementById('sv-color').value='#C9A96E';
+  document.getElementById('sv-section').value='all';
+  document.getElementById('server-modal').classList.add('show');
+}
+function openEditServer(id){
+  const s=(_store.servers||[]).find(x=>x.id===id);if(!s)return;
+  document.getElementById('sv-modal-title').textContent='Edit Staff Member';
+  document.getElementById('sv-edit-id').value=id;
+  const parts=(s.name||'').split(' ');
+  document.getElementById('sv-first').value=parts[0]||'';
+  document.getElementById('sv-last').value=parts.slice(1).join(' ')||'';
+  document.getElementById('sv-role').value=s.role||'';
+  document.getElementById('sv-level').value=s.accessLevel||2;
+  document.getElementById('sv-color').value=s.color||'#C9A96E';
+  document.getElementById('sv-passcode').value='';
+  document.getElementById('sv-section').value=s.section||'all';
+  document.getElementById('server-modal').classList.add('show');
+}
+function submitServer(){
+  const first=document.getElementById('sv-first').value.trim();
+  if(!first){showToast('Name required','warning');return;}
+  const last=document.getElementById('sv-last').value.trim();
+  const name=`${first} ${last}`.trim();
+  const editId=document.getElementById('sv-edit-id').value;
+  const obj={
+    name,role:document.getElementById('sv-role').value||'Server',
+    accessLevel:parseInt(document.getElementById('sv-level').value)||2,
+    color:document.getElementById('sv-color').value,active:true,
+    section:document.getElementById('sv-section').value||'all',
+    initials:name.split(' ').map(w=>w[0]||'').join('').toUpperCase()
+  };
+  const pin=document.getElementById('sv-passcode').value;
+  if(pin) obj.passcode=pin;
+  const d=window_HiveData_get();d.servers=d.servers||[];
+  if(editId){
+    const idx=d.servers.findIndex(s=>s.id===editId);
+    if(idx>=0) d.servers[idx]=Object.assign({},d.servers[idx],obj);
+  }else{
+    obj.id='S'+Date.now().toString().slice(-6);
+    obj.passcode=obj.passcode||'0000';
+    d.servers.push(obj);
+  }
+  Object.assign(_store,d);saveStore(_store);
+  closeModal('server-modal');renderServers();showToast(`${name} saved`,'success');
+}
+function removeServer(id){
+  const d=window_HiveData_get();
+  d.servers=(d.servers||[]).filter(s=>s.id!==id);
+  Object.assign(_store,d);saveStore(_store);renderServers();showToast('Staff member removed','info');
+}
+function openPasscodeModal(id){
+  const s=(_store.servers||[]).find(x=>x.id===id)||{name:id};
+  document.getElementById('pc-staff-name').textContent=`Updating PIN for ${s.name}`;
+  document.getElementById('pc-staff-id').value=id;
+  document.getElementById('pc-new').value='';
+  document.getElementById('pc-confirm').value='';
+  document.getElementById('passcode-modal').classList.add('show');
+}
+function submitPasscode(){
+  const newPin=document.getElementById('pc-new').value.trim();
+  const conf=document.getElementById('pc-confirm').value.trim();
+  if(newPin.length!==4||!/^[0-9]{4}$/.test(newPin)){showToast('PIN must be exactly 4 digits','warning');return;}
+  if(newPin!==conf){showToast('PINs do not match','warning');return;}
+  const staffId=document.getElementById('pc-staff-id').value;
+  const d=window_HiveData_get();
+  const idx=(d.servers||[]).findIndex(s=>s.id===staffId);
+  if(idx>=0){d.servers[idx].passcode=newPin;Object.assign(_store,d);saveStore(_store);}
+  closeModal('passcode-modal');showToast('PIN updated successfully','success');
+}
+
+// ── API URL ──
+function saveApiUrl(){
+  const url=document.getElementById('api-url-input').value.trim();
+  if(!url){showToast('Enter the Apps Script URL','warning');return;}
+  localStorage.setItem('hive_api_url',url);
+  showToast('API URL saved — reload pages to apply','success');
+}
+async function testApiConnection(){
+  const url=document.getElementById('api-url-input').value.trim()||localStorage.getItem('hive_api_url')||'';
+  const el=document.getElementById('api-test-result');
+  el.style.display='block';el.style.color='var(--amber)';el.textContent='Testing connection…';
+  if(!url||url.includes('YOUR_DEPLOYMENT_ID')){
+    el.style.color='var(--red)';el.textContent='No valid URL configured.';return;
+  }
+  try{
+    const r=await fetch(url+'?action=getStaff');
+    const data=await r.json();
+    if(data.staff){el.style.color='var(--green)';el.textContent='Connected — '+data.staff.length+' staff members found.';}
+    else{el.style.color='var(--red)';el.textContent='Unexpected response: '+JSON.stringify(data).slice(0,80);}
+  }catch(e){el.style.color='var(--red)';el.textContent='Connection failed: '+e.message;}
+}
+
+// ── PATCH showPage for new pages ──
+const __origShowPage=showPage;
+function showPage(id,btn){
+  __origShowPage(id,btn);
+  if(id==='hours') initHoursPage();
+  if(id==='sheetsync'){const saved=localStorage.getItem('hive_api_url');if(saved&&document.getElementById('api-url-input'))document.getElementById('api-url-input').value=saved;}
+}
+
+window.addEventListener('DOMContentLoaded',initAdminPage);
 </script>
+<!-- LOGIN GATE — Admin Level 1 only -->
+<div id="login-gate" style="position:fixed;inset:0;z-index:9999;background:#0B0907;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif">
+  <div style="width:100%;max-width:340px;padding:0 24px;text-align:center">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:#C9A96E;letter-spacing:.12em;margin-bottom:6px">HIVE <span style="color:#A89B84;font-weight:300">BUCKHEAD</span></div>
+    <div style="font-size:11px;color:#6B5E4A;margin-bottom:32px;letter-spacing:.06em">ADMIN DASHBOARD — LEVEL 1 ACCESS</div>
+    <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:26px 22px">
+      <div style="font-size:12px;color:#A89B84;margin-bottom:16px">Admin credentials required</div>
+      <input id="lg-id" type="text" placeholder="Staff ID (e.g. S001)"
+        style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px"
+        onkeydown="if(event.key==='Enter')document.getElementById('lg-pin').focus()">
+      <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN"
+        style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:20px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px"
+        onkeydown="if(event.key==='Enter')doLoginAdmin()">
+      <button onclick="doLoginAdmin()" id="lg-btn"
+        style="width:100%;padding:11px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;cursor:pointer">Sign In</button>
+      <div id="lg-err" style="font-size:12px;color:#C4524A;margin-top:9px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT SERVER MODAL -->
+<div class="modal-overlay" id="server-modal">
+  <div class="modal">
+    <div class="modal-title" id="sv-modal-title">Add Staff Member</div>
+    <input type="hidden" id="sv-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="sv-first" placeholder="First"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="sv-last" placeholder="Last"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Role</label><input class="form-input" id="sv-role" placeholder="Server, Host, Bartender…"></div>
+      <div class="form-group"><label class="form-label">Access Level</label>
+        <select class="form-select" id="sv-level">
+          <option value="1">1 — Admin (full access)</option>
+          <option value="2" selected>2 — Staff (reservations + floor)</option>
+          <option value="3">3 — Floor view only</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">4-Digit PIN</label>
+        <input class="form-input" id="sv-passcode" type="password" maxlength="4" placeholder="••••" inputmode="numeric" style="letter-spacing:.2em;text-align:center"></div>
+      <div class="form-group"><label class="form-label">Color</label><input class="form-input" id="sv-color" type="color" value="#C9A96E"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Section Assignment</label>
+      <select class="form-select" id="sv-section">
+        <option value="all">All Sections</option>
+        <option value="fine_dining">Fine Dining</option>
+        <option value="bar">Bar</option>
+        <option value="den">Den</option>
+        <option value="patio">Patio</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('server-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitServer()">Save Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE PASSCODE MODAL -->
+<div class="modal-overlay" id="passcode-modal">
+  <div class="modal" style="width:380px">
+    <div class="modal-title">Update PIN</div>
+    <div style="font-size:13px;color:var(--text-m);margin-bottom:16px" id="pc-staff-name">—</div>
+    <div class="form-group"><label class="form-label">New 4-Digit PIN</label>
+      <input class="form-input" id="pc-new" type="password" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;letter-spacing:.25em;font-size:20px"></div>
+    <div class="form-group"><label class="form-label">Confirm PIN</label>
+      <input class="form-input" id="pc-confirm" type="password" maxlength="4" placeholder="••••" inputmode="numeric" style="text-align:center;letter-spacing:.25em;font-size:20px"></div>
+    <input type="hidden" id="pc-staff-id">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('passcode-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPasscode()">Update PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- SPECIAL HOURS MODAL -->
+<div class="modal-overlay" id="special-hours-modal">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">Special Hours</div>
+    <div class="form-group"><label class="form-label">Date *</label>
+      <input class="form-input" id="sh-date" type="date"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Open</label><input class="form-input" id="sh-open" type="time" value="17:00"></div>
+      <div class="form-group"><label class="form-label">Close</label><input class="form-input" id="sh-close" type="time" value="22:00"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-m);cursor:pointer;margin-bottom:12px">
+      <input type="checkbox" id="sh-closed" style="accent-color:var(--red)"> Mark as CLOSED all day
+    </label>
+    <div class="form-group"><label class="form-label">Note (e.g. "Thanksgiving")</label>
+      <input class="form-input" id="sh-note" placeholder="Holiday, private event…"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('special-hours-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSpecialHours()">Add Special Hours</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
