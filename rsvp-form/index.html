@@ -500,6 +500,16 @@ body::before{
 
 <script>
 const STORE_KEY = "hive_buckhead_v2";
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
+async function saveToSheets(rsv) {
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'saveReservation', reservation: rsv})
+    });
+  } catch(e) { console.warn('Sheets save failed - stored locally only:', e.message); }
+}
 const TODAY = new Date().toISOString().split("T")[0];
 
 // State
