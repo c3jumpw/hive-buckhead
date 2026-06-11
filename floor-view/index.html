@@ -8,7 +8,7 @@
 <script>
 // ── INLINE API CLIENT (self-contained, no external script dependency) ──
 const HIVE_API = (() => {
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
   const STORE_KEY = 'hive_session';
   function getSession(){try{return JSON.parse(sessionStorage.getItem(STORE_KEY))||null;}catch(e){return null;}}
   function setSession(d){sessionStorage.setItem(STORE_KEY,JSON.stringify(d));}
@@ -17,12 +17,12 @@ const HIVE_API = (() => {
   function getStaffName(){return getSession()?.staff?.name||'Staff';}
   function getAccessLevel(){return getSession()?.staff?.accessLevel||99;}
   async function post(body){
-    if(APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID'))return{error:'not_configured'};
+    if(APPS_SCRIPT_URL.includes('AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A'))return{error:'not_configured'};
     const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     return r.json();
   }
   async function get(params){
-    if(APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID'))return{error:'not_configured'};
+    if(APPS_SCRIPT_URL.includes('AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A'))return{error:'not_configured'};
     const r=await fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params).toString());
     return r.json();
   }
@@ -798,7 +798,7 @@ async function submitChangeSeat(){
 
 // ── SETTINGS ──
 function openSettings(){
-  const apiOk = !HIVE_API.SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID');
+  const apiOk = !HIVE_API.SCRIPT_URL.includes('AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A');
   document.getElementById('api-status').textContent = apiOk ? '✓ Connected' : '⚠ Not configured (dev mode)';
   document.getElementById('api-status').style.color = apiOk ? 'var(--green)' : 'var(--amber)';
   document.getElementById('sync-time-display').textContent = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
@@ -864,7 +864,7 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='Verifying…';
   try{
     let staff=null;
-    if(HIVE_API.SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')){
+    if(HIVE_API.SCRIPT_URL.includes('AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A')){
       staff=LOCAL_STAFF.find(s=>s.id===id&&s.passcode===pin);
     } else {
       const r=await HIVE_API.login(id,pin);
