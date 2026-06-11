@@ -494,6 +494,9 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
 <script>
 // ── SHARED DATA LAYER — same localStorage key as floor-view and rsvp-mgnt ──
 const STORE_KEY = "hive_buckhead_v1";
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
+async function sheetsPost(body){try{const r=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json();}catch(e){return null;}}
+async function sheetsGet(params){try{const r=await fetch(SHEETS_URL+'?'+new URLSearchParams(params).toString());return await r.json();}catch(e){return null;}}
 const TODAY = new Date().toISOString().split("T")[0];
 const TOMORROW = new Date(Date.now()+86400000).toISOString().split("T")[0];
 
@@ -1003,7 +1006,8 @@ function saveHours(){
   });
   _store.hours=hoursData;_store.specials=specialsData;saveStore(_store);
   const b=document.getElementById('hours-banner');if(b)b.style.display='none';
-  showToast('Operating hours saved and synced','success');
+  sheetsPost({action:'saveHours',hours:hoursData,specials:specialsData,staffName:(()=>{try{return JSON.parse(sessionStorage.getItem('hive_session'))?.staff?.name||'Admin';}catch(e){return 'Admin';}})()});
+  showToast('Operating hours saved and synced to Sheets','success');
 }
 function renderSpecials(){
   const el=document.getElementById('specials-list');const ne=document.getElementById('no-specials');
@@ -1110,7 +1114,7 @@ function submitServer(){
     d.servers.push(obj);
   }
   Object.assign(_store,d);saveStore(_store);
-  closeModal('server-modal');renderServers();showToast(`${name} saved`,'success');
+  closeModal('server-modal');renderServers();sheetsPost({action:'saveStaff',staff:editId?d.servers.find(s=>s.id===editId):d.servers[d.servers.length-1]});showToast(`${name} saved`,'success');
 }
 function removeServer(id){
   const d=window_HiveData_get();
@@ -1134,6 +1138,7 @@ function submitPasscode(){
   const d=window_HiveData_get();
   const idx=(d.servers||[]).findIndex(s=>s.id===staffId);
   if(idx>=0){d.servers[idx].passcode=newPin;Object.assign(_store,d);saveStore(_store);}
+  sheetsPost({action:'updatePasscode',staffId,newPasscode:newPin});
   closeModal('passcode-modal');showToast('PIN updated successfully','success');
 }
 
@@ -1148,7 +1153,7 @@ async function testApiConnection(){
   const url=document.getElementById('api-url-input').value.trim()||localStorage.getItem('hive_api_url')||'';
   const el=document.getElementById('api-test-result');
   el.style.display='block';el.style.color='var(--amber)';el.textContent='Testing connection…';
-  if(!url||url.includes('YOUR_DEPLOYMENT_ID')){
+  if(!url||url.includes('AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A')){
     el.style.color='var(--red)';el.textContent='No valid URL configured.';return;
   }
   try{
