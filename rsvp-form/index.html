@@ -20,8 +20,8 @@
 html,body{height:100%}
 body{
   font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:flex-start;overflow-x:hidden;
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;overflow-x:hidden;-webkit-text-size-adjust:100%;
 }
 
 /* ── BACKGROUND TEXTURE ── */
@@ -117,7 +117,7 @@ body::before{
 .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
 @media(max-width:420px){.section-grid{grid-template-columns:1fr}}
 .section-card{
-  padding:14px 14px 12px;border-radius:10px;border:.5px solid var(--border);
+  padding:14px 14px 12px;border-radius:10px;border:.5px solid var(--border);min-height:80px;
   cursor:pointer;transition:all .2s;background:var(--surface2);
   display:flex;flex-direction:column;gap:4px;
 }
@@ -211,7 +211,7 @@ body::before{
 .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:4px}
 @media(max-width:380px){.time-grid{grid-template-columns:repeat(2,1fr)}}
 .time-slot{
-  padding:9px 6px;border-radius:7px;border:.5px solid var(--border);
+  padding:11px 6px;border-radius:7px;border:.5px solid var(--border);min-height:44px;
   text-align:center;cursor:pointer;font-size:13px;color:var(--text-m);
   background:var(--surface2);transition:all .18s;
 }
@@ -222,6 +222,8 @@ body::before{
 <body>
 
 <div class="header">
+  <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="Hive Buckhead"
+    style="width:48px;height:48px;object-fit:contain;border-radius:8px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto" onerror="this.style.display='none'">
   <div class="logo">HIVE <span>BUCKHEAD</span></div>
   <div class="tagline">Reserve Your Table</div>
 </div>
@@ -478,12 +480,12 @@ body::before{
         <div class="rsvp-badge" id="success-id">RSVP # —</div>
         <div class="success-detail" id="success-detail"></div>
         <div class="next-steps">
-          📧 <strong>Confirmation email</strong> sent to your inbox via SendGrid.<br>
-          📱 <strong>Confirmation text</strong> sent to your phone via Quo.<br><br>
+          📧 <strong>Confirmation email</strong> sent to your inbox.<br>
+          📱 <strong>Confirmation text</strong> sent to your phone.<br><br>
           <strong>What happens next:</strong> Our team reviews your request and confirms within 30 minutes during business hours. Watch for a second message once confirmed.
         </div>
         <div style="font-size:12px;color:var(--text-d);margin-bottom:18px">
-          Need to modify or cancel? <a href="cancel.html" style="color:var(--gold);text-decoration:none;border-bottom:.5px solid rgba(201,169,110,.3)">Visit the reservation management page</a> and enter your RSVP #.
+          Need to modify or cancel? <a href="https://c3jumpw.github.io/hive-buckhead/cancel/" style="color:var(--gold);text-decoration:none;border-bottom:.5px solid rgba(201,169,110,.3)">visit our reservation management page</a> and enter your RSVP #.
         </div>
         <button class="btn btn-primary" onclick="resetForm()">Make Another Reservation</button>
       </div>
@@ -493,9 +495,7 @@ body::before{
 </div><!-- /form-outer -->
 
 <div class="footer-links" id="footer-links">
-  <a href="../rsvp-mgnt/">Staff Portal</a>
-  &nbsp;·&nbsp;
-  <a href="cancel.html">Modify or Cancel</a>
+  <a href="https://c3jumpw.github.io/hive-buckhead/cancel/">Modify or Cancel Reservation</a>
 </div>
 
 <script>
