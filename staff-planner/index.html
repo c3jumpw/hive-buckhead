@@ -1,1 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hive Buckhead — Staff Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0E0C0A;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.14);--amber:#D4A020;--amber-bg:rgba(212,160,32,.14);--red:#C4524A;--red-bg:rgba(196,82,74,.14);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.14);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.14);--teal:#3AACA8;--teal-bg:rgba(58,172,168,.14)}
+[data-theme="light"]{--bg:#F7F4EF;--surface:#FFF;--surface2:#F0EDE7;--surface3:#E8E3DA;--border:rgba(139,110,62,.15);--border-s:rgba(139,110,62,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:54px;border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;gap:10px}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;letter-spacing:.08em;color:var(--gold);white-space:nowrap;display:flex;align-items:center;gap:8px}
+.nav-brand img{width:26px;height:26px;object-fit:contain;border-radius:4px}
+.nav-badge{font-size:10px;background:var(--purple-bg);color:var(--purple);border:.5px solid rgba(155,126,200,.3);padding:2px 8px;border-radius:12px;letter-spacing:.04em;font-weight:500}
+.btn{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--surface2);border-color:var(--gold)}
+.btn-primary{background:var(--gold);color:#0E0C0A;border-color:var(--gold)}
+.btn-primary:hover{background:var(--gold-light)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-ghost{padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;border:.5px solid var(--border);background:transparent;color:var(--text-m);transition:all .12s}
+.btn-ghost:hover{color:var(--text);border-color:var(--gold)}
+.icon-btn{width:32px;height:32px;border-radius:6px;border:.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-m);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.icon-btn:hover{border-color:var(--gold);color:var(--text)}
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 54px);overflow:hidden}
+.sidebar{width:200px;flex-shrink:0;border-right:.5px solid var(--border);background:var(--surface);overflow-y:auto;padding:1rem 0}
+.sidebar-section{padding:0 .75rem;margin-bottom:1.25rem}
+.sidebar-label{font-size:10px;font-weight:500;letter-spacing:.1em;color:var(--text-d);text-transform:uppercase;margin-bottom:5px;padding:0 6px}
+.sb{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:var(--text-m);font-size:12.5px;transition:all .12s;margin-bottom:1px;border:none;background:transparent;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.sb:hover{background:var(--surface2);color:var(--text)}
+.sb.active{background:var(--surface3);color:var(--gold)}
+.sb svg{width:14px;height:14px;flex-shrink:0}
+.s-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;color:#fff}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+/* VIEWS */
+.view-tabs-bar{display:flex;align-items:center;gap:0;border-bottom:.5px solid var(--border);background:var(--surface);padding:0 1.25rem;height:42px;flex-shrink:0}
+.vtab{padding:4px 16px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text-m);border:none;background:transparent;border-bottom:2px solid transparent;height:42px;transition:all .15s;font-family:'DM Sans',sans-serif}
+.vtab:hover{color:var(--text)}
+.vtab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.view-content{flex:1;overflow:auto}
+/* WEEK VIEW */
+.week-header{display:flex;align-items:center;gap:12px;padding:12px 1.25rem;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0}
+.week-label{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--gold);flex:1}
+.week-grid{display:grid;border-bottom:.5px solid var(--border)}
+.week-grid-head{display:grid;grid-template-columns:120px repeat(7,1fr);background:var(--surface);border-bottom:.5px solid var(--border);position:sticky;top:0;z-index:5}
+.week-dow{padding:8px 10px;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text-d);text-transform:uppercase;border-right:.5px solid var(--border);text-align:center}
+.week-dow.today{color:var(--gold)}
+.week-dow:last-child{border-right:none}
+.week-staff-col{padding:0;font-size:11px}
+.week-row{display:grid;grid-template-columns:120px repeat(7,1fr);border-bottom:.5px solid var(--border);min-height:52px}
+.week-name-cell{padding:8px 10px;display:flex;align-items:center;gap:7px;border-right:.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:500}
+.week-shift-cell{border-right:.5px solid var(--border);padding:4px;position:relative;cursor:pointer;transition:background .1s}
+.week-shift-cell:last-child{border-right:none}
+.week-shift-cell:hover{background:var(--surface2)}
+.shift-block{border-radius:5px;padding:4px 7px;font-size:10px;font-weight:500;line-height:1.4;cursor:pointer;transition:filter .1s}
+.shift-block:hover{filter:brightness(1.2)}
+.shift-open{background:var(--green-bg);color:var(--green);border:.5px solid rgba(76,175,130,.3)}
+.shift-close{background:var(--blue-bg);color:var(--blue);border:.5px solid rgba(91,150,200,.3)}
+.shift-mid{background:var(--purple-bg);color:var(--purple);border:.5px solid rgba(155,126,200,.3)}
+.shift-off{color:var(--text-d);font-size:10px;padding:4px 7px}
+.shift-callout{background:var(--red-bg);color:var(--red);border:.5px solid rgba(196,82,74,.3);text-decoration:line-through}
+.add-shift-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;color:var(--text-d);font-size:18px;font-weight:300}
+.week-shift-cell:hover .add-shift-btn{opacity:1}
+/* MONTH VIEW */
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;flex:1}
+.month-dow{padding:8px;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text-d);text-transform:uppercase;text-align:center;border-bottom:.5px solid var(--border);border-right:.5px solid var(--border)}
+.month-dow:last-child{border-right:none}
+.month-day{padding:6px 8px;min-height:80px;border-right:.5px solid var(--border);border-bottom:.5px solid var(--border);cursor:default;font-size:11px}
+.month-day:nth-child(7n){border-right:none}
+.month-dn{font-size:11px;color:var(--text-m);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.month-dn.today-dn{color:var(--gold);font-weight:600}
+.month-chip{font-size:9.5px;padding:2px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* STAFF LIST VIEW */
+.staff-table{width:100%;border-collapse:collapse}
+.staff-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:500;letter-spacing:.07em;color:var(--text-d);text-transform:uppercase;background:var(--surface);border-bottom:.5px solid var(--border);white-space:nowrap;position:sticky;top:0}
+.staff-table td{padding:11px 14px;border-bottom:.5px solid var(--border);font-size:13px;vertical-align:middle}
+.staff-table tr:hover td{background:var(--surface2);cursor:pointer}
+.role-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500}
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:12px;width:480px;max-height:90vh;overflow-y:auto;padding:1.4rem;transform:translateY(8px);transition:transform .15s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-sm{width:380px}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:500;color:var(--gold);margin-bottom:1.1rem}
+.form-group{margin-bottom:12px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:4px}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 11px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--text-d)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.1rem}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:9px;transform:translateY(50px) scale(.96);opacity:0;transition:all .2s;pointer-events:none;box-shadow:0 6px 28px rgba(0,0,0,.35)}
+.toast.show{transform:translateY(0) scale(1);opacity:1}
+.toast-icon{width:7px;height:7px;border-radius:50%}
+.toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}.toast.warning .toast-icon{background:var(--amber)}.toast.red .toast-icon{background:var(--red)}
+/* CALLOUT BADGE */
+.callout-badge{background:var(--red-bg);color:var(--red);border:.5px solid rgba(196,82,74,.3);border-radius:4px;font-size:10px;padding:1px 5px;font-weight:500}
+/* HOURS SUMMARY */
+.hrs-bar{height:4px;border-radius:2px;background:var(--green);margin-top:3px}
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;color:var(--text-d);text-align:center;gap:8px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
+</style>
+</head>
+<body>
 
+<!-- NAV -->
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <div class="nav-brand">
+      <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="" onerror="this.style.display='none'">
+      <span>HIVE <span style="color:var(--text-m);font-weight:300">BUCKHEAD</span></span>
+    </div>
+    <div class="nav-badge">Staff Planner</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:7px">
+    <div id="staff-pill" style="display:none;align-items:center;gap:5px;padding:3px 8px;background:rgba(201,169,110,.08);border:.5px solid rgba(201,169,110,.2);border-radius:14px;font-size:11px;color:var(--text-m);cursor:pointer" onclick="confirmLogout()">
+      <div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div>
+      <span id="staff-name-display">Staff</span>
+    </div>
+    <a href="../rsvp-mgnt/" target="_blank" rel="noopener"><button class="btn btn-sm">📋 Reservations</button></a>
+    <a href="../admin-dashboard/" target="_blank" rel="noopener"><button class="btn btn-sm">⚙ Admin</button></a>
+    <button class="btn btn-primary" onclick="openShiftModal(null,null)">+ Add Shift</button>
+    <button class="icon-btn" onclick="exportSchedule()" title="Export">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="icon-btn" onclick="toggleTheme()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Views</div>
+    <button class="sb active" id="sb-week" onclick="setView('week',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Week Schedule
+    </button>
+    <button class="sb" id="sb-month" onclick="setView('month',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Month View
+    </button>
+    <button class="sb" id="sb-staff" onclick="setView('staff',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Staff Roster
+    </button>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Staff</div>
+    <button class="sb" onclick="filterStaff(null,this)" id="sf-all" style="font-size:12px">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--text-d);display:inline-block;flex-shrink:0"></span>All Staff
+      <span style="margin-left:auto;font-size:10px;color:var(--text-d)" id="sf-all-cnt">0</span>
+    </button>
+    <div id="staff-sidebar-list"></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Week</div>
+    <button class="sb" onclick="goToToday()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>This Week
+    </button>
+    <button class="sb" onclick="openForecastModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Forecast Hours
+    </button>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Tools</div>
+    <button class="sb" onclick="openCalloutModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Log Callout
+    </button>
+    <button class="sb" onclick="exportSchedule()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export (CSV / iCal)
+    </button>
+    <button class="sb" onclick="openStaffModal(null)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Staff Member
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="main-area">
+  <!-- WEEK HEADER -->
+  <div class="week-header" id="week-header">
+    <button class="icon-btn" onclick="weekNav(-1)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="week-label" id="week-label">Loading…</div>
+    <button class="icon-btn" onclick="weekNav(1)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div style="font-size:11px;color:var(--text-d);margin-left:12px" id="week-hours-summary"></div>
+    <button class="btn-ghost" style="margin-left:auto" onclick="goToToday()">Today</button>
+  </div>
+  <!-- VIEW CONTAINER -->
+  <div class="view-content" id="view-container"></div>
+</div>
+</div>
+
+<!-- MODALS -->
+
+<!-- SHIFT MODAL -->
+<div class="modal-overlay" id="shift-modal">
+  <div class="modal">
+    <div class="modal-title" id="shift-modal-title">Add Shift</div>
+    <input type="hidden" id="shift-edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Staff Member *</label>
+        <select class="form-select" id="sh-staff"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date *</label>
+        <input class="form-input" type="date" id="sh-date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Time *</label>
+        <input class="form-input" type="time" id="sh-start">
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Time *</label>
+        <input class="form-input" type="time" id="sh-end">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Role / Section</label>
+        <select class="form-select" id="sh-role">
+          <option value="">Any</option>
+          <option>Fine Dining Server</option>
+          <option>Bar Server</option>
+          <option>Host</option>
+          <option>Lounge Server</option>
+          <option>Patio Server</option>
+          <option>Manager on Duty</option>
+          <option>Kitchen</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="sh-type">
+          <option value="open">Opening</option>
+          <option value="close">Closing</option>
+          <option value="mid">Mid Shift</option>
+          <option value="double">Double</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input class="form-input" id="sh-notes" placeholder="Any special instructions…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="sh-delete-btn" style="color:var(--red);border-color:rgba(196,82,74,.3);display:none" onclick="deleteShift()">Delete</button>
+      <button class="btn" onclick="closeModal('shift-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShift()">Save Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALLOUT MODAL -->
+<div class="modal-overlay" id="callout-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title">Log Callout</div>
+    <div class="form-group">
+      <label class="form-label">Staff Member *</label>
+      <select class="form-select" id="co-staff"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date *</label>
+      <input class="form-input" type="date" id="co-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason</label>
+      <select class="form-select" id="co-reason">
+        <option>Sick / Illness</option>
+        <option>Personal</option>
+        <option>Family Emergency</option>
+        <option>No Call No Show</option>
+        <option>Approved PTO</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Covered by</label>
+      <select class="form-select" id="co-cover">
+        <option value="">Not covered</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input class="form-input" id="co-notes" placeholder="Additional details…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('callout-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCallout()">Log Callout</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORECAST MODAL -->
+<div class="modal-overlay" id="forecast-modal">
+  <div class="modal">
+    <div class="modal-title">Weekly Forecast</div>
+    <div id="forecast-content" style="font-size:13px"></div>
+    <div id="forecast-admin-link" style="margin-top:10px;padding:9px 11px;background:var(--surface2);border-radius:6px;font-size:12px;color:var(--text-m)">
+      Full staff analytics available in <a href="../admin-dashboard/" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;border-bottom:.5px solid rgba(201,169,110,.3)">Admin Dashboard → Staff Intelligence</a>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('forecast-modal')">Close</button>
+      <button class="btn btn-primary" onclick="exportSchedule()">Export Week</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT STAFF MODAL -->
+<div class="modal-overlay" id="staff-modal">
+  <div class="modal">
+    <div class="modal-title" id="sm-title">Add Staff Member</div>
+    <input type="hidden" id="sm-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="sm-first" placeholder="First"></div>
+      <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="sm-last" placeholder="Last"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="sm-phone" placeholder="404…" type="tel"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="sm-email" placeholder="staff@email.com" type="email"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Role</label>
+        <select class="form-select" id="sm-role">
+          <option>Lead Server</option><option>Server</option><option>Server / Bar</option>
+          <option>Host</option><option>Bartender</option><option>Manager</option><option>Kitchen</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Access Level</label>
+        <select class="form-select" id="sm-access">
+          <option value="3">3 — Floor View Only</option>
+          <option value="2" selected>2 — Reservations + Floor</option>
+          <option value="1">1 — Admin (Full Access)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">4-digit PIN</label><input class="form-input" id="sm-pin" placeholder="e.g. 7890" maxlength="4" inputmode="numeric"></div>
+      <div class="form-group"><label class="form-label">Availability</label>
+        <select class="form-select" id="sm-avail">
+          <option value="fulltime">Full Time</option>
+          <option value="parttime">Part Time</option>
+          <option value="oncall">On Call</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="sm-notes" placeholder="Any scheduling notes…"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('staff-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStaffMember()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
+
+<!-- LOGIN GATE -->
+<div id="login-gate" style="position:fixed;inset:0;z-index:9999;background:#0E0C0A;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;padding:20px">
+  <div style="width:100%;max-width:360px;text-align:center">
+    <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="" style="width:52px;height:52px;object-fit:contain;margin-bottom:14px;border-radius:8px" onerror="this.style.display='none'">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:#C9A96E;letter-spacing:.12em;margin-bottom:4px">HIVE <span style="color:#A89B84;font-weight:300">BUCKHEAD</span></div>
+    <div style="font-size:11px;color:#6B5E4A;margin-bottom:26px;letter-spacing:.06em">STAFF PLANNER — LEVEL 1 & 2 ACCESS</div>
+    <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:24px 20px">
+      <div style="font-size:12px;color:#A89B84;margin-bottom:14px">Select your name and enter your PIN</div>
+      <select id="lg-staff-sel" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none" onchange="document.getElementById('lg-pin').focus()">
+        <option value="">Select staff member…</option>
+      </select>
+      <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:22px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()" id="lg-btn" style="width:100%;padding:13px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;cursor:pointer">Sign In</button>
+      <div id="lg-err" style="font-size:12px;color:#C4524A;margin-top:9px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
+const STORE_KEY='hive_buckhead_v2';
+const PLANNER_KEY='hive_planner_v1';
+const TODAY=new Date().toISOString().split('T')[0];
+
+const LOCAL_STAFF=[
+  {id:'S001',name:'Admin User',   role:'Manager on Duty',accessLevel:1,passcode:'1234',color:'#C9A96E'},
+  {id:'S002',name:'Ashley Smith', role:'Lead Server',    accessLevel:2,passcode:'2345',color:'#5B96C8'},
+  {id:'S003',name:'Marcus Rivera',role:'Server',         accessLevel:2,passcode:'3456',color:'#9B7EC8'},
+  {id:'S004',name:'Jenna Park',   role:'Server',         accessLevel:2,passcode:'4567',color:'#3AACA8'},
+  {id:'S005',name:'Devon Harris', role:'Server / Bar',   accessLevel:2,passcode:'5678',color:'#4CAF82'},
+  {id:'S006',name:'Floor Staff',  role:'Host',           accessLevel:3,passcode:'6789',color:'#A89B84'},
+];
+
+async function sheetsGet(p){try{const r=await fetch(SHEETS_URL+'?'+new URLSearchParams(p));return await r.json();}catch(e){return null;}}
+async function sheetsPost(b){try{const r=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return await r.json();}catch(e){return null;}}
+
+function getSession(){try{return JSON.parse(sessionStorage.getItem('hive_session'))||null;}catch(e){return null;}}
+function setSession(d){sessionStorage.setItem('hive_session',JSON.stringify(d));}
+function getStaffName(){return getSession()?.staff?.name||'Staff';}
+function getAccessLevel(){return getSession()?.staff?.accessLevel||99;}
+function genId(){return Math.random().toString(36).substr(2,8).toUpperCase();}
+function fmtTime12(t){if(!t)return'';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m}${hr>=12?'p':'a'}`;}
+function fmtHrs(start,end){if(!start||!end)return 0;const[sh,sm]=start.split(':').map(Number);const[eh,em]=end.split(':').map(Number);return Math.round(((eh*60+em)-(sh*60+sm))/30)*0.5;}
+
+// ── PLANNER DATA ──
+let PLANNER={shifts:[],staff:[...LOCAL_STAFF],callouts:[]};
+function loadPlanner(){
+  try{
+    const r=localStorage.getItem(PLANNER_KEY);
+    if(r){const d=JSON.parse(r);PLANNER.shifts=d.shifts||[];PLANNER.callouts=d.callouts||[];if(d.staff&&d.staff.length)PLANNER.staff=d.staff;}
+  }catch(e){}
+}
+function savePlanner(){
+  try{localStorage.setItem(PLANNER_KEY,JSON.stringify(PLANNER));}catch(e){}
+}
+
+// ── Sync shifts and callouts FROM Sheets (runs on login) ──
+async function syncPlannerFromSheets(){
+  try{
+    const[sr,cr]=await Promise.all([
+      sheetsGet({action:'getShifts'}),
+      sheetsGet({action:'getCallouts'}),
+    ]);
+    let changed=false;
+    if(sr?.shifts&&sr.shifts.length){
+      PLANNER.shifts=sr.shifts;
+      changed=true;
+    }
+    if(cr?.callouts&&cr.callouts.length){
+      PLANNER.callouts=cr.callouts;
+      changed=true;
+    }
+    if(changed){savePlanner();renderMain();}
+  }catch(e){console.warn('Planner sync failed:',e);}
+}
+
+// ── Poll Sheets every 60s while planner is open ──
+let _plannerPoll=null;
+function startPlannerPolling(){
+  if(_plannerPoll)return;
+  _plannerPoll=setInterval(syncPlannerFromSheets,60000);
+}
+function getStaffList(){
+  // Try getting staff from main store first
+  try{const s=localStorage.getItem(STORE_KEY);if(s){const d=JSON.parse(s);if(d.servers&&d.servers.length)return d.servers.map(x=>({id:x.id,name:x.name,role:x.role||'Staff',accessLevel:x.accessLevel||2,color:x.color||'#A89B84',passcode:x.passcode||'0000'}));}}catch(e){}
+  return PLANNER.staff;
+}
+
+// ── Read reservation performance metrics (cross-data with admin) ──
+function getStaffPerf(staffName){
+  try{
+    const d=JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+    const rsv=d.reservations||[];
+    const mine=rsv.filter(r=>r.server===staffName);
+    const completed=mine.filter(r=>r.status==='Completed');
+    const rev=completed.reduce((a,r)=>a+(r.orderTotal||0),0);
+    const cov=mine.reduce((a,r)=>a+(r.party||0),0);
+    const shown=mine.filter(r=>r.status==='Completed'||r.status==='Seated').length;
+    const showR=mine.length?Math.round(shown/mine.length*100):0;
+    return{rev,cov,showR,cnt:mine.length};
+  }catch(e){return{rev:0,cov:0,showR:0,cnt:0};}
+}
+
+function shiftHrs(sh){
+  if(!sh.start||!sh.end)return 0;
+  const[sh_h,sh_m]=sh.start.split(':').map(Number);
+  const[eh,em]=sh.end.split(':').map(Number);
+  return Math.max(0,((eh*60+em)-(sh_h*60+sh_m))/60);
+}
+
+function getStaffScore(s){
+  const d30=new Date(Date.now()-30*864e5).toISOString().split('T')[0];
+  const shifts=PLANNER.shifts.filter(sh=>sh.staffId===s.id&&sh.date>=d30);
+  const callouts=PLANNER.callouts.filter(co=>co.staffId===s.id&&co.date>=d30).length;
+  const calloutRate=shifts.length?callouts/shifts.length*100:0;
+  const reliability=Math.max(0,100-calloutRate);
+  const perf=getStaffPerf(s.name);
+  const hrs=shifts.reduce((a,sh)=>a+shiftHrs(sh),0);
+  const revPerShift=shifts.length&&perf.rev>0?perf.rev/shifts.length:0;
+  const score=Math.round((perf.showR*0.3)+(reliability*0.3)+(Math.min(revPerShift/50,1)*100*0.2)+(Math.min(perf.showR,100)*0.2));
+  return{score:Math.min(score,100),reliability,hrs:Math.round(hrs*10)/10,callouts,perf};
+}
+
+// ── WEEK STATE ──
+let currentView='week';
+let viewWeekStart=getThisMonday();
+let filterStaffId=null;
+
+function getThisMonday(){
+  const d=new Date(); const day=d.getDay(); const diff=d.getDate()-day+(day===0?-6:1);
+  const m=new Date(d.setDate(diff)); m.setHours(0,0,0,0); return m;
+}
+function getWeekDates(monday){
+  return Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return d.toISOString().split('T')[0];});
+}
+function weekNav(dir){viewWeekStart=new Date(viewWeekStart);viewWeekStart.setDate(viewWeekStart.getDate()+dir*7);renderMain();}
+function goToToday(){viewWeekStart=getThisMonday();renderMain();}
+function setView(v,btn){
+  currentView=v;
+  document.querySelectorAll('.sb[id^="sb-"]').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('week-header').style.display=(v==='week')?'flex':'none';
+  renderMain();
+}
+function filterStaff(id,btn){
+  filterStaffId=id;
+  document.querySelectorAll('.sb[id^="sf-"]').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderMain();
+}
+
+// ── SIDEBAR STAFF LIST ──
+function renderSidebarStaff(){
+  const list=getStaffList().filter(s=>parseInt(s.accessLevel)<=3);
+  document.getElementById('sf-all-cnt').textContent=list.length;
+  document.getElementById('staff-sidebar-list').innerHTML=list.map(s=>`
+    <button class="sb ${filterStaffId===s.id?'active':''}" id="sf-${s.id}" onclick="filterStaff('${s.id}',this)">
+      <div class="s-avatar" style="background:${s.color||'#A89B84'}">${s.name.charAt(0)}</div>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">${s.name.split(' ')[0]}</span>
+    </button>`).join('');
+}
+
+// ── MAIN RENDER ──
+function renderMain(){
+  if(currentView==='week') renderWeek();
+  else if(currentView==='month') renderMonth();
+  else if(currentView==='staff') renderStaffRoster();
+  renderSidebarStaff();
+}
+
+// ── WEEK VIEW ──
+function renderWeek(){
+  const dates=getWeekDates(viewWeekStart);
+  const dow=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const fullDow=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const staff=getStaffList().filter(s=>!filterStaffId||s.id===filterStaffId);
+
+  // Week label
+  const start=new Date(dates[0]);const end=new Date(dates[6]);
+  document.getElementById('week-label').textContent=
+    `${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+
+  // Hours summary
+  const totalHrs=PLANNER.shifts.filter(sh=>dates.includes(sh.date)&&sh.type!=='callout').reduce((a,sh)=>a+fmtHrs(sh.start,sh.end),0);
+  document.getElementById('week-hours-summary').textContent=`${totalHrs}h scheduled this week`;
+
+  let html=`<div style="overflow:auto;height:100%">
+  <div class="week-grid-head">
+    <div class="week-dow" style="font-size:10px;color:var(--text-d);text-align:left;padding-left:12px">STAFF</div>`;
+
+  dates.forEach((d,i)=>{
+    const isT=d===TODAY;
+    const dt=new Date(d+'T00:00:00');
+    html+=`<div class="week-dow ${isT?'today':''}">${dow[i]}<br><span style="font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:500">${dt.getDate()}</span></div>`;
+  });
+  html+=`</div>`;
+
+  staff.forEach(s=>{
+    const weekShifts=PLANNER.shifts.filter(sh=>sh.staffId===s.id&&dates.includes(sh.date));
+    const callouts=PLANNER.callouts.filter(co=>co.staffId===s.id&&dates.includes(co.date));
+    const weekHrs=weekShifts.filter(sh=>!callouts.find(co=>co.date===sh.date)).reduce((a,sh)=>a+fmtHrs(sh.start,sh.end),0);
+
+    const sc=getStaffScore(s);
+    const scoreClr=sc.score>=80?'var(--green)':sc.score>=60?'var(--amber)':'var(--red)';
+    html+=`<div class="week-row">
+      <div class="week-name-cell" onclick="openStaffModal('${s.id}')" style="cursor:pointer" title="Score: ${sc.score} | ${sc.hrs}h | ${sc.callouts} callout${sc.callouts!==1?'s':''}">
+        <div class="s-avatar" style="background:${s.color||'#A89B84'};width:26px;height:26px;font-size:10px">${s.name.charAt(0)}</div>
+        <div style="min-width:0">
+          <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name.split(' ')[0]}</div>
+          <div style="font-size:9px;color:var(--text-d);display:flex;align-items:center;gap:4px">
+            <span>${weekHrs}h</span>
+            <span style="color:${scoreClr};font-weight:500">·${sc.score}</span>
+            ${sc.callouts>0?`<span style="color:var(--red)">·${sc.callouts}✗</span>`:''}
+          </div>
+        </div>
+      </div>`;
+
+    dates.forEach(d=>{
+      const shift=weekShifts.find(sh=>sh.date===d);
+      const isCallout=callouts.find(co=>co.date===d);
+      const isT=d===TODAY;
+      html+=`<div class="week-shift-cell ${isT?'style="background:rgba(201,169,110,.04)"':''}" onclick="openShiftModal('${s.id}','${d}')">`;
+      if(isCallout){
+        html+=`<div class="shift-block shift-callout">${isCallout.reason.split(' ')[0]}</div>`;
+      } else if(shift){
+        const cls={open:'shift-open',close:'shift-close',mid:'shift-mid',double:'shift-close'}[shift.type]||'shift-mid';
+        html+=`<div class="shift-block ${cls}" onclick="event.stopPropagation();editShift('${shift.id}')">${fmtTime12(shift.start)}–${fmtTime12(shift.end)}<br><span style="font-size:9px;opacity:.75">${shift.role||shift.type}</span></div>`;
+      } else {
+        html+=`<div class="add-shift-btn">+</div>`;
+      }
+      html+=`</div>`;
+    });
+    html+=`</div>`;
+  });
+
+  html+=`</div>`;
+  document.getElementById('view-container').innerHTML=html;
+}
+
+// ── MONTH VIEW ──
+function renderMonth(){
+  const y=viewWeekStart.getFullYear();
+  const m=viewWeekStart.getMonth();
+  document.getElementById('week-label').textContent=new Date(y,m,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  document.getElementById('week-header').style.display='flex';
+
+  const dow=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html=`<div style="overflow:auto;height:100%">
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:.5px solid var(--border);background:var(--surface);position:sticky;top:0">
+  ${dow.map(d=>`<div class="month-dow">${d}</div>`).join('')}</div>
+  <div class="month-grid">`;
+
+  const first=new Date(y,m,1);
+  const firstDow=(first.getDay()+6)%7; // Mon=0
+  const dim=new Date(y,m+1,0).getDate();
+
+  let cells=[];
+  for(let i=0;i<firstDow;i++){const d=new Date(y,m,1-firstDow+i);cells.push({date:d.toISOString().split('T')[0],cur:false});}
+  for(let i=1;i<=dim;i++){cells.push({date:new Date(y,m,i).toISOString().split('T')[0],cur:true});}
+  while(cells.length<42)cells.push({date:'',cur:false});
+
+  cells.forEach(cell=>{
+    if(!cell.date){html+=`<div class="month-day"></div>`;return;}
+    const dayShifts=PLANNER.shifts.filter(sh=>sh.date===cell.date&&(!filterStaffId||sh.staffId===filterStaffId));
+    const dayCallouts=PLANNER.callouts.filter(co=>co.date===cell.date);
+    const isT=cell.date===TODAY;
+    const dt=new Date(cell.date+'T00:00:00');
+    html+=`<div class="month-day ${!cell.cur?'style="opacity:.35"':''}">
+      <div class="month-dn ${isT?'today-dn':''}">
+        <span>${dt.getDate()}</span>
+        ${dayShifts.length?`<span style="font-size:9px;color:var(--text-d)">${dayShifts.length} shift${dayShifts.length>1?'s':''}</span>`:''}
+      </div>`;
+    dayShifts.slice(0,3).forEach(sh=>{
+      const stf=getStaffList().find(s=>s.id===sh.staffId);
+      const cls=sh.type==='open'?'shift-open':sh.type==='close'?'shift-close':'shift-mid';
+      html+=`<div class="month-chip ${cls}" onclick="editShift('${sh.id}')" style="cursor:pointer">${stf?.name.split(' ')[0]||'?'} ${fmtTime12(sh.start)}</div>`;
+    });
+    if(dayCallouts.length)html+=`<div class="month-chip" style="background:var(--red-bg);color:var(--red)">${dayCallouts.length} callout${dayCallouts.length>1?'s':''}</div>`;
+    if(dayShifts.length>3)html+=`<div style="font-size:9px;color:var(--text-d)">+${dayShifts.length-3} more</div>`;
+    html+=`</div>`;
+  });
+
+  html+=`</div></div>`;
+  document.getElementById('view-container').innerHTML=html;
+}
+
+// ── STAFF ROSTER ──
+function renderStaffRoster(){
+  document.getElementById('week-header').style.display='none';
+  const staff=getStaffList();
+  const allShifts=PLANNER.shifts;
+
+  let html=`<div style="overflow:auto;height:100%"><table class="staff-table">
+  <thead><tr>
+    <th>Staff Member</th><th>Role</th><th>Access</th><th>Avail.</th>
+    <th>Shifts (30d)</th><th>Hours (30d)</th><th>Revenue</th><th>Callouts</th><th>Score</th><th style="width:70px"></th>
+  </tr></thead><tbody>`;
+
+  const now=new Date();
+  const d30ago=new Date(now.getTime()-30*864e5).toISOString().split('T')[0];
+
+  staff.forEach(s=>{
+    const shifts30=allShifts.filter(sh=>sh.staffId===s.id&&sh.date>=d30ago);
+    const hrs30=shifts30.reduce((a,sh)=>a+fmtHrs(sh.start,sh.end),0);
+    const callouts=PLANNER.callouts.filter(co=>co.staffId===s.id&&co.date>=d30ago).length;
+    const lvlLabel={1:'Admin',2:'Manager',3:'Host'}[s.accessLevel]||'Staff';
+    const lvlColor={1:'var(--gold)',2:'var(--blue)',3:'var(--teal)'}[s.accessLevel]||'var(--text-m)';
+    html+=`<tr onclick="openStaffModal('${s.id}')">
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="s-avatar" style="background:${s.color||'#A89B84'};width:28px;height:28px;font-size:11px">${s.name.charAt(0)}</div><div><div style="font-weight:500">${s.name}</div><div style="font-size:11px;color:var(--text-d)">${s.phone||'—'}</div></div></div></td>
+      <td style="font-size:12px;color:var(--text-m)">${s.role||'—'}</td>
+      <td><span style="font-size:11px;font-weight:500;color:${lvlColor}">L${s.accessLevel} ${lvlLabel}</span></td>
+      <td style="font-size:12px;color:var(--text-m)">${s.availability||'Full Time'}</td>
+      <td style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px">${shifts30.length}</td>
+      <td style="font-size:12px;color:var(--green)">${hrs30}h</td>
+      <td style="text-align:center">${callouts>0?`<span class="callout-badge">${callouts}</span>`:'—'}</td>
+      <td><button class="btn-ghost" onclick="event.stopPropagation();openStaffModal('${s.id}')">Edit</button></td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('view-container').innerHTML=html;
+}
+
+// ── SHIFT ACTIONS ──
+let editShiftId=null;
+
+function openShiftModal(staffId,date){
+  editShiftId=null;
+  document.getElementById('shift-modal-title').textContent='Add Shift';
+  document.getElementById('sh-delete-btn').style.display='none';
+  document.getElementById('shift-edit-id').value='';
+  populateShiftStaffDropdown(staffId);
+  document.getElementById('sh-date').value=date||TODAY;
+  document.getElementById('sh-start').value='17:00';
+  document.getElementById('sh-end').value='23:00';
+  document.getElementById('sh-role').value='';
+  document.getElementById('sh-type').value='close';
+  document.getElementById('sh-notes').value='';
+  document.getElementById('shift-modal').classList.add('show');
+}
+
+function editShift(id){
+  const sh=PLANNER.shifts.find(x=>x.id===id);if(!sh)return;
+  editShiftId=id;
+  document.getElementById('shift-modal-title').textContent='Edit Shift';
+  document.getElementById('sh-delete-btn').style.display='block';
+  document.getElementById('shift-edit-id').value=id;
+  populateShiftStaffDropdown(sh.staffId);
+  document.getElementById('sh-date').value=sh.date;
+  document.getElementById('sh-start').value=sh.start;
+  document.getElementById('sh-end').value=sh.end;
+  document.getElementById('sh-role').value=sh.role||'';
+  document.getElementById('sh-type').value=sh.type||'close';
+  document.getElementById('sh-notes').value=sh.notes||'';
+  document.getElementById('shift-modal').classList.add('show');
+}
+
+function populateShiftStaffDropdown(preId){
+  const sl=document.getElementById('sh-staff');
+  const staff=getStaffList();
+  sl.innerHTML=staff.map(s=>`<option value="${s.id}" ${s.id===preId?'selected':''}>${s.name} (${s.role||'Staff'})</option>`).join('');
+}
+
+function saveShift(){
+  const staffId=document.getElementById('sh-staff').value;
+  const date=document.getElementById('sh-date').value;
+  const start=document.getElementById('sh-start').value;
+  const end=document.getElementById('sh-end').value;
+  if(!staffId||!date||!start||!end){showToast('Fill all required fields','warning');return;}
+  if(editShiftId){
+    const sh=PLANNER.shifts.find(x=>x.id===editShiftId);
+    if(sh)Object.assign(sh,{staffId,date,start,end,role:document.getElementById('sh-role').value,type:document.getElementById('sh-type').value,notes:document.getElementById('sh-notes').value});
+  } else {
+    PLANNER.shifts.push({id:genId(),staffId,date,start,end,role:document.getElementById('sh-role').value,type:document.getElementById('sh-type').value,notes:document.getElementById('sh-notes').value,createdBy:getStaffName()});
+  }
+  savePlanner();
+  // Write to Sheets (async, don't block UI)
+  const shiftToSave=editShiftId?PLANNER.shifts.find(x=>x.id===editShiftId):PLANNER.shifts.slice(-1)[0];
+  if(shiftToSave){
+    shiftToSave.staffName=getStaffList().find(s=>s.id===shiftToSave.staffId)?.name||shiftToSave.staffId;
+    sheetsPost({action:'saveShift',shift:shiftToSave,staffName:getStaffName()}).catch(()=>{});
+  }
+  closeModal('shift-modal');
+  showToast(editShiftId?'Shift updated':'Shift added','success');
+  renderMain();
+}
+
+function deleteShift(){
+  if(!editShiftId)return;
+  if(!confirm('Delete this shift?'))return;
+  const deletedId=editShiftId;
+  PLANNER.shifts=PLANNER.shifts.filter(x=>x.id!==deletedId);
+  savePlanner();
+  sheetsPost({action:'deleteShift',id:deletedId,staffName:getStaffName()}).catch(()=>{});
+  closeModal('shift-modal');showToast('Shift removed','info');renderMain();
+}
+
+// ── CALLOUT ──
+function openCalloutModal(){
+  const sl=document.getElementById('co-staff');
+  const cv=document.getElementById('co-cover');
+  const staff=getStaffList();
+  sl.innerHTML=staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  cv.innerHTML='<option value="">Not covered</option>'+staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('co-date').value=TODAY;
+  document.getElementById('co-notes').value='';
+  document.getElementById('callout-modal').classList.add('show');
+}
+function saveCallout(){
+  const staffId=document.getElementById('co-staff').value;
+  const date=document.getElementById('co-date').value;
+  if(!staffId||!date){showToast('Select staff and date','warning');return;}
+  const coverId=document.getElementById('co-cover').value;
+  const coverName=getStaffList().find(s=>s.id===coverId)?.name||'';
+  const calloutStaff=getStaffList().find(s=>s.id===staffId);
+  const newCallout={id:genId(),staffId,staffName:calloutStaff?.name||staffId,date,reason:document.getElementById('co-reason').value,coveredBy:coverId,coveredByName:coverName,notes:document.getElementById('co-notes').value,loggedBy:getStaffName(),loggedAt:new Date().toISOString()};
+  PLANNER.callouts.push(newCallout);
+  savePlanner();
+  sheetsPost({action:'saveCallout',callout:newCallout,staffName:getStaffName()}).catch(()=>{});
+  closeModal('callout-modal');showToast('Callout logged','info');renderMain();
+}
+
+// ── FORECAST ──
+function openForecastModal(){
+  const dates=getWeekDates(viewWeekStart);
+  const staff=getStaffList();
+  let html=`<div style="margin-bottom:14px;font-size:12px;color:var(--text-m)">Week of ${new Date(dates[0]).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>`;
+  html+=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+  <thead><tr><th style="text-align:left;padding:6px;border-bottom:.5px solid var(--border);font-size:10px;color:var(--text-d)">STAFF</th>
+  <th style="text-align:center;padding:6px;border-bottom:.5px solid var(--border);font-size:10px;color:var(--text-d)">SHIFTS</th>
+  <th style="text-align:center;padding:6px;border-bottom:.5px solid var(--border);font-size:10px;color:var(--text-d)">HRS</th>
+  <th style="text-align:center;padding:6px;border-bottom:.5px solid var(--border);font-size:10px;color:var(--text-d)">STATUS</th>
+  </tr></thead><tbody>`;
+  let totalHrs=0;
+  staff.forEach(s=>{
+    const shifts=PLANNER.shifts.filter(sh=>sh.staffId===s.id&&dates.includes(sh.date));
+    const callouts=PLANNER.callouts.filter(co=>co.staffId===s.id&&dates.includes(co.date));
+    const hrs=shifts.reduce((a,sh)=>a+fmtHrs(sh.start,sh.end),0);
+    totalHrs+=hrs;
+    html+=`<tr><td style="padding:7px 6px">${s.name}</td>
+    <td style="text-align:center;padding:7px 6px">${shifts.length}</td>
+    <td style="text-align:center;padding:7px 6px;color:var(--green)">${hrs}h</td>
+    <td style="text-align:center;padding:7px 6px">${callouts.length?`<span class="callout-badge">${callouts.length} callout</span>`:'<span style="color:var(--green);font-size:10px">✓</span>'}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>
+  <div style="margin-top:14px;padding:10px;background:var(--surface2);border-radius:6px;display:flex;justify-content:space-between;font-size:12px">
+    <span style="color:var(--text-m)">Total scheduled hours</span>
+    <span style="color:var(--gold);font-weight:500;font-family:'Cormorant Garamond',serif;font-size:18px">${totalHrs}h</span>
+  </div>`;
+  document.getElementById('forecast-content').innerHTML=html;
+  document.getElementById('forecast-modal').classList.add('show');
+}
+
+// ── STAFF MODAL ──
+function openStaffModal(id){
+  const s=id?getStaffList().find(x=>x.id===id):null;
+  document.getElementById('sm-title').textContent=s?'Edit Staff Member':'Add Staff Member';
+  document.getElementById('sm-id').value=s?.id||'';
+  document.getElementById('sm-first').value=s?.name?.split(' ')[0]||'';
+  document.getElementById('sm-last').value=s?.name?.split(' ').slice(1).join(' ')||'';
+  document.getElementById('sm-phone').value=s?.phone||'';
+  document.getElementById('sm-email').value=s?.email||'';
+  document.getElementById('sm-role').value=s?.role||'Server';
+  document.getElementById('sm-access').value=s?.accessLevel||2;
+  document.getElementById('sm-pin').value=s?.passcode||'';
+  document.getElementById('sm-avail').value=s?.availability||'fulltime';
+  document.getElementById('sm-notes').value=s?.notes||'';
+  document.getElementById('staff-modal').classList.add('show');
+}
+
+function saveStaffMember(){
+  const first=document.getElementById('sm-first').value.trim();
+  const last=document.getElementById('sm-last').value.trim();
+  if(!first){showToast('Name required','warning');return;}
+  const id=document.getElementById('sm-id').value||genId();
+  const colors=['#C9A96E','#5B96C8','#9B7EC8','#3AACA8','#4CAF82','#D4A020','#C4524A'];
+  const staffObj={id,name:`${first} ${last}`.trim(),phone:document.getElementById('sm-phone').value,email:document.getElementById('sm-email').value,role:document.getElementById('sm-role').value,accessLevel:parseInt(document.getElementById('sm-access').value),passcode:document.getElementById('sm-pin').value,availability:document.getElementById('sm-avail').value,notes:document.getElementById('sm-notes').value,color:PLANNER.staff.find(s=>s.id===id)?.color||colors[Math.floor(Math.random()*colors.length)]};
+  const idx=PLANNER.staff.findIndex(s=>s.id===id);
+  if(idx>=0)PLANNER.staff[idx]=staffObj; else PLANNER.staff.push(staffObj);
+  savePlanner();
+  sheetsPost({action:'saveStaff',staff:staffObj,staffName:getStaffName()}).catch(()=>{});
+  closeModal('staff-modal');showToast(`${staffObj.name} saved`,'success');renderMain();
+}
+
+// ── EXPORT ──
+function exportSchedule(){
+  const dates=getWeekDates(viewWeekStart);
+  const staff=getStaffList();
+  // CSV export
+  let csv='Staff,Date,Day,Start,End,Role,Type,Hours,Notes\n';
+  PLANNER.shifts.filter(sh=>dates.includes(sh.date)).sort((a,b)=>a.date===b.date?a.start.localeCompare(b.start):a.date.localeCompare(b.date)).forEach(sh=>{
+    const s=staff.find(x=>x.id===sh.staffId);
+    const dt=new Date(sh.date+'T00:00:00');
+    const day=dt.toLocaleDateString('en-US',{weekday:'long'});
+    csv+=`"${s?.name||'?'}","${sh.date}","${day}","${sh.start}","${sh.end}","${sh.role||''}","${sh.type||''}","${fmtHrs(sh.start,sh.end)}","${sh.notes||''}"\n`;
+  });
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`hive-schedule-${dates[0]}.csv`;a.click();
+  showToast('Schedule exported','success');
+}
+
+// ── LOGIN ──
+function populateLoginDropdown(){
+  const sel=document.getElementById('lg-staff-sel');
+  const staff=getStaffList().filter(s=>parseInt(s.accessLevel)<=2);
+  sel.innerHTML='<option value="">Select staff member…</option>'+staff.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  sheetsGet({action:'getStaff'}).then(r=>{
+    if(r?.staff?.length){
+      const eligible=r.staff.filter(s=>parseInt(s.accessLevel)<=2);
+      if(eligible.length)sel.innerHTML='<option value="">Select staff member…</option>'+eligible.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+    }
+  }).catch(()=>{});
+}
+
+async function doLogin(){
+  const id=document.getElementById('lg-staff-sel').value;
+  const pin=document.getElementById('lg-pin').value.trim();
+  const err=document.getElementById('lg-err');const btn=document.getElementById('lg-btn');
+  err.style.display='none';
+  if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
+  if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Verifying…';
+  try{
+    let staff=null;
+    const res=await sheetsGet({action:'getStaff'}).catch(()=>null);
+    if(res?.staff){const f=res.staff.find(s=>s.id===id);if(f&&String(f.passcode)===pin&&parseInt(f.accessLevel)<=2)staff=f;}
+    if(!staff){const l=getStaffList().find(s=>s.id===id&&s.passcode===pin&&parseInt(s.accessLevel)<=2);if(l)staff=l;}
+    if(staff){
+      setSession({staff,loginTime:Date.now()});
+      document.getElementById('login-gate').style.display='none';
+      document.getElementById('staff-pill').style.display='flex';
+      document.getElementById('staff-name-display').textContent=staff.name.split(' ')[0];
+      loadPlanner();renderMain();
+      // Pull latest from Sheets, then start polling
+      syncPlannerFromSheets();
+      startPlannerPolling();
+    }else{err.textContent='Incorrect PIN or insufficient access.';err.style.display='block';}
+  }catch(e){err.textContent='Login error — try again.';err.style.display='block';}
+  btn.disabled=false;btn.textContent='Sign In';
+}
+
+function confirmLogout(){if(confirm(`Sign out ${getStaffName()}?`)){sessionStorage.removeItem('hive_session');location.reload();}}
+
+// ── HELPERS ──
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
+let dark=true;
+function toggleTheme(){dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');}
+let toastT;
+function showToast(msg,type='success'){const el=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;el.className=`toast ${type} show`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3400);}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  populateLoginDropdown();
+  const sess=getSession();
+  if(sess?.staff&&parseInt(sess.staff.accessLevel)<=2){
+    document.getElementById('login-gate').style.display='none';
+    document.getElementById('staff-pill').style.display='flex';
+    document.getElementById('staff-name-display').textContent=sess.staff.name.split(' ')[0];
+    loadPlanner();renderMain();
+    syncPlannerFromSheets();
+    startPlannerPolling();
+  }
+});
+</script>
+</body>
+</html>
