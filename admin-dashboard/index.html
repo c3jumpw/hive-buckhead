@@ -132,6 +132,7 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
     <a href="../rsvp-mgnt/"><button class="btn btn-sm">← Reservations</button></a>
     <a href="../floor-view/" target="_blank" rel="noopener"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">🏠 Floor</button></a>
     <a href="../rsvp-form/" target="_blank" rel="noopener"><button class="btn btn-sm" style="color:var(--green);border-color:rgba(76,175,130,.3)">📝 RSVP Form</button></a>
+    <a href="../staff-planner/" target="_blank" rel="noopener"><button class="btn btn-sm" style="color:var(--purple);border-color:rgba(155,126,200,.3)">📅 Schedule</button></a>
     
   </div>
 </nav>
@@ -242,30 +243,91 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
 
 <!-- STAFF -->
 <div class="page" id="page-staff">
-  <h2>Staff Performance</h2>
-  <div class="page-sub">Reservations, covers, revenue, and cancellations by server.</div>
+  <h2>Staff Intelligence</h2>
+  <div class="page-sub">Performance, reliability, and operational metrics across all staff. Linked with the Staff Planner schedule data.</div>
+
+  <!-- TOP LEADERBOARD STRIP -->
   <div class="metric-grid" id="staff-metrics"></div>
-  <div class="card">
-    <div class="card-title">Server Leaderboard</div>
-    <table class="dt"><thead><tr><th>Server</th><th>Reservations</th><th>Covers</th><th>Avg Order</th><th>Revenue</th><th>Cancellations</th><th>Show Rate</th></tr></thead>
-    <tbody id="staff-table"></tbody></table>
+
+  <!-- 4 SIGNAL LEADERBOARDS -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px" id="leaderboard-strip">
+    <div class="card" style="padding:14px">
+      <div class="card-title" style="font-size:11px;margin-bottom:10px">🏆 TOP EARNER</div>
+      <div id="lb-earner"></div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div class="card-title" style="font-size:11px;margin-bottom:10px">⚡ MOST EFFICIENT</div>
+      <div id="lb-efficient"></div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div class="card-title" style="font-size:11px;margin-bottom:10px">👥 MOST COVERS</div>
+      <div id="lb-covers"></div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div class="card-title" style="font-size:11px;margin-bottom:10px">✅ MOST RELIABLE</div>
+      <div id="lb-reliable"></div>
+    </div>
   </div>
+
+  <!-- MAIN STAFF TABLE -->
   <div class="card">
-    <div class="card-title">Section Performance — Today</div>
-    <div id="section-today"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin:0">Full Staff Performance Table</div>
+      <a href="../staff-planner/" target="_blank" rel="noopener" style="font-size:11px;color:var(--gold);text-decoration:none;border-bottom:.5px solid rgba(201,169,110,.3)">→ Open Staff Planner</a>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="dt">
+      <thead><tr>
+        <th>Staff Member</th>
+        <th>Reservations</th>
+        <th>Covers</th>
+        <th>Revenue</th>
+        <th>Rev / Shift</th>
+        <th>Avg Party</th>
+        <th>Show Rate</th>
+        <th>Hours (30d)</th>
+        <th>Callouts</th>
+        <th>Reliability</th>
+      </tr></thead>
+      <tbody id="staff-table"></tbody>
+    </table>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-title">Pending Review <span class="card-sub" id="review-count"></span></div>
-    <div id="review-queue"></div>
-  </div>
-  <div class="two-col">
+
+  <!-- STAFF PROFILE CARDS -->
+  <div id="staff-profile-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:14px"></div>
+
+  <!-- SECTION PERFORMANCE -->
+  <div class="two-col" style="margin-top:14px">
     <div class="card">
-      <div class="card-title">Covers by Server</div>
+      <div class="card-title">Section Performance — Today</div>
+      <div id="section-today"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pending Review <span class="card-sub" id="review-count"></span></div>
+      <div id="review-queue"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="two-col" style="margin-top:14px">
+    <div class="card">
+      <div class="card-title">Revenue by Staff</div>
+      <div id="staff-rev-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Hours Scheduled — Last 4 Weeks</div>
+      <div id="staff-hours-chart"></div>
+    </div>
+  </div>
+  <div class="two-col" style="margin-top:14px">
+    <div class="card">
+      <div class="card-title">Covers by Staff</div>
       <div id="staff-covers-chart"></div>
     </div>
     <div class="card">
-      <div class="card-title">Revenue by Server</div>
-      <div id="staff-rev-chart"></div>
+      <div class="card-title">Callout Log — Last 30 Days</div>
+      <div id="callout-log"></div>
     </div>
   </div>
 </div>
@@ -710,58 +772,243 @@ function renderStaff(){
   const rsv = window_HiveData_reservations();
   const servers = window_HiveData_servers();
   const completed = rsv.filter(r=>r.status==='Completed');
-  document.getElementById('staff-metrics').innerHTML=`
-    <div class="mc"><div class="mc-val" style="color:var(--gold)">${servers.length}</div><div class="mc-lbl">Active Servers</div></div>
-    <div class="mc"><div class="mc-val" style="color:var(--green)">$${completed.reduce((a,r)=>a+(r.orderTotal||0),0).toFixed(0)}</div><div class="mc-lbl">Total Logged Revenue</div></div>
-    <div class="mc"><div class="mc-val" style="color:var(--blue)">${rsv.filter(r=>r.status==='Seated').length}</div><div class="mc-lbl">Currently Seated</div></div>`;
+
+  // ── Load planner data: localStorage (immediate) + Sheets (async refresh) ──
+  let plannerShifts=[], plannerCallouts=[];
+  try{
+    const pd=JSON.parse(localStorage.getItem('hive_planner_v1')||'{}');
+    plannerShifts=pd.shifts||[];
+    plannerCallouts=pd.callouts||[];
+  }catch(e){}
+  // Async: pull fresh data from Sheets and re-render if newer data found
+  Promise.all([sheetsGet({action:'getShifts'}),sheetsGet({action:'getCallouts'})]).then(([sr,cr])=>{
+    let updated=false;
+    if(sr?.shifts&&sr.shifts.length){plannerShifts=sr.shifts;updated=true;}
+    if(cr?.callouts&&cr.callouts.length){plannerCallouts=cr.callouts;updated=true;}
+    if(updated){
+      try{
+        const pd=JSON.parse(localStorage.getItem('hive_planner_v1')||'{}');
+        pd.shifts=plannerShifts;pd.callouts=plannerCallouts;
+        localStorage.setItem('hive_planner_v1',JSON.stringify(pd));
+      }catch(e){}
+      renderStaff(); // re-render once Sheets data arrives
+    }
+  }).catch(()=>{});
+
+  // ── Helper: hours for a shift ──
+  function shiftHrs(sh){
+    if(!sh.start||!sh.end)return 0;
+    const[sh_h,sh_m]=sh.start.split(':').map(Number);
+    const[eh,em]=sh.end.split(':').map(Number);
+    return Math.max(0,((eh*60+em)-(sh_h*60+sh_m))/60);
+  }
+
+  // ── 30-day window ──
+  const d30=new Date(Date.now()-30*864e5).toISOString().split('T')[0];
+  const d4w=new Date(Date.now()-28*864e5).toISOString().split('T')[0];
+
+  // ── Build performance object per server ──
   const perf = servers.map(s=>{
     const mine = rsv.filter(r=>r.server===s.name);
-    const rev = mine.filter(r=>r.status==='Completed').reduce((a,r)=>a+(r.orderTotal||0),0);
-    const cov = mine.reduce((a,r)=>a+r.party,0);
+    const mineCompleted = mine.filter(r=>r.status==='Completed');
+    const rev = mineCompleted.reduce((a,r)=>a+(r.orderTotal||0),0);
+    const tips = mineCompleted.reduce((a,r)=>a+(r.tipAmount||0),0);
+    const cov = mine.reduce((a,r)=>a+(r.party||0),0);
     const can = mine.filter(r=>r.status==='Cancelled').length;
     const shown = mine.filter(r=>r.status==='Completed'||r.status==='Seated').length;
     const showR = mine.length ? Math.round(shown/mine.length*100) : 0;
-    return{...s,cnt:mine.length,rev,cov,can,showR,avg:mine.filter(r=>r.orderTotal).length?Math.round(rev/mine.filter(r=>r.orderTotal).length):0};
+    const avgOrder = mineCompleted.length ? rev/mineCompleted.length : 0;
+    const avgParty = mine.length ? cov/mine.length : 0;
+    // Change requests attributed to this server's tables
+    const changeReqs = rsv.filter(r=>r.server===s.name&&(r.status==='Change Requested'||r.status==='Cancellation Requested')).length;
+    // Walk-ins handled
+    const walkIns = mine.filter(r=>r.source==='walk_in'||((r.notes||'').includes('walk-in'))).length;
+    // Planner data: shifts & hours in last 30 days
+    const myShifts = plannerShifts.filter(sh=>sh.staffId===s.id&&sh.date>=d30);
+    const myHrs = myShifts.reduce((a,sh)=>a+shiftHrs(sh),0);
+    const my4wShifts = plannerShifts.filter(sh=>sh.staffId===s.id&&sh.date>=d4w);
+    const my4wHrs = my4wShifts.reduce((a,sh)=>a+shiftHrs(sh),0);
+    const avgHrsWk = Math.round(my4wHrs/4*10)/10;
+    // Callouts in last 30 days
+    const myCallouts = plannerCallouts.filter(co=>co.staffId===s.id&&co.date>=d30).length;
+    const calloutRate = myShifts.length ? Math.round(myCallouts/myShifts.length*100) : 0;
+    const reliability = Math.max(0,100-calloutRate);
+    // Revenue per shift (efficiency)
+    const revPerShift = myShifts.length && rev>0 ? Math.round(rev/myShifts.length) : 0;
+    // Confirmed→Completed conversion
+    const confirmed = mine.filter(r=>r.status==='Completed'||r.status==='Seated'||r.status==='Cancelled');
+    const convRate = confirmed.length ? Math.round(mineCompleted.length/confirmed.length*100) : 0;
+    // Score (0-100 composite)
+    const scoreRaw = (showR*0.3) + (reliability*0.3) + (Math.min(convRate,100)*0.2) + (Math.min(revPerShift/50,1)*100*0.2);
+    const score = Math.round(Math.min(scoreRaw,100));
+    return{...s,cnt:mine.length,rev,tips,cov,can,showR,avgOrder,avgParty,changeReqs,walkIns,myShifts:myShifts.length,myHrs:Math.round(myHrs*10)/10,avgHrsWk,myCallouts,calloutRate,reliability,revPerShift,convRate,score};
   }).sort((a,b)=>b.rev-a.rev);
+
+  // ── Top metrics bar ──
+  document.getElementById('staff-metrics').innerHTML=`
+    <div class="mc"><div class="mc-val" style="color:var(--gold)">${servers.length}</div><div class="mc-lbl">Active Staff</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--green)">$${completed.reduce((a,r)=>a+(r.orderTotal||0),0).toFixed(0)}</div><div class="mc-lbl">Total Revenue Logged</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--blue)">${rsv.filter(r=>r.status==='Seated').length}</div><div class="mc-lbl">Currently Seated</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--purple)">${Math.round(plannerShifts.filter(sh=>sh.date>=d30).reduce((a,sh)=>a+shiftHrs(sh),0))}h</div><div class="mc-lbl">Hours Scheduled (30d)</div></div>
+    <div class="mc"><div class="mc-val" style="color:var(--amber)">${plannerCallouts.filter(co=>co.date>=d30).length}</div><div class="mc-lbl">Callouts (30d)</div></div>`;
+
+  // ── 4-signal leaderboard cards ──
+  function lbCard(staff, valueLabel, subLabel, color){
+    if(!staff) return '<div style="color:var(--text-d);font-size:12px">No data</div>';
+    return`<div style="display:flex;align-items:center;gap:9px">
+      <div style="width:32px;height:32px;border-radius:50%;background:${staff.color||'#A89B84'}22;color:${staff.color||'#A89B84'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0">${staff.name.charAt(0)}</div>
+      <div>
+        <div style="font-weight:500;font-size:13px">${staff.name.split(' ')[0]}</div>
+        <div style="font-size:11px;color:var(--text-m)">${staff.role||''}</div>
+        <div style="font-size:14px;font-weight:600;font-family:'Cormorant Garamond',serif;color:${color};margin-top:2px">${valueLabel}</div>
+        <div style="font-size:9px;color:var(--text-d)">${subLabel}</div>
+      </div>
+    </div>`;
+  }
+  const byRev=[...perf].sort((a,b)=>b.rev-a.rev);
+  const byEff=[...perf].filter(s=>s.revPerShift>0).sort((a,b)=>b.revPerShift-a.revPerShift);
+  const byCov=[...perf].sort((a,b)=>b.cov-a.cov);
+  const byRel=[...perf].sort((a,b)=>b.reliability-a.reliability);
+  document.getElementById('lb-earner').innerHTML=lbCard(byRev[0], `$${byRev[0]?.rev?.toFixed(0)||0}`, 'total revenue', 'var(--green)');
+  document.getElementById('lb-efficient').innerHTML=lbCard(byEff[0], `$${byEff[0]?.revPerShift||0}/shift`, 'revenue per shift', 'var(--gold)');
+  document.getElementById('lb-covers').innerHTML=lbCard(byCov[0], `${byCov[0]?.cov||0} covers`, 'guests served', 'var(--purple)');
+  document.getElementById('lb-reliable').innerHTML=lbCard(byRel[0], `${byRel[0]?.reliability||0}%`, 'reliability score', 'var(--blue)');
+
+  // ── Main staff table ──
+  function scoreTag(n){
+    if(n>=80) return`<span class="tag tg">${n}</span>`;
+    if(n>=60) return`<span class="tag ta">${n}</span>`;
+    return`<span class="tag tr">${n}</span>`;
+  }
   document.getElementById('staff-table').innerHTML=perf.map(s=>`
-    <tr><td><strong>${s.name}</strong><br><span style="font-size:10px;color:var(--text-d)">${s.role}</span></td>
-    <td>${s.cnt}</td><td>${s.cov}</td><td>$${s.avg}</td>
-    <td style="color:var(--green)">$${s.rev.toFixed(0)}</td>
-    <td>${s.can}</td>
-    <td><span class="tag ${s.showR>=80?'tg':s.showR>=60?'ta':'tr'}">${s.showR}%</span></td></tr>`).join('');
-  const maxCov=Math.max(...perf.map(s=>s.cov),1);
-  document.getElementById('staff-covers-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.cov/maxCov*100),3)}%;background:var(--purple-bg);color:var(--purple)">${s.cov}</div></div></div>`).join('');
-  const maxRev=Math.max(...perf.map(s=>s.rev),1);
-  document.getElementById('staff-rev-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.rev/maxRev*100),3)}%;background:var(--green-bg);color:var(--green)">$${s.rev.toFixed(0)}</div></div></div>`).join('');
-  // Section performance today
-  const sections=[{key:'fine_dining',label:'Fine Dining',color:'var(--gold)'},{key:'den',label:'Den',color:'var(--blue)'},{key:'patio',label:'Patio',color:'var(--teal)'},{key:'bar',label:'Bar',color:'var(--purple)'}];
+    <tr onclick="renderStaffProfile('${s.id}')" style="cursor:pointer">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:26px;height:26px;border-radius:50%;background:${s.color||'#A89B84'}22;color:${s.color||'#A89B84'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0">${s.name.charAt(0)}</div>
+          <div><strong>${s.name}</strong><br><span style="font-size:10px;color:var(--text-d)">${s.role||''}</span></div>
+        </div>
+      </td>
+      <td>${s.cnt}</td>
+      <td>${s.cov}</td>
+      <td style="color:var(--green)">$${s.rev.toFixed(0)}</td>
+      <td style="color:var(--gold)">${s.revPerShift?'$'+s.revPerShift:'—'}</td>
+      <td>${s.avgParty.toFixed(1)}</td>
+      <td>${scoreTag(s.showR)}</td>
+      <td style="color:var(--blue)">${s.myHrs}h <span style="font-size:10px;color:var(--text-d)">(${s.avgHrsWk}h/wk)</span></td>
+      <td style="color:${s.myCallouts>0?'var(--red)':'var(--text-m)'}">${s.myCallouts>0?`<span class="tag tr">${s.myCallouts}</span>`:'0'}</td>
+      <td>${scoreTag(s.reliability)}</td>
+    </tr>`).join('');
+
+  // ── Staff profile cards ──
+  document.getElementById('staff-profile-cards').innerHTML=perf.map(s=>`
+    <div class="card" style="padding:16px" id="profile-${s.id}">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+        <div style="width:44px;height:44px;border-radius:50%;background:${s.color||'#A89B84'}22;color:${s.color||'#A89B84'};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;flex-shrink:0;font-family:'Cormorant Garamond',serif">${s.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:14px">${s.name}</div>
+          <div style="font-size:11px;color:var(--text-m);margin-top:1px">${s.role||'Staff'}</div>
+          <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+            <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${s.score>=80?'var(--green-bg)':s.score>=60?'var(--amber-bg)':'var(--red-bg)'};color:${s.score>=80?'var(--green)':s.score>=60?'var(--amber)':'var(--red)'};font-weight:500">Score ${s.score}</span>
+            ${s.myCallouts>0?`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red)">${s.myCallouts} callout${s.myCallouts>1?'s':''}</span>`:''}
+            ${s.walkIns>0?`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber)">${s.walkIns} walk-ins</span>`:''}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--green)">$${s.rev.toFixed(0)}</div>
+          <div style="font-size:9px;color:var(--text-d)">TOTAL REVENUE</div>
+        </div>
+      </div>
+      <!-- 4 metric rows -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+        <div style="background:var(--surface2);border-radius:6px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text-d);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Reservations</div>
+          <div style="font-size:18px;font-family:'Cormorant Garamond',serif;font-weight:500;color:var(--text)">${s.cnt}</div>
+          <div style="font-size:10px;color:var(--text-m)">${s.cov} covers · avg ${s.avgParty.toFixed(1)}/party</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:6px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text-d);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Efficiency</div>
+          <div style="font-size:18px;font-family:'Cormorant Garamond',serif;font-weight:500;color:var(--gold)">${s.revPerShift?'$'+s.revPerShift:'—'}</div>
+          <div style="font-size:10px;color:var(--text-m)">per shift · ${s.myHrs}h worked (30d)</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:6px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text-d);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Reliability</div>
+          <div style="font-size:18px;font-family:'Cormorant Garamond',serif;font-weight:500;color:${s.reliability>=80?'var(--green)':s.reliability>=60?'var(--amber)':'var(--red)'}">${s.reliability}%</div>
+          <div style="font-size:10px;color:var(--text-m)">${s.myCallouts} callout${s.myCallouts!==1?'s':''} · ${s.myShifts} shifts scheduled</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:6px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text-d);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Show Rate</div>
+          <div style="font-size:18px;font-family:'Cormorant Garamond',serif;font-weight:500;color:${s.showR>=80?'var(--green)':s.showR>=60?'var(--amber)':'var(--red)'}">${s.showR}%</div>
+          <div style="font-size:10px;color:var(--text-m)">${s.convRate}% conversion · ${s.can} cancel${s.can!==1?'s':''}</div>
+        </div>
+      </div>
+      <!-- Hours bar -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-d);margin-bottom:4px">
+          <span>Avg hours/week (last 4 wk)</span><span style="color:var(--blue)">${s.avgHrsWk}h</span>
+        </div>
+        <div style="height:4px;background:var(--surface3);border-radius:2px">
+          <div style="height:4px;border-radius:2px;background:var(--blue);width:${Math.min(s.avgHrsWk/40*100,100)}%"></div>
+        </div>
+      </div>
+      ${s.changeReqs>0?`<div style="font-size:11px;color:var(--amber);background:var(--amber-bg);border-radius:5px;padding:5px 8px;margin-top:6px">⚠ ${s.changeReqs} change/cancel request${s.changeReqs>1?'s':''} attributed</div>`:''}
+    </div>`).join('');
+
+  // ── Section Performance ──
+  const sections=[{key:'fine_dining',label:'Fine Dining',color:'var(--gold)'},{key:'den',label:'Den / Lounge',color:'var(--blue)'},{key:'patio',label:'Patio',color:'var(--teal)'},{key:'bar',label:'Bar',color:'var(--purple)'}];
   const secEl=document.getElementById('section-today');
   if(secEl){
     const todayRsv=(_store.reservations||[]).filter(r=>r.date===TODAY&&r.status!=='Cancelled');
+    if(!todayRsv.length){secEl.innerHTML='<div style="color:var(--text-d);font-size:12px;padding:8px 0">No reservations today yet.</div>';return;}
     secEl.innerHTML=sections.map(sec=>{
       const sRsv=todayRsv.filter(r=>r.section===sec.key);
-      const covers=sRsv.reduce((a,r)=>a+r.party,0);
+      const covers=sRsv.reduce((a,r)=>a+(r.party||0),0);
       const seated=sRsv.filter(r=>r.status==='Seated').length;
-      return`<div class="bar-row"><span class="bar-lbl">${sec.label}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(sRsv.length/Math.max(todayRsv.length,1)*100,3)}%;background:${sec.color}22;color:${sec.color}">${sRsv.length} rsvp · ${covers} covers</div></div><span class="bar-val">${seated} seated</span></div>`;
+      const maxLen=Math.max(todayRsv.length,1);
+      return`<div class="bar-row"><span class="bar-lbl">${sec.label}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(sRsv.length/maxLen*100,3)}%;background:${sec.color}22;color:${sec.color}">${sRsv.length} rsvp · ${covers} covers</div></div><span class="bar-val">${seated} seated</span></div>`;
     }).join('');
   }
-  // Review queue
+
+  // ── Review Queue ──
   const reviewEl=document.getElementById('review-queue');
   const reviewCountEl=document.getElementById('review-count');
   if(reviewEl){
     const needsReview=(_store.reservations||[]).filter(r=>r.status==='Change Requested'||r.status==='Cancellation Requested');
     if(reviewCountEl) reviewCountEl.textContent=`${needsReview.length} pending`;
-    if(!needsReview.length){reviewEl.innerHTML='<div style="color:var(--text-d);font-size:12px;padding:8px 0">No pending requests.</div>';}
-    else{reviewEl.innerHTML=needsReview.map(r=>`
-      <div style="padding:9px 0;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12.5px">
-        <div style="flex:1"><strong style="color:var(--text)">${r.first} ${r.last}</strong><br>
-          <span style="color:var(--text-m)">${r.status} · ${r.date} ${fmtTime(r.time)} · Party ${r.party}</span><br>
-          <span style="font-size:11px;color:var(--text-d)">${(r.changeRequest||{}).message||''}</span>
-        </div>
-        <span style="font-size:10px;color:var(--gold)">${r.id}</span>
-      </div>`).join('');}
+    reviewEl.innerHTML=!needsReview.length
+      ?'<div style="color:var(--text-d);font-size:12px;padding:8px 0">No pending requests.</div>'
+      :needsReview.map(r=>`<div style="padding:9px 0;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12.5px"><div style="flex:1"><strong style="color:var(--text)">${r.first} ${r.last}</strong><br><span style="color:var(--text-m)">${r.status} · ${r.date} ${fmtTime(r.time)} · Party ${r.party}</span><br><span style="font-size:11px;color:var(--text-d)">${(r.changeRequest||{}).message||r.notes||''}</span></div><span style="font-size:10px;color:var(--gold)">${r.id}</span></div>`).join('');
+  }
+
+  // ── Revenue chart ──
+  const maxRev=Math.max(...perf.map(s=>s.rev),1);
+  document.getElementById('staff-rev-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.rev/maxRev*100),3)}%;background:var(--green-bg);color:var(--green)">$${s.rev.toFixed(0)}</div></div></div>`).join('');
+
+  // ── Hours chart (last 4 weeks per person) ──
+  const maxHrs=Math.max(...perf.map(s=>s.myHrs),1);
+  document.getElementById('staff-hours-chart').innerHTML=perf.length&&perf.some(s=>s.myHrs>0)
+    ?perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.myHrs/maxHrs*100),3)}%;background:var(--blue-bg);color:var(--blue)">${s.myHrs}h</div></div><span class="bar-val" style="font-size:10px;color:var(--text-d)">${s.avgHrsWk}h/wk</span></div>`).join('')
+    :'<div style="color:var(--text-d);font-size:12px;padding:8px 0">No schedule data yet. Add shifts in the <a href="../staff-planner/" target="_blank" style="color:var(--gold)">Staff Planner</a>.</div>';
+
+  // ── Covers chart ──
+  const maxCov=Math.max(...perf.map(s=>s.cov),1);
+  document.getElementById('staff-covers-chart').innerHTML=perf.map(s=>`<div class="bar-row"><span class="bar-lbl">${s.name.split(' ')[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(Math.round(s.cov/maxCov*100),3)}%;background:var(--purple-bg);color:var(--purple)">${s.cov}</div></div></div>`).join('');
+
+  // ── Callout log ──
+  const calloutLogEl=document.getElementById('callout-log');
+  if(calloutLogEl){
+    const recentCallouts=plannerCallouts.filter(co=>co.date>=d30).sort((a,b)=>b.date.localeCompare(a.date));
+    if(!recentCallouts.length){calloutLogEl.innerHTML='<div style="color:var(--text-d);font-size:12px;padding:8px 0">No callouts in the last 30 days.</div>';return;}
+    calloutLogEl.innerHTML=recentCallouts.slice(0,8).map(co=>{
+      const staff=servers.find(s=>s.id===co.staffId)||{name:co.staffId,color:'#A89B84'};
+      return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:.5px solid var(--border);font-size:12px">
+        <div style="width:22px;height:22px;border-radius:50%;background:${staff.color||'#A89B84'}22;color:${staff.color||'#A89B84'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0">${staff.name.charAt(0)}</div>
+        <div style="flex:1"><strong>${staff.name.split(' ')[0]}</strong> — ${co.reason||'Callout'}</div>
+        <div style="text-align:right;color:var(--text-d);font-size:10px">${co.date}<br>${co.coveredBy?'Covered':'No cover'}</div>
+      </div>`;
+    }).join('');
   }
 }
+
 
 // ── TABLES ──
 function renderTables(){
@@ -927,13 +1174,20 @@ renderOverview();
 function populateAdminStaffDropdown(){
   const sel=document.getElementById('lg-id');
   if(!sel||sel.tagName!=='SELECT') return;
-  const baseStaff=[{id:'S001',name:'Admin User'},...(_store.servers||[]).filter(s=>parseInt(s.accessLevel)===1)];
-  sel.innerHTML='<option value="">Select staff member…</option>'+baseStaff.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
-  // Try Sheets
+  // Always start with the hardcoded admin + any Level 1 staff from store
+  const LOCAL_ADMIN_LIST=[
+    {id:'S001',name:'Admin User',accessLevel:1,passcode:'1234'},
+  ];
+  const storeAdmins=(_store.servers||[]).filter(s=>parseInt(s.accessLevel)===1);
+  const combined=[...LOCAL_ADMIN_LIST,...storeAdmins.filter(s=>s.id!=='S001')];
+  sel.innerHTML='<option value="">Select staff member…</option>'+combined.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  // Try Sheets async — override if found
   sheetsGet({action:'getStaff'}).then(r=>{
     if(r?.staff){
-      const admins=r.staff.filter(s=>parseInt(s.accessLevel)===1&&(s.active===true||s.active==='true'));
-      if(admins.length) sel.innerHTML='<option value="">Select staff member…</option>'+admins.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+      const admins=r.staff.filter(s=>parseInt(s.accessLevel)===1);
+      if(admins.length){
+        sel.innerHTML='<option value="">Select staff member…</option>'+admins.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+      }
     }
   }).catch(()=>{});
 }
@@ -1221,8 +1475,9 @@ async function testApiConnection(){
 window.addEventListener('DOMContentLoaded',()=>{populateAdminStaffDropdown();initAdminPage();});
 </script>
 <!-- LOGIN GATE — Admin Level 1 only -->
-<div id="login-gate" style="position:fixed;inset:0;z-index:9999;background:#0B0907;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif">
-  <div style="width:100%;max-width:340px;padding:0 24px;text-align:center">
+<div id="login-gate" style="position:fixed;inset:0;z-index:9999;background:#0B0907;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;padding:20px">
+  <div style="width:100%;max-width:360px;text-align:center">
+    <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="" style="width:52px;height:52px;object-fit:contain;margin-bottom:14px;border-radius:8px" onerror="this.style.display='none'">
     <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:#C9A96E;letter-spacing:.12em;margin-bottom:6px">HIVE <span style="color:#A89B84;font-weight:300">BUCKHEAD</span></div>
     <div style="font-size:11px;color:#6B5E4A;margin-bottom:32px;letter-spacing:.06em">ADMIN DASHBOARD — LEVEL 1 ACCESS</div>
     <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:26px 22px">
