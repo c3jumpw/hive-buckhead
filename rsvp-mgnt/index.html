@@ -498,7 +498,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
         onchange="document.getElementById('lg-pin').focus()">
         <option value="">Select staff member…</option>
       </select>
-      <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN"
+      <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN"
         style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:20px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px"
         onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()" id="lg-btn" style="width:100%;padding:11px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;cursor:pointer">Sign In</button>
@@ -1016,12 +1016,17 @@ const LOCAL_STAFF_MGMT=[
 function populateMgmtStaffDropdown(){
   const sel=document.getElementById('lg-id');
   if(!sel) return;
-  const existing=sel.innerHTML;
-  if(existing.includes('Ashley')) return;
-  sel.innerHTML='<option value="">Select staff member…</option>'+LOCAL_STAFF_MGMT.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  // Always seed with local staff first (instant)
+  sel.innerHTML='<option value="">Select staff member…</option>'+
+    LOCAL_STAFF_MGMT.filter(s=>parseInt(s.accessLevel)<=2).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  // Then override with Sheets data if available
   sheetsGet({action:'getStaff'}).then(r=>{
     if(r?.staff&&r.staff.length){
-      sel.innerHTML='<option value="">Select staff member…</option>'+r.staff.filter(s=>s.active!==false&&parseInt(s.accessLevel)<=2).map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+      const eligible=r.staff.filter(s=>parseInt(s.accessLevel)<=2&&s.active!==false);
+      if(eligible.length){
+        sel.innerHTML='<option value="">Select staff member…</option>'+
+          eligible.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+      }
     }
   }).catch(()=>{});
 }
@@ -1037,26 +1042,56 @@ function initMgmtPage(){
   }
 }
 
-function doLogin(){
+async function doLogin(){
   const id=document.getElementById('lg-id').value.trim();
   const pin=document.getElementById('lg-pin').value.trim();
   const err=document.getElementById('lg-err');
   const btn=document.getElementById('lg-btn');
   err.style.display='none';
-  if(!id||pin.length<4){err.textContent='Enter your Staff ID and 4-digit PIN.';err.style.display='block';return;}
+  if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
+  if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Verifying…';
-  const staff=LOCAL_STAFF_MGMT.find(s=>s.id===id&&s.passcode===pin);
-  if(staff&&staff.accessLevel<=2){
-    sessionStorage.setItem('hive_session',JSON.stringify({staff,loginTime:Date.now()}));
-    document.getElementById('login-gate').style.display='none';
-    showLoggedInMgmt(staff);
-    renderView();
-    setTimeout(syncFromSheets, 400);
-    startPolling();
-  } else if(staff&&staff.accessLevel>2){
-    err.textContent='Access denied — your role cannot access reservations.';err.style.display='block';
-  } else {
-    err.textContent='Incorrect Staff ID or PIN.';err.style.display='block';
+  try{
+    let staff=null;
+    // Try Sheets first
+    const res=await sheetsGet({action:'getStaff'}).catch(()=>null);
+    if(res?.staff?.length){
+      const found=res.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin);
+      if(found&&parseInt(found.accessLevel)<=2) staff=found;
+      else if(found&&parseInt(found.accessLevel)>2){
+        err.textContent='Access denied — Level 3 (Floor Only) cannot access reservations.';
+        err.style.display='block';btn.disabled=false;btn.textContent='Sign In';return;
+      }
+    }
+    // Fallback to LOCAL_STAFF_MGMT
+    if(!staff){
+      const local=LOCAL_STAFF_MGMT.find(s=>String(s.id)===id&&String(s.passcode)===pin);
+      if(local&&parseInt(local.accessLevel)<=2) staff=local;
+      else if(local&&parseInt(local.accessLevel)>2){
+        err.textContent='Access denied — Level 3 (Floor Only) cannot access reservations.';
+        err.style.display='block';btn.disabled=false;btn.textContent='Sign In';return;
+      }
+    }
+    if(staff){
+      sessionStorage.setItem('hive_session',JSON.stringify({staff,loginTime:Date.now()}));
+      document.getElementById('login-gate').style.display='none';
+      showLoggedInMgmt(staff);
+      renderView();
+      setTimeout(syncFromSheets,400);
+      startPolling();
+    }else{
+      err.textContent='Incorrect Staff ID or PIN. Try again.';err.style.display='block';
+    }
+  }catch(e){
+    // If all else fails try local only
+    const local=LOCAL_STAFF_MGMT.find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)<=2);
+    if(local){
+      sessionStorage.setItem('hive_session',JSON.stringify({staff:local,loginTime:Date.now()}));
+      document.getElementById('login-gate').style.display='none';
+      showLoggedInMgmt(local);renderView();startPolling();
+    }else{
+      err.textContent='Login error. Check connection and try again.';err.style.display='block';
+    }
   }
   btn.disabled=false;btn.textContent='Sign In';
 }
