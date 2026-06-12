@@ -133,8 +133,364 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 </div>
 
 <div class="floor-container">
-  <svg id="floor-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 680"
-    style="width:100%;max-width:1100px;height:auto;min-width:700px"></svg>
+  <svg id="floor-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 730"
+    style="width:100%;max-width:1200px;height:auto;min-width:750px"></svg>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="table-modal">
+  <div class="modal">
+    <div class="modal-title" id="tmod-title">Table</div>
+    <div id="tmod-info" style="margin-bottom:12px"></div>
+    <div id="tmod-acts"></div>
+    <div class="modal-actions"><button class="btn" style="width:100%;padding:12px" onclick="closeModal('table-modal')">Close</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="seat-modal">
+  <div class="modal">
+    <div class="modal-title">Seat Confirmed Guest</div>
+    <div class="info-tag">Select a confirmed reservation arriving within 24 hours.</div>
+    <div class="form-group"><label class="form-label">Reservation</label>
+      <select class="form-select" id="seat-rsv-sel"></select></div>
+    <div class="form-group"><label class="form-label">Assign Table(s)</label>
+      <div class="tbl-cb-grid" id="seat-tbl-cbs"></div></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('seat-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="submitSeat()">Seat Guest</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="walkin-modal">
+  <div class="modal">
+    <div class="modal-title">New Walk-In</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="wi-first" placeholder="First"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="wi-last" placeholder="Last"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="wi-phone" placeholder="Optional" type="tel"></div>
+      <div class="form-group"><label class="form-label">Party Size *</label><input class="form-input" id="wi-party" type="number" min="1" max="40" placeholder="2"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Tables *</label><div class="tbl-cb-grid" id="wi-tbl-cbs"></div></div>
+    <div class="form-group"><label class="form-label">Server</label><select class="form-select" id="wi-server"><option value="">Unassigned</option></select></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('walkin-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="submitWalkIn()">Seat Walk-In</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="changeseat-modal">
+  <div class="modal">
+    <div class="modal-title">Change Table Assignment</div>
+    <div class="form-group"><label class="form-label">Move to table(s)</label><div class="tbl-cb-grid" id="cs-cbs"></div></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('changeseat-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="submitChangeSeat()">Confirm Move</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">⚙ Settings</div>
+    <button class="btn" style="width:100%;text-align:left;margin-bottom:6px;padding:12px" onclick="loadSampleData()">↺ Load Sample Data</button>
+    <button class="btn" style="width:100%;text-align:left;margin-bottom:14px;padding:12px;color:var(--red);border-color:rgba(196,82,74,.35)" onclick="clearAllData()">✕ Clear All Data</button>
+    <div style="font-size:12px;color:var(--text-m);padding:10px;background:var(--surface2);border-radius:6px;margin-bottom:12px;line-height:1.7">
+      API: <span id="api-status" style="color:var(--green)">✓ Connected</span><br>
+      Last sync: <span id="sync-time">—</span>
+    </div>
+    <button class="btn btn-gold" style="width:100%;padding:12px" onclick="syncNow()">↺ Sync with Sheets</button>
+    <div class="modal-actions" style="margin-top:8px"><button class="btn" onclick="closeModal('settings-modal')">Done</button></div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"><div class="toast-icon"></div><span id="toast-msg"></span></div>
+
+<!-- LOGIN GATE -->
+<div id="login-gate" style="position:fixed;inset:0;z-index:9999;background:#0B0907;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;padding:20px">
+  <div style="width:100%;max-width:340px;text-align:center">
+    <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="" style="width:52px;height:52px;object-fit:contain;margin-bottom:12px;border-radius:8px" onerror="this.style.display='none'">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:#C9A96E;letter-spacing:.12em;margin-bottom:4px">HIVE <span style="color:#A89B84;font-weight:300">BUCKHEAD</span></div>
+    <div style="font-size:11px;color:#6B5E4A;margin-bottom:26px;letter-spacing:.06em">LIVE FLOOR — STAFF ACCESS</div>
+    <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:24px 20px">
+      <div style="font-size:12px;color:#A89B84;margin-bottom:14px">Select your name and enter your PIN</div>
+      <select id="lg-staff-sel" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none" onchange="document.getElementById('lg-pin').focus()">
+        <option value="">Select staff member…</option>
+      </select>
+      <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:22px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()" id="lg-btn" style="width:100%;padding:13px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;cursor:pointer">Sign In</button>
+      <div id="lg-err" style="font-size:12px;color:#C4524A;margin-top:9px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
+const STORE_KEY='hive_buckhead_v2';
+const TODAY=new Date().toISOString().split('T')[0];
+const TOMORROW=new Date(Date.now()+86400000).toISOString().split('T')[0];
+
+const LOCAL_STAFF=[
+  {id:'S001',name:'Admin User',accessLevel:1,passcode:'1234'},
+  {id:'S002',name:'Ashley Smith',accessLevel:2,passcode:'2345'},
+  {id:'S003',name:'Marcus Rivera',accessLevel:2,passcode:'3456'},
+  {id:'S004',name:'Jenna Park',accessLevel:2,passcode:'4567'},
+  {id:'S005',name:'Devon Harris',accessLevel:2,passcode:'5678'},
+  {id:'S006',name:'Floor Staff',accessLevel:3,passcode:'6789'},
+];
+
+async function sheetsGet(p){try{const r=await fetch(SHEETS_URL+'?'+new URLSearchParams(p));return await r.json();}catch(e){return null;}}
+async function sheetsPost(b){try{const r=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return await r.json();}catch(e){return null;}}
+function getSession(){try{return JSON.parse(sessionStorage.getItem('hive_session'))||null;}catch(e){return null;}}
+function setSession(d){sessionStorage.setItem('hive_session',JSON.stringify(d));}
+function getStaffName(){return getSession()?.staff?.name||'Staff';}
+function fmtTime(t){if(!t)return'—';const[h,m]=t.split(':');const hr=+h;return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`;}
+function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+
+// ── TABLE DEFINITIONS ──
+const FD=[
+  {id:'T200',cap:2,s:'fine_dining'},{id:'T201',cap:2,s:'fine_dining'},
+  {id:'T202',cap:2,s:'fine_dining'},{id:'T203',cap:2,s:'fine_dining'},
+  {id:'T204',cap:2,s:'fine_dining'},{id:'T205',cap:2,s:'fine_dining'},{id:'T206',cap:2,s:'fine_dining'},
+  {id:'T207',cap:3,s:'fine_dining'},{id:'T208',cap:3,s:'fine_dining'},
+  {id:'T209',cap:4,s:'fine_dining'},{id:'T210',cap:4,s:'fine_dining'},
+  {id:'T211',cap:4,s:'fine_dining'},{id:'T212',cap:4,s:'fine_dining'},
+  {id:'T213',cap:2,s:'fine_dining'},{id:'T214',cap:2,s:'fine_dining'},
+  {id:'T215',cap:2,s:'fine_dining'},{id:'T216',cap:2,s:'fine_dining'},{id:'T217',cap:2,s:'fine_dining'},
+  {id:'T218',cap:2,s:'fine_dining'},
+];
+const BAR=Array.from({length:20},(_,i)=>({id:`B${i+1}`,cap:1,s:'bar'}));
+const DEN=[
+  ...Array.from({length:8},(_,i)=>({id:`T${11+i}`,cap:4,s:'den'})),
+  ...Array.from({length:4},(_,i)=>({id:`T${19+i}`,cap:4,s:'den'})),
+  {id:'T23',cap:3,s:'den'},
+];
+const PATIO=[
+  {id:'T101',cap:6,s:'patio',lbl:'Booth B'},{id:'T102',cap:10,s:'patio',lbl:'Booth A'},
+  ...Array.from({length:10},(_,i)=>({id:`T${103+i}`,cap:4,s:'patio'})),
+];
+const ALL=[...FD,...BAR,...DEN,...PATIO];
+
+// ── POSITIONS — redesigned with proper spacing ──
+// SVG 1100×680
+// BUILDING: polygon 52,15 → 1085,15 → 1085,650 → 15,650 → 15,440 → 52,15
+// Fine Dining zone: trapezoid left side, y=15 to y=435
+// Lounge/Den: below y=445, x=15 to x=620
+// Patio: x=630 to x=1085, y=15 to y=415
+// Service: x=630 to x=1085, y=420 to y=650
+
+const P={
+  // ══════════════════════════════════════════════════════
+  // FINE DINING — SVG zone x=15-645, y=15-485
+  // All gaps verified: min 12px between any two elements
+  // ══════════════════════════════════════════════════════
+
+  // Top row: 5 × 2-seat (T200-T203, T218) — y=60, spacing=100px (gap=46px ✓)
+  T200:{x:155,y:60},  T201:{x:255,y:60},  T202:{x:355,y:60},
+  T203:{x:455,y:60},  T218:{x:555,y:60},
+
+  // Right column: 3 × 2-seat then 2 × 4-seat — x=600
+  // T204→T205: gap=36px ✓  T205→T206: gap=36px ✓
+  // T206→T211: gap=15px ✓  T211→T212: gap=17px ✓
+  // T212 bottom chair y=463, divider y=485: gap=22px ✓
+  T204:{x:600,y:100}, T205:{x:600,y:190}, T206:{x:600,y:270},
+  T211:{x:600,y:355}, T212:{x:600,y:430},
+
+  // Left diagonal column: follows wall (52,15)→(15,485)
+  // T207,T208=3-seat, T209,T210=4-seat
+  // All placed 55px inside diagonal wall
+  T207:{x:105,y:100}, T208:{x:96,y:200},
+  T209:{x:87,y:305},  T210:{x:78,y:405},
+
+  // Below bar: 5 × 2-seat (T213-T217) — y=430, B16-B20 bottom=y+11=378 ✓
+  T213:{x:245,y:430}, T214:{x:315,y:430}, T215:{x:385,y:430},
+  T216:{x:455,y:430}, T217:{x:525,y:430},
+
+  // ══════════════════════════════════════════════════════
+  // BAR — horseshoe C-shape, outer x=228-520, y=205-390
+  // ══════════════════════════════════════════════════════
+
+  // Top counter (B1-B10): y=197, x=230-500 (spacing=30px) — above bar top edge ✓
+  B1:{x:230,y:197},B2:{x:260,y:197},B3:{x:290,y:197},B4:{x:320,y:197},B5:{x:350,y:197},
+  B6:{x:380,y:197},B7:{x:410,y:197},B8:{x:440,y:197},B9:{x:470,y:197},B10:{x:500,y:197},
+
+  // Left side (B11-B15): x=218, y=225-345 (spacing=30px) — outside bar left wall ✓
+  B11:{x:218,y:225},B12:{x:218,y:255},B13:{x:218,y:285},B14:{x:218,y:315},B15:{x:218,y:345},
+
+  // Bottom counter (B16-B20): y=367, x=262-454 (spacing=48px) — inside bar cavity
+  // B16-B20 bottom edge y=378, bar bottom outer at y=393: gap=15px ✓
+  // T213-T217 top chair at y=430-27=403, gap from B bottom=403-378=25px ✓
+  B16:{x:262,y:367},B17:{x:310,y:367},B18:{x:358,y:367},B19:{x:406,y:367},B20:{x:454,y:367},
+
+  // ══════════════════════════════════════════════════════
+  // LOUNGE / DEN — zone x=15-645, y=495-720
+  // Booth tables: chairs top/bottom only (not sides)
+  // TW=70, gap=10, spacing=80px — 8 tables fit exactly ✓
+  // ══════════════════════════════════════════════════════
+
+  // Top row: T11-T18 (8 × 4-seat booths) — y=540
+  // x: 20, 100, 180, 260, 340, 420, 500, 580
+  T11:{x:22,y:540},  T12:{x:102,y:540}, T13:{x:182,y:540}, T14:{x:262,y:540},
+  T15:{x:342,y:540}, T16:{x:422,y:540}, T17:{x:502,y:540}, T18:{x:582,y:540},
+
+  // Bottom row: T19-T22 (4 × 4-seat) + T23 (3-seat) — y=645
+  // x: 22, 127, 232, 337, 432 (spacing=105px, gap=105-70=35px ✓)
+  T19:{x:22,y:645},  T20:{x:127,y:645}, T21:{x:232,y:645},
+  T22:{x:337,y:645}, T23:{x:432,y:645},
+
+  // ══════════════════════════════════════════════════════
+  // PATIO — zone x=655-1185, y=15-445
+  // ══════════════════════════════════════════════════════
+
+  // Big Booth B (6 seats): upper-left of patio — tall rectangle
+  T101:{x:710,y:90},
+  // Big Booth A (10 seats): below Booth B — wider+taller rectangle
+  T102:{x:710,y:260},
+
+  // Tables for 4 (square): 2 rows of 5
+  // x: 815, 891, 967, 1043, 1110 (spacing=76px, aisle=76-54=22px ✓)
+  // T107 right chair: 1110+19+8=1137, wall at 1185: gap=48px ✓
+  T103:{x:815,y:80},  T104:{x:891,y:80},  T105:{x:967,y:80},
+  T106:{x:1043,y:80}, T107:{x:1110,y:80},
+  T108:{x:815,y:220}, T109:{x:891,y:220}, T110:{x:967,y:220},
+  T111:{x:1043,y:220},T112:{x:1110,y:220},
+}DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Hive Buckhead — Live Floor</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A96E;--gold-light:#E8D4B0;--bg:#0B0907;--surface:#1A1714;--surface2:#242018;--surface3:#2E2920;--border:rgba(201,169,110,.18);--border-s:rgba(201,169,110,.35);--text:#F5EFE4;--text-m:#A89B84;--text-d:#6B5E4A;--green:#4CAF82;--green-bg:rgba(76,175,130,.22);--amber:#D4A020;--amber-bg:rgba(212,160,32,.22);--red:#C4524A;--red-bg:rgba(196,82,74,.22);--blue:#5B96C8;--blue-bg:rgba(91,150,200,.18);--purple:#9B7EC8;--purple-bg:rgba(155,126,200,.22);--teal:#3AACA8;--teal-bg:rgba(58,172,168,.18)}
+[data-theme="light"]{--bg:#EEE9E0;--surface:#F9F6F1;--surface2:#EDE8DF;--surface3:#E0D9CE;--border:rgba(100,80,40,.15);--border-s:rgba(100,80,40,.3);--text:#1A1510;--text-m:#6B5E4A;--text-d:#A89B84;--green-bg:rgba(76,175,130,.18);--amber-bg:rgba(212,160,32,.18);--red-bg:rgba(196,82,74,.18);--purple-bg:rgba(155,126,200,.18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:50px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;gap:8px}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--gold);letter-spacing:.08em;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.nav-brand img{width:26px;height:26px;object-fit:contain;border-radius:4px;flex-shrink:0}
+.live-badge{display:flex;align-items:center;gap:4px;background:var(--red-bg);border:.5px solid rgba(196,82,74,.4);border-radius:20px;padding:2px 7px;font-size:10px;color:var(--red);font-weight:500;flex-shrink:0}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.clock{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--gold);text-align:center;line-height:1.1}
+.date-str{font-size:9px;color:var(--text-m);text-align:center}
+.btn{padding:5px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:.5px solid var(--border-s);background:transparent;color:var(--text);transition:all .15s;white-space:nowrap}
+.btn:hover,.btn:active{background:var(--surface2);border-color:var(--gold)}
+.btn-gold{background:var(--gold);color:#0B0907;border-color:var(--gold)}
+.btn-gold:hover{background:var(--gold-light)}
+.icon-btn{width:30px;height:30px;border-radius:6px;border:.5px solid var(--border);background:transparent;cursor:pointer;color:var(--text-m);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.icon-btn:hover,.icon-btn:active{border-color:var(--gold);color:var(--text)}
+.stats-bar{display:flex;border-bottom:.5px solid var(--border);flex-shrink:0;background:var(--surface);overflow-x:auto}
+.fstat{flex:1;min-width:65px;padding:5px 6px;border-right:.5px solid var(--border);text-align:center}
+.fstat:last-child{border-right:none}
+.fstat-val{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;line-height:1}
+.fstat-lbl{font-size:8px;color:var(--text-d);letter-spacing:.04em;text-transform:uppercase}
+.section-tabs{display:flex;gap:0;border-bottom:.5px solid var(--border);flex-shrink:0;background:var(--surface);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sec-tab{padding:7px 13px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text-m);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.sec-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.legend-bar{display:flex;align-items:center;gap:10px;padding:4px 10px;border-bottom:.5px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-m);white-space:nowrap}
+.leg-sw{width:9px;height:9px;border-radius:2px;border:.5px solid}
+.floor-container{flex:1;overflow:auto;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:6px;-webkit-overflow-scrolling:touch}
+.tbl-grp{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tbl-grp:hover .tbl-body,.tbl-grp:active .tbl-body{filter:brightness(1.4)}
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:.5px solid var(--border-s);border-radius:14px 14px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:1.2rem;transform:translateY(20px);transition:transform .2s}
+@media(min-width:600px){.modal{border-radius:12px;max-width:440px}}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--gold);margin-bottom:.9rem}
+.dr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px;gap:8px}
+.dr:last-child{border-bottom:none}
+.dr .l{color:var(--text-m)}.dr .v{color:var(--text);font-weight:500;text-align:right}
+.form-group{margin-bottom:12px}
+.form-label{display:block;font-size:11px;color:var(--text-m);margin-bottom:3px}
+.form-input,.form-select{width:100%;padding:10px 11px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none}
+.form-input:focus,.form-select:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--text-d)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:.9rem}
+.floor-act{width:100%;padding:12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:.5px solid;transition:all .12s;text-align:left;display:flex;align-items:center;gap:8px;background:transparent;margin-bottom:6px;min-height:48px}
+.fa-seat{color:var(--purple);border-color:rgba(155,126,200,.4)}.fa-seat:active{background:var(--purple-bg)}
+.fa-walkin{color:var(--gold);border-color:rgba(201,169,110,.35)}.fa-walkin:active{background:rgba(201,169,110,.08)}
+.fa-clean{color:var(--green);border-color:rgba(76,175,130,.4)}.fa-clean:active{background:var(--green-bg)}
+.fa-dirty{color:var(--red);border-color:rgba(196,82,74,.35)}.fa-dirty:active{background:var(--red-bg)}
+.fa-change{color:var(--blue);border-color:rgba(91,150,200,.4)}.fa-change:active{background:var(--blue-bg)}
+.info-tag{background:var(--blue-bg);border:.5px solid rgba(91,150,200,.3);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--blue);margin-bottom:10px;line-height:1.5}
+.warn-tag{background:var(--amber-bg);border:.5px solid rgba(212,160,32,.3);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--amber);margin-bottom:10px}
+.tbl-cb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-height:170px;overflow-y:auto;padding:6px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px}
+.tbl-cb-lbl{display:flex;align-items:center;gap:5px;padding:6px 7px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text-m);min-height:36px}
+.tbl-cb-lbl:active{background:rgba(201,169,110,.1)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px) scale(.96);z-index:500;background:var(--surface2);border:.5px solid var(--border-s);border-radius:8px;padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0) scale(1);opacity:1}
+.toast-icon{width:7px;height:7px;border-radius:50%}
+.toast.success .toast-icon{background:var(--green)}.toast.info .toast-icon{background:var(--blue)}.toast.warning .toast-icon{background:var(--amber)}
+.loading-overlay{position:fixed;inset:0;z-index:100;background:rgba(11,9,7,.7);display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.loading-overlay.show{opacity:1;pointer-events:all}
+.spinner{width:34px;height:34px;border:2px solid rgba(201,169,110,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.staff-pill{display:flex;align-items:center;gap:5px;padding:3px 8px;background:rgba(201,169,110,.08);border:.5px solid rgba(201,169,110,.2);border-radius:14px;font-size:11px;color:var(--text-m);cursor:pointer;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden">
+    <div class="nav-brand">
+      <img src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png" alt="" onerror="this.style.display='none'">
+      <span>HIVE <span style="color:var(--text-m);font-weight:300">BUCKHEAD</span></span>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div style="text-align:center;flex-shrink:0">
+    <div class="clock" id="clock">—</div>
+    <div class="date-str" id="date-str">—</div>
+  </div>
+  <div style="display:flex;gap:5px;align-items:center">
+    <div class="staff-pill" id="staff-pill" style="display:none" onclick="confirmLogout()">
+      <div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div>
+      <span id="staff-name-display">Staff</span>
+    </div>
+    <button class="btn btn-gold" style="font-size:11px;padding:5px 9px" onclick="openWalkIn()">+Walk-In</button>
+    <button class="btn" style="font-size:11px;padding:5px 9px" onclick="openSeatModal(null)">🪑</button>
+    <button class="icon-btn" onclick="toggleTheme()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openSettings()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="stats-bar">
+  <div class="fstat"><div class="fstat-val" style="color:var(--purple)" id="s-seated">0</div><div class="fstat-lbl">Seated</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--amber)" id="s-arriving">0</div><div class="fstat-lbl">Arriving</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--red)" id="s-bussing">0</div><div class="fstat-lbl">Bussing</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--green)" id="s-open">0</div><div class="fstat-lbl">Open</div></div>
+  <div class="fstat"><div class="fstat-val" style="color:var(--gold)" id="s-covers">0</div><div class="fstat-lbl">Covers</div></div>
+</div>
+
+<div class="section-tabs">
+  <button class="sec-tab active" onclick="setSection('all',this)">All</button>
+  <button class="sec-tab" onclick="setSection('fine_dining',this)">🍽 Fine Dining</button>
+  <button class="sec-tab" onclick="setSection('bar',this)">🍸 Bar</button>
+  <button class="sec-tab" onclick="setSection('den',this)">🪑🚬 Den / Lounge</button>
+  <button class="sec-tab" onclick="setSection('patio',this)">☀️ Patio</button>
+</div>
+
+<div class="legend-bar">
+  <div class="leg"><div class="leg-sw" style="background:var(--green-bg);border-color:rgba(76,175,130,.5)"></div>Open</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--purple-bg);border-color:rgba(155,126,200,.5)"></div>Seated</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--amber-bg);border-color:rgba(212,160,32,.5)"></div>Reserved</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--red-bg);border-color:rgba(196,82,74,.5)"></div>Bussing</div>
+  <div class="leg"><div class="leg-sw" style="background:var(--teal-bg);border-color:rgba(58,172,168,.5)"></div>Clean/Avail</div>
+</div>
+
+<div class="floor-container">
+  <svg id="floor-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 730"
+    style="width:100%;max-width:1200px;height:auto;min-width:750px"></svg>
 </div>
 
 <!-- MODALS -->
@@ -388,72 +744,72 @@ function renderFloor(){
       <path d="M22 0L0 0 0 22" fill="none" stroke="${GR}" stroke-width=".5"/>
     </pattern>
     <clipPath id="building-clip">
-      <polygon points="52,15 1085,15 1085,650 15,650 15,440 52,15"/>
+      <polygon points="55,15 1185,15 1185,715 15,715 15,485 55,15"/>
     </clipPath>
   </defs>
   <rect width="1100" height="680" fill="url(#g)"/>
   <!-- OUTER BUILDING — angled left wall -->
-  <polygon points="52,15 1085,15 1085,650 15,650 15,440 52,15" fill="${W}" stroke="${WS}" stroke-width="2.8"/>
+  <polygon points="55,15 1185,15 1185,715 15,715 15,485 55,15" fill="${W}" stroke="${WS}" stroke-width="2.8"/>
 
   <!-- FINE DINING ZONE (upper-left trapezoid) -->
-  <polygon points="52,15 618,15 618,430 15,430 15,440 52,15" fill="${dk?'rgba(201,169,110,.025)':'rgba(201,169,110,.035)'}" stroke="none"/>
+  <polygon points="55,15 645,15 645,485 15,485 15,485 55,15" fill="${dk?'rgba(201,169,110,.025)':'rgba(201,169,110,.035)'}" stroke="none"/>
   <text x="118" y="32" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" letter-spacing="2" text-anchor="middle">FINE DINING</text>
   <text x="118" y="44" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 200–218 · Bar B1–B20</text>
 
   <!-- HORSESHOE BAR STRUCTURE ──
        Outer: 225×200px, C-opens-right shape at x=228,y=200 to x=500,y=368 -->
-  <path d="M228,200 L228,356 Q228,374 248,374 L504,374 Q518,374 518,356 L518,200 Z"
+  <path d="M230,205 L230,388 Q230,398 245,398 L515,398 Q525,398 525,388 L525,205 Z"
     fill="${dk?'rgba(201,169,110,.08)':'rgba(180,140,60,.08)'}" stroke="${WS}" stroke-width="1.8"/>
   <!-- Inner cutout of bar (counter surface) -->
-  <path d="M243,214 L243,348 Q243,362 256,362 L494,362 Q506,362 506,348 L506,214 Z"
+  <path d="M244,218 L244,376 Q244,384 255,384 L500,384 Q510,384 510,376 L510,218 Z"
     fill="${dk?'rgba(201,169,110,.04)':'rgba(180,140,60,.04)'}" stroke="${dk?'rgba(201,169,110,.12)':'rgba(180,140,60,.12)'}" stroke-width="1"/>
   <!-- Bar top counter surface -->
-  <rect x="228" y="198" width="290" height="13" rx="3" fill="${dk?'rgba(201,169,110,.17)':'rgba(180,140,60,.16)'}" stroke="${WS}" stroke-width=".8"/>
-  <text x="370" y="295" font-family="Cormorant Garamond,serif" font-size="10" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="1.5" opacity=".6">BAR</text>
+  <rect x="230" y="203" width="295" height="13" rx="3" fill="${dk?'rgba(201,169,110,.17)':'rgba(180,140,60,.16)'}" stroke="${WS}" stroke-width=".8"/>
+  <text x="375" y="305" font-family="Cormorant Garamond,serif" font-size="10" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="1.5" opacity=".6">BAR</text>
 
   <!-- Fine Dining / Lounge divider -->
-  <line x1="15" y1="440" x2="618" y2="440" stroke="${WS}" stroke-width="2"/>
+  <line x1="15" y1="485" x2="645" y2="485" stroke="${WS}" stroke-width="2"/>
 
   <!-- LOUNGE / DEN ZONE -->
   <polygon points="15,440 618,440 618,650 15,650" fill="${dk?'rgba(91,150,200,.032)':'rgba(91,150,200,.04)'}" stroke="none"/>
-  <text x="310" y="462" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="2">DEN / LOUNGE 🚬</text>
-  <text x="310" y="474" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 11–23</text>
+  <text x="320" y="502" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="2">DEN / LOUNGE 🚬</text>
+  <text x="320" y="514" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 11–23</text>
   <!-- Banquette backs -->
-  <rect x="22" y="478" width="594" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
-  <rect x="22" y="578" width="460" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
+  <rect x="18" y="514" width="627" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
+  <rect x="18" y="620" width="460" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
 
   <!-- VERTICAL DIVIDER -->
-  <line x1="622" y1="15" x2="622" y2="650" stroke="${WS}" stroke-width="2"/>
+  <line x1="648" y1="15" x2="648" y2="715" stroke="${WS}" stroke-width="2"/>
 
   <!-- PATIO ZONE -->
-  <rect x="626" y="15" width="459" height="405" rx="2" fill="${dk?'rgba(58,172,168,.04)':'rgba(58,172,168,.03)'}" stroke="${dk?'rgba(58,172,168,.28)':'rgba(58,172,168,.2)'}" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <rect x="652" y="15" width="533" height="430" rx="2" fill="${dk?'rgba(58,172,168,.04)':'rgba(58,172,168,.03)'}" stroke="${dk?'rgba(58,172,168,.28)':'rgba(58,172,168,.2)'}" stroke-width="1.2" stroke-dasharray="5,3"/>
   <text x="855" y="33" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="2">PATIO</text>
   <text x="855" y="45" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 101–112 · Big Booths A &amp; B</text>
 
   <!-- SERVICE AREA -->
   <rect x="626" y="425" width="459" height="225" rx="2" fill="${RM}" stroke="${WS}" stroke-width="1.5"/>
-  <rect x="650" y="442" width="88" height="62" rx="3" fill="${dk?'rgba(201,169,110,.09)':'rgba(201,169,110,.09)'}" stroke="${WS}" stroke-width="1"/>
+  <rect x="668" y="465" width="88" height="62" rx="3" fill="${dk?'rgba(201,169,110,.09)':'rgba(201,169,110,.09)'}" stroke="${WS}" stroke-width="1"/>
   <text x="694" y="476" font-family="DM Sans,sans-serif" font-size="8" font-weight="500" fill="${LBL}" text-anchor="middle">HOST</text>
   <path d="M694,488 Q694,512 674,512" fill="none" stroke="${WS}" stroke-width="1.2"/>
   <path d="M694,488 Q694,512 714,512" fill="none" stroke="${WS}" stroke-width="1.2"/>
   <rect x="758" y="438" width="110" height="58" rx="2" fill="${RM}" stroke="${WS}" stroke-width="1.2"/>
   <text x="813" y="470" font-family="DM Sans,sans-serif" font-size="8" font-weight="500" fill="${LBL}" text-anchor="middle">RESTROOMS</text>
-  <rect x="886" y="438" width="180" height="58" rx="2" fill="${RM}" stroke="${WS}" stroke-width="1.2"/>
+  <rect x="910" y="462" width="180" height="58" rx="2" fill="${RM}" stroke="${WS}" stroke-width="1.2"/>
   <text x="976" y="470" font-family="DM Sans,sans-serif" font-size="8" font-weight="500" fill="${LBL}" text-anchor="middle">KITCHEN</text>
 
   <!-- ENTRANCE -->
-  <line x1="540" y1="650" x2="620" y2="650" stroke="${SEC}" stroke-width="3"/>
+  <line x1="545" y1="715" x2="645" y2="715" stroke="${SEC}" stroke-width="3"/>
   <text x="580" y="645" font-family="DM Sans,sans-serif" font-size="8.5" font-weight="500" fill="${SEC}" text-anchor="middle">↑ ENTRANCE</text>
 
   <!-- EXIT -->
-  <line x1="15" y1="185" x2="15" y2="280" stroke="${dk?'rgba(196,82,74,.55)':'rgba(196,82,74,.45)'}" stroke-width="3"/>
+  <line x1="15" y1="200" x2="15" y2="320" stroke="${dk?'rgba(196,82,74,.55)':'rgba(196,82,74,.45)'}" stroke-width="3"/>
   <text x="22" y="202" font-family="DM Sans,sans-serif" font-size="7" fill="${dk?'rgba(196,82,74,.6)':'rgba(196,82,74,.5)'}" letter-spacing=".3">EXIT</text>
 
   <!-- PLANTS -->
-  ${[{x:636,y:26},{x:672,y:26},{x:1060,y:26},{x:1078,y:68},{x:1078,y:118}].map(p=>`<circle cx="${p.x}" cy="${p.y}" r="8" fill="${dk?'rgba(76,175,130,.18)':'rgba(76,175,130,.14)'}" stroke="${dk?'rgba(76,175,130,.3)':'rgba(76,175,130,.2)'}" stroke-width=".7"/><text x="${p.x}" y="${p.y+3.5}" font-size="9" text-anchor="middle">🌿</text>`).join('')}
+  ${[{x:660,y:26},{x:700,y:26},{x:1145,y:26},{x:1160,y:68},{x:1160,y:118}].map(p=>`<circle cx="${p.x}" cy="${p.y}" r="8" fill="${dk?'rgba(76,175,130,.18)':'rgba(76,175,130,.14)'}" stroke="${dk?'rgba(76,175,130,.3)':'rgba(76,175,130,.2)'}" stroke-width=".7"/><text x="${p.x}" y="${p.y+3.5}" font-size="9" text-anchor="middle">🌿</text>`).join('')}
 
   <!-- COMPASS -->
-  <g transform="translate(1078,638)"><circle r="11" fill="${dk?'rgba(201,169,110,.07)':'rgba(180,140,60,.07)'}" stroke="${WS}" stroke-width=".7"/><text y="-1" font-family="DM Sans,sans-serif" font-size="7" font-weight="500" fill="${SEC}" text-anchor="middle">N</text><line y1="2" y2="5" stroke="${SEC}" stroke-width="1" x1="0" x2="0"/></g>`;
+  <g transform="translate(1175,698)"><circle r="11" fill="${dk?'rgba(201,169,110,.07)':'rgba(180,140,60,.07)'}" stroke="${WS}" stroke-width=".7"/><text y="-1" font-family="DM Sans,sans-serif" font-size="7" font-weight="500" fill="${SEC}" text-anchor="middle">N</text><line y1="2" y2="5" stroke="${SEC}" stroke-width="1" x1="0" x2="0"/></g>`;
 
   // ── DRAW FINE DINING (round tables) ──
   FD.forEach(t=>{
