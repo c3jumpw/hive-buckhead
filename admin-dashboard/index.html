@@ -589,6 +589,13 @@ function showPage(id, btn){
 
 function renderPage(id){
   if(id==='overview') renderOverview();
+  else if(id==='revenue') renderRevenue();
+  else if(id==='staff') renderStaff();
+  else if(id==='tables') renderTables();
+  else if(id==='patterns') renderPatterns();
+  else if(id==='guests') renderGuests();
+  else if(id==='servers') renderServers();
+  else if(id==='tableconfig') renderTableConfig();
   else if(id==='hours') initHoursPage();
   else if(id==='sheetsync'){const saved=localStorage.getItem('hive_api_url');if(saved&&document.getElementById('api-url-input'))document.getElementById('api-url-input').value=saved;}
   else if(id==='revenue') renderRevenue();
@@ -946,17 +953,30 @@ function doLoginAdmin(){
   err.style.display='none';
   if(!id||pin.length<4){err.textContent='Enter Staff ID and 4-digit PIN.';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Verifying…';
-  // Check against staff in store
-  const allStaff=[
+  // Try local fallback first, then Sheets
+  const LOCAL_ADMINS=[
     {id:'S001',name:'Admin User',role:'Admin',accessLevel:1,passcode:'1234'},
-    ...(_store.servers||[])
   ];
-  const found=allStaff.find(s=>String(s.id).toUpperCase()===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
-  if(found){
-    sessionStorage.setItem('hive_session',JSON.stringify({staff:found,loginTime:Date.now()}));
-    document.getElementById('login-gate').style.display='none';
-    updateAdminBadge(found.name);
-    renderPage('overview');
+  const localFound=LOCAL_ADMINS.concat(_store.servers||[]).find(s=>
+    String(s.id)===id && String(s.passcode)===pin && parseInt(s.accessLevel)===1
+  );
+  
+  async function tryLogin(){
+    let found=localFound;
+    if(!found){
+      try{
+        const r=await sheetsGet({action:'getStaff'});
+        if(r&&r.staff) found=r.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
+      }catch(e){}
+    }
+    btn.disabled=false;btn.textContent='Sign In';
+    if(found){
+      sessionStorage.setItem('hive_session',JSON.stringify({staff:found,loginTime:Date.now()}));
+      document.getElementById('login-gate').style.display='none';
+      updateAdminBadge(found.name);
+      renderPage('overview');
+      setTimeout(syncAdminFromSheets,500);
+      if(!window._adminPollInterval) window._adminPollInterval=setInterval(syncAdminFromSheets,30000);
   }else{
     err.textContent='Incorrect credentials or insufficient access level.';
     err.style.display='block';
@@ -968,6 +988,19 @@ function updateAdminBadge(name){
   if(tag)tag.innerHTML=`<div class="rt-dot"></div>${name}&nbsp;<span style="cursor:pointer;opacity:.7;font-size:10px" onclick="adminLogout()">· sign out</span>`;
 }
 function adminLogout(){if(confirm('Sign out of admin?')){sessionStorage.removeItem('hive_session');location.reload();}}
+
+async function syncAdminFromSheets(){
+  try{
+    const r=await sheetsGet({action:'getReservations'});
+    if(r&&r.reservations&&r.reservations.length>0){
+      _store.reservations=r.reservations;
+      saveStore(_store);
+      const active=document.querySelector('.page.active');
+      if(active) renderPage(active.id.replace('page-',''));
+      document.getElementById('sync-label').textContent='Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    }
+  }catch(e){console.warn('Admin sync:',e);}
+}
 
 // ── OPERATING HOURS ──
 const DAYS=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
@@ -1183,13 +1216,7 @@ async function testApiConnection(){
   }catch(e){el.style.color='var(--red)';el.textContent='Connection failed: '+e.message;}
 }
 
-// ── PATCH showPage for new pages ──
-const __origShowPage=showPage;
-function showPage(id,btn){
-  __origShowPage(id,btn);
-  if(id==='hours') initHoursPage();
-  if(id==='sheetsync'){const saved=localStorage.getItem('hive_api_url');if(saved&&document.getElementById('api-url-input'))document.getElementById('api-url-input').value=saved;}
-}
+// showPage already handles hours and sheetsync via renderPage()
 
 window.addEventListener('DOMContentLoaded',()=>{populateAdminStaffDropdown();initAdminPage();});
 </script>
