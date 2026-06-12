@@ -518,6 +518,9 @@ tr:hover td{background:var(--surface2);cursor:pointer}
 </div>
 <script>
 const STORE_KEY="hive_buckhead_v2";
+async function sheetsGet(params){try{const r=await fetch(SHEETS_URL+'?'+new URLSearchParams(params).toString());return await r.json();}catch(e){console.warn('GET:',e.message);return null;}}
+async function sheetsPost(body){try{const r=await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json();}catch(e){console.warn('POST:',e.message);return null;}}
+
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzWkOHU3dmsmHGWI0iQ4wGzpzT6YtGgnndPRcqK8GyEZffRxPo_4FrGzWaKaNLDy0A/exec';
 const TODAY=new Date().toISOString().split("T")[0];
 const TOMORROW=new Date(Date.now()+86400000).toISOString().split("T")[0];
@@ -775,7 +778,12 @@ function selectRow(id){
       <div class="act-text flex-1">${a.text}</div>
       <div class="act-time">${a.time}</div>
     </div>`).join('')||'<div style="color:var(--text-d);font-size:12px">No activity yet.</div>';
-  document.getElementById('detail-panel').classList.remove('hidden');
+  const panel=document.getElementById('detail-panel');
+  panel.classList.remove('hidden');
+  panel.style.display='flex';
+  panel.style.flexDirection='column';
+  // Scroll panel into view on mobile
+  setTimeout(()=>panel.scrollIntoView&&panel.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
   renderView();
 }
 
@@ -890,8 +898,24 @@ function denyChange(id){
 }
 function closePanel(){selectedId=null;document.getElementById('detail-panel').classList.add('hidden');renderView();}
 
-function setFilter(s,el){activeFilter=s;dateFilter='';document.getElementById('date-flt').value='';document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
-function setDateQ(d,el){dateFilter=d;activeFilter=null;document.getElementById('date-flt').value=d;document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
+function setFilter(s,el){
+  activeFilter=s;dateFilter='';
+  document.getElementById('date-flt').value='';
+  document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+  if(el)el.classList.add('active');
+  // Automatically switch away from calendar view
+  if(currentView==='calendar'){switchView('list',document.getElementById('nav-tab-list'));}
+  renderView();
+}
+function setDateQ(d,el){
+  dateFilter=d;activeFilter=null;
+  document.getElementById('date-flt').value=d;
+  document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+  if(el)el.classList.add('active');
+  // Switch away from calendar when using date filters
+  if(currentView==='calendar'){switchView('list',document.getElementById('nav-tab-list'));}
+  renderView();
+}
 function filterServer(s,el){activeFilter=null;document.getElementById('srv-flt').value=s;document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');renderView();}
 
 const ETMPL=[
@@ -1010,6 +1034,8 @@ function initMgmtPage(){
     document.getElementById('login-gate').style.display='none';
     showLoggedInMgmt(sess.staff);
     renderView();
+    setTimeout(syncFromSheets, 400);
+    startPolling();
   }
 }
 
@@ -1027,7 +1053,8 @@ function doLogin(){
     document.getElementById('login-gate').style.display='none';
     showLoggedInMgmt(staff);
     renderView();
-    setTimeout(syncFromSheets, 500);
+    setTimeout(syncFromSheets, 400);
+    startPolling();
   } else if(staff&&staff.accessLevel>2){
     err.textContent='Access denied — your role cannot access reservations.';err.style.display='block';
   } else {
@@ -1147,7 +1174,46 @@ function selectRow(id){
   },50);
 }
 
-window.addEventListener('DOMContentLoaded',()=>{populateMgmtStaffDropdown();initMgmtPage();});
+window.addEventListener('DOMContentLoaded',()=>{
+  populateMgmtStaffDropdown();
+  initMgmtPage();
+});
+
+// ── REAL-TIME POLL: refresh from Sheets every 20s ──
+let _pollInterval=null;
+function startPolling(){
+  if(_pollInterval) return;
+  _pollInterval=setInterval(async()=>{
+    try{
+      const r=await sheetsGet({action:'getReservations'});
+      if(r&&r.reservations){
+        const prevCount=reservations.length;
+        reservations=r.reservations;
+        persistRsv();
+        renderView();
+        if(selectedId) selectRow(selectedId);
+        const now=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+        document.getElementById('sync-lbl').textContent='Live '+now;
+        if(r.reservations.length>prevCount) showToast('New reservation received','info');
+      }
+    }catch(e){}
+  },10000);
+
+  // Cross-tab sync via localStorage events
+  window.addEventListener('storage', e=>{
+    if(e.key===STORE_KEY && e.newValue){
+      try{
+        const d=JSON.parse(e.newValue);
+        if(d.reservations){
+          reservations=d.reservations;
+          renderView();
+          if(selectedId) selectRow(selectedId);
+        }
+      }catch(ex){}
+    }
+  });
+}
+function stopPolling(){if(_pollInterval){clearInterval(_pollInterval);_pollInterval=null;}}
 </script>
 </body>
 </html>
