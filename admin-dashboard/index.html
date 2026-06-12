@@ -1173,20 +1173,15 @@ renderOverview();
 // ── ADMIN LOGIN ──
 function populateAdminStaffDropdown(){
   const sel=document.getElementById('lg-id');
-  if(!sel||sel.tagName!=='SELECT') return;
-  // Always start with the hardcoded admin + any Level 1 staff from store
-  const LOCAL_ADMIN_LIST=[
-    {id:'S001',name:'Admin User',accessLevel:1,passcode:'1234'},
-  ];
-  const storeAdmins=(_store.servers||[]).filter(s=>parseInt(s.accessLevel)===1);
-  const combined=[...LOCAL_ADMIN_LIST,...storeAdmins.filter(s=>s.id!=='S001')];
-  sel.innerHTML='<option value="">Select staff member…</option>'+combined.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
-  // Try Sheets async — override if found
+  if(!sel) return;
+  // Seed immediately with local admin (shows instantly, no wait)
+  sel.innerHTML='<option value="">Select staff member…</option><option value="S001">Admin User</option>';
+  // Override with Sheets data if available
   sheetsGet({action:'getStaff'}).then(r=>{
-    if(r?.staff){
-      const admins=r.staff.filter(s=>parseInt(s.accessLevel)===1);
+    if(r?.staff?.length){
+      const admins=r.staff.filter(s=>parseInt(s.accessLevel)===1&&s.active!==false);
       if(admins.length){
-        sel.innerHTML='<option value="">Select staff member…</option>'+admins.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+        sel.innerHTML='<option value="">Select staff member…</option>'+admins.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
       }
     }
   }).catch(()=>{});
@@ -1199,29 +1194,29 @@ function initAdminPage(){
     updateAdminBadge(sess.staff.name);
   }
 }
-function doLoginAdmin(){
+async function doLoginAdmin(){
   const id=document.getElementById('lg-id').value.trim();
   const pin=document.getElementById('lg-pin').value.trim();
   const err=document.getElementById('lg-err');
   const btn=document.getElementById('lg-btn');
   err.style.display='none';
-  if(!id||pin.length<4){err.textContent='Enter Staff ID and 4-digit PIN.';err.style.display='block';return;}
+  if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
+  if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Verifying…';
-  // Try local fallback first, then Sheets
   const LOCAL_ADMINS=[
     {id:'S001',name:'Admin User',role:'Admin',accessLevel:1,passcode:'1234'},
   ];
-  const localFound=LOCAL_ADMINS.concat(_store.servers||[]).find(s=>
-    String(s.id)===id && String(s.passcode)===pin && parseInt(s.accessLevel)===1
-  );
-  
-  async function tryLogin(){
-    let found=localFound;
+  try{
+    let found=null;
+    // Try Sheets first
+    const res=await sheetsGet({action:'getStaff'}).catch(()=>null);
+    if(res?.staff?.length){
+      found=res.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
+    }
+    // Fallback to local
     if(!found){
-      try{
-        const r=await sheetsGet({action:'getStaff'});
-        if(r&&r.staff) found=r.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
-      }catch(e){}
+      found=LOCAL_ADMINS.find(s=>String(s.id)===id&&String(s.passcode)===pin);
+      if(!found)found=(_store.servers||[]).find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
     }
     btn.disabled=false;btn.textContent='Sign In';
     if(found){
@@ -1230,12 +1225,24 @@ function doLoginAdmin(){
       updateAdminBadge(found.name);
       renderPage('overview');
       setTimeout(syncAdminFromSheets,500);
-      if(!window._adminPollInterval) window._adminPollInterval=setInterval(syncAdminFromSheets,30000);
-  }else{
-    err.textContent='Incorrect credentials or insufficient access level.';
-    err.style.display='block';
+      if(!window._adminPollInterval)window._adminPollInterval=setInterval(syncAdminFromSheets,30000);
+    }else{
+      err.textContent='Incorrect PIN or not an Admin (Level 1) account.';
+      err.style.display='block';
+    }
+  }catch(e){
+    // Pure local fallback
+    const local=LOCAL_ADMINS.find(s=>String(s.id)===id&&String(s.passcode)===pin);
+    btn.disabled=false;btn.textContent='Sign In';
+    if(local){
+      sessionStorage.setItem('hive_session',JSON.stringify({staff:local,loginTime:Date.now()}));
+      document.getElementById('login-gate').style.display='none';
+      updateAdminBadge(local.name);
+      renderPage('overview');
+    }else{
+      err.textContent='Login error. Try again.';err.style.display='block';
+    }
   }
-  btn.disabled=false;btn.textContent='Sign In';
 }
 function updateAdminBadge(name){
   const tag=document.querySelector('.sync-tag');
