@@ -931,31 +931,55 @@ function populateLoginDropdown(){
   }).catch(()=>{});
 }
 
-async function doLogin(){
-  const id=document.getElementById('lg-staff-sel').value;
-  const pin=document.getElementById('lg-pin').value.trim();
-  const err=document.getElementById('lg-err');const btn=document.getElementById('lg-btn');
-  err.style.display='none';
-  if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
-  if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Verifying…';
-  try{
-    let staff=null;
-    const res=await sheetsGet({action:'getStaff'}).catch(()=>null);
-    if(res?.staff){const f=res.staff.find(s=>s.id===id);if(f&&String(f.passcode)===pin&&parseInt(f.accessLevel)<=2)staff=f;}
-    if(!staff){const l=getStaffList().find(s=>s.id===id&&s.passcode===pin&&parseInt(s.accessLevel)<=2);if(l)staff=l;}
-    if(staff){
-      setSession({staff,loginTime:Date.now()});
-      document.getElementById('login-gate').style.display='none';
-      document.getElementById('staff-pill').style.display='flex';
-      document.getElementById('staff-name-display').textContent=staff.name.split(' ')[0];
-      loadPlanner();renderMain();
-      // Pull latest from Sheets, then start polling
-      syncPlannerFromSheets();
-      startPlannerPolling();
-    }else{err.textContent='Incorrect PIN or insufficient access.';err.style.display='block';}
-  }catch(e){err.textContent='Login error — try again.';err.style.display='block';}
-  btn.disabled=false;btn.textContent='Sign In';
+function doLogin(){
+  const id = document.getElementById('lg-staff-sel').value;
+  const pin = document.getElementById('lg-pin').value;
+  const err = document.getElementById('lg-err');
+  const btn = document.getElementById('lg-btn');
+
+  err.style.display = 'none';
+  err.textContent = '';
+
+  if(!id){
+    err.textContent = 'Please select your name.';
+    err.style.display = 'block';
+    return;
+  }
+  if(!pin || pin.length < 4){
+    err.textContent = 'Please enter your 4-digit PIN.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const staffList = getStaffList();
+  const staff = staffList.find(function(s){
+    return String(s.id) === String(id) && String(s.passcode) === String(pin);
+  });
+
+  if(!staff){
+    err.textContent = 'Incorrect name or PIN. Please try again.';
+    err.style.display = 'block';
+    return;
+  }
+
+  if(parseInt(staff.accessLevel) > 2){
+    err.textContent = 'Access denied — floor-only staff cannot access the planner.';
+    err.style.display = 'block';
+    return;
+  }
+
+  // ✓ Login success
+  setSession({staff: staff, loginTime: Date.now()});
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('staff-pill').style.display = 'flex';
+  document.getElementById('staff-name-display').textContent = staff.name.split(' ')[0];
+
+  loadPlanner();
+  renderMain();
+  setTimeout(function(){
+    syncPlannerFromSheets();
+    startPlannerPolling();
+  }, 300);
 }
 
 function confirmLogout(){if(confirm(`Sign out ${getStaffName()}?`)){sessionStorage.removeItem('hive_session');location.reload();}}
