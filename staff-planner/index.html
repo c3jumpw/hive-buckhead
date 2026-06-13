@@ -148,7 +148,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Month View
     </button>
     <button class="sb" id="sb-staff" onclick="setView('staff',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Staff Roster
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Staff Profiles
     </button>
   </div>
   <div class="sidebar-section">
@@ -160,12 +160,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div id="staff-sidebar-list"></div>
   </div>
   <div class="sidebar-section">
-    <div class="sidebar-label">Week</div>
-    <button class="sb" onclick="goToToday()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>This Week
-    </button>
+    <div class="sidebar-label">Forecast</div>
     <button class="sb" onclick="openForecastModal()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Forecast Hours
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Weekly Forecast
     </button>
   </div>
   <div class="sidebar-section">
@@ -376,7 +373,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:24px 20px">
       <div style="font-size:12px;color:#A89B84;margin-bottom:14px">Select your name and enter your PIN</div>
       <select id="lg-staff-sel" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none" onchange="document.getElementById('lg-pin').focus()">
-        <option value="">Select staff member…</option>
+<option value="">Select staff member…</option>
+        <option value="S001">Admin User</option>
+        <option value="S002">Ashley Smith</option>
+        <option value="S003">Marcus Rivera</option>
+        <option value="S004">Jenna Park</option>
+        <option value="S005">Devon Harris</option>
       </select>
       <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:22px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()" id="lg-btn" style="width:100%;padding:13px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;cursor:pointer">Sign In</button>
@@ -657,37 +659,85 @@ function renderMonth(){
 function renderStaffRoster(){
   document.getElementById('week-header').style.display='none';
   const staff=getStaffList();
-  const allShifts=PLANNER.shifts;
+  const d30=new Date(Date.now()-30*864e5).toISOString().split('T')[0];
+  const lvlLabel={1:'Admin / Owner',2:'Manager / Server',3:'Host / Floor'};
+  const lvlColor={1:'var(--gold)',2:'var(--blue)',3:'var(--teal)'};
+  const accessNote={
+    1:'Full system access — all pages, analytics, settings',
+    2:'Reservations + Floor plan + Staff Planner',
+    3:'Floor plan view only'
+  };
 
-  let html=`<div style="overflow:auto;height:100%"><table class="staff-table">
-  <thead><tr>
-    <th>Staff Member</th><th>Role</th><th>Access</th><th>Avail.</th>
-    <th>Shifts (30d)</th><th>Hours (30d)</th><th>Revenue</th><th>Callouts</th><th>Score</th><th style="width:70px"></th>
-  </tr></thead><tbody>`;
-
-  const now=new Date();
-  const d30ago=new Date(now.getTime()-30*864e5).toISOString().split('T')[0];
+  let html=`<div style="overflow:auto;height:100%;padding:1rem">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--gold)">Staff Profiles</div>
+      <div style="font-size:11px;color:var(--text-m);margin-top:2px">${staff.length} staff members · performance data from reservation history</div>
+    </div>
+    <button class="btn btn-primary" onclick="openStaffModal(null)">+ Add Staff Member</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">`;
 
   staff.forEach(s=>{
-    const shifts30=allShifts.filter(sh=>sh.staffId===s.id&&sh.date>=d30ago);
-    const hrs30=shifts30.reduce((a,sh)=>a+fmtHrs(sh.start,sh.end),0);
-    const callouts=PLANNER.callouts.filter(co=>co.staffId===s.id&&co.date>=d30ago).length;
-    const lvlLabel={1:'Admin',2:'Manager',3:'Host'}[s.accessLevel]||'Staff';
-    const lvlColor={1:'var(--gold)',2:'var(--blue)',3:'var(--teal)'}[s.accessLevel]||'var(--text-m)';
-    html+=`<tr onclick="openStaffModal('${s.id}')">
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="s-avatar" style="background:${s.color||'#A89B84'};width:28px;height:28px;font-size:11px">${s.name.charAt(0)}</div><div><div style="font-weight:500">${s.name}</div><div style="font-size:11px;color:var(--text-d)">${s.phone||'—'}</div></div></div></td>
-      <td style="font-size:12px;color:var(--text-m)">${s.role||'—'}</td>
-      <td><span style="font-size:11px;font-weight:500;color:${lvlColor}">L${s.accessLevel} ${lvlLabel}</span></td>
-      <td style="font-size:12px;color:var(--text-m)">${s.availability||'Full Time'}</td>
-      <td style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:18px">${shifts30.length}</td>
-      <td style="font-size:12px;color:var(--green)">${hrs30}h</td>
-      <td style="text-align:center">${callouts>0?`<span class="callout-badge">${callouts}</span>`:'—'}</td>
-      <td><button class="btn-ghost" onclick="event.stopPropagation();openStaffModal('${s.id}')">Edit</button></td>
-    </tr>`;
+    const sc=getStaffScore(s);
+    const rsv=[];
+    try{
+      const d=JSON.parse(localStorage.getItem('hive_buckhead_v2')||'{}');
+      const all=d.reservations||[];
+      rsv.push(...all.filter(r=>r.server===s.name));
+    }catch(e){}
+    const rev=rsv.filter(r=>r.status==='Completed').reduce((a,r)=>a+(r.orderTotal||0),0);
+    const myShifts=PLANNER.shifts.filter(sh=>sh.staffId===s.id&&sh.date>=d30);
+    const callouts=PLANNER.callouts.filter(co=>co.staffId===s.id&&co.date>=d30).length;
+    const avgHrs=myShifts.length ? Math.round(myShifts.reduce((a,sh)=>a+shiftHrs(sh),0)/Math.ceil(myShifts.length/5)*10)/10 : 0;
+    const scoreClr=sc.score>=80?'var(--green)':sc.score>=60?'var(--amber)':'var(--red)';
+
+    html+=`<div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:16px;cursor:pointer" onclick="openStaffModal('${s.id}')">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+        <div style="width:46px;height:46px;border-radius:50%;background:${s.color||'#A89B84'}22;color:${s.color||'#A89B84'};display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;font-family:'Cormorant Garamond',serif;flex-shrink:0">${s.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:14px">${s.name}</div>
+          <div style="font-size:11px;color:var(--text-m)">${s.role||'Staff'}</div>
+          <div style="margin-top:4px;display:flex;gap:5px;flex-wrap:wrap">
+            <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${lvlColor[s.accessLevel]||'var(--text-m)'}22;color:${lvlColor[s.accessLevel]||'var(--text-m)'};font-weight:500">L${s.accessLevel} — ${lvlLabel[s.accessLevel]||'Staff'}</span>
+            <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${scoreClr}22;color:${scoreClr};font-weight:500">Score ${sc.score}</span>
+          </div>
+        </div>
+      </div>
+      <!-- Access note -->
+      <div style="font-size:10px;color:var(--text-d);background:var(--surface2);border-radius:5px;padding:5px 8px;margin-bottom:10px">${accessNote[s.accessLevel]||''}</div>
+      <!-- Stats grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text)">${rsv.length}</div>
+          <div style="font-size:9px;color:var(--text-d)">RESERVATIONS</div>
+        </div>
+        <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--blue)">${sc.hrs}h</div>
+          <div style="font-size:9px;color:var(--text-d)">HRS (30D)</div>
+        </div>
+        <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:${callouts>0?'var(--red)':'var(--green)'}">${callouts}</div>
+          <div style="font-size:9px;color:var(--text-d)">CALLOUTS</div>
+        </div>
+      </div>
+      <!-- Revenue + reliability bars -->
+      ${rev>0?`<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-d);margin-bottom:3px"><span>Revenue (completed orders)</span><span style="color:var(--green)">$${rev.toFixed(0)}</span></div></div>`:''}
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-d);margin-bottom:3px"><span>Reliability</span><span style="color:${scoreClr}">${sc.reliability}%</span></div>
+        <div style="height:3px;background:var(--surface2);border-radius:2px"><div style="height:3px;border-radius:2px;background:${scoreClr};width:${sc.reliability}%"></div></div>
+      </div>
+      <!-- Contact (if available) -->
+      ${s.phone?`<div style="margin-top:8px;font-size:11px;color:var(--text-m)">📱 ${s.phone}</div>`:''}
+      ${s.email?`<div style="font-size:11px;color:var(--text-m)">✉ ${s.email}</div>`:''}
+    </div>`;
   });
-  html+=`</tbody></table></div>`;
+
+  html+=`</div></div>`;
   document.getElementById('view-container').innerHTML=html;
 }
+
 
 // ── SHIFT ACTIONS ──
 let editShiftId=null;
