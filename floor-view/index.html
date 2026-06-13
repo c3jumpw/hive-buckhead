@@ -286,62 +286,95 @@ const ALL=[...FD,...BAR,...DEN,...PATIO];
 // Service: x=630 to x=1085, y=420 to y=650
 
 const P={
-  // ── FINE DINING — Top row (7 × 2-seat): even horizontal spread ──
-  // x spread: 258 to 545, spacing = (545-258)/6 = 47.8 → use 48px
-  T200:{x:258,y:55}, T201:{x:316,y:55}, T202:{x:374,y:55},
-  T203:{x:432,y:55}, T204:{x:557,y:100},
-  T205:{x:557,y:170}, T206:{x:557,y:240},
+  // ══════════════════════════════════════════════════
+  // FINE DINING — SVG x=15-645, y=15-485
+  // Based on actual building PDF layout
+  // ══════════════════════════════════════════════════
 
-  // ── Left angled wall: 2 three-seat + 2 four-seat tables ──
-  // Wall diagonal: (52,15)→(15,440). At y=90, x_wall≈45. Tables 55px inside.
-  T207:{x:82,y:95},   // 3-seat near top
-  T208:{x:72,y:185},  // 3-seat lower — gap from T207: 185-95-52=38px ✓
+  // TOP ROW: 6 × 2-seat round tables along top wall
+  // PDF page 4: evenly spaced from left-center to right side of FD zone
+  T200:{x:160,y:58}, T201:{x:248,y:58}, T202:{x:336,y:58},
+  T203:{x:424,y:58}, T204:{x:512,y:58}, T205:{x:600,y:58},
 
-  // 4-seat round tables
-  T209:{x:82,y:275},  // 4-seat — gap from T208: 275-185-52=38px ✓
-  T210:{x:82,y:358},  // 4-seat — gap from T209: 358-275-52=31px ✓ / bottom=384 < divider 440 ✓
+  // LEFT SIDE: 2 × 3-seat near angled (street entrance) wall
+  // PDF page 4: 2 orange circles on left near entrance
+  T206:{x:82,y:115},   // 3-seat upper left
+  T207:{x:82,y:210},   // 3-seat lower left
 
-  // ── Right side fine dining (near patio divider) ──
-  T211:{x:553,y:315}, // 4-seat — gap from T206: 315-240-52=23px ✓
-  T212:{x:553,y:385}, // 4-seat — gap from T211: 385-315-52=18px ✓, bottom=411 < 440 ✓
+  // LEFT LOWER: 2 × 4-seat near angled wall, lower section
+  // PDF page 4: 2 blue circles lower left
+  T208:{x:82,y:310},   // 4-seat
+  T209:{x:82,y:400},   // 4-seat — bottom chair: 400+33=433 < divider 485 ✓
 
-  // ── Below bar — 5 × 2-seat (T213-T217): y=420 clears bar stools at y=374 ──
-  // B16-B20 bottom: 374+11=385; T213 top chair: 420-26=394; gap=9px ✓
-  T213:{x:248,y:420}, T214:{x:316,y:420},
-  T215:{x:384,y:420}, T216:{x:452,y:420}, T217:{x:520,y:420},
+  // RIGHT SIDE: 3 × 4-seat near patio divider
+  // PDF page 4: 2 blue circles right side + T218 at top right
+  T210:{x:605,y:150},  // 4-seat upper right
+  T211:{x:605,y:250},  // 4-seat middle right
+  T212:{x:605,y:350},  // 4-seat lower right — bottom: 350+33=383 < 485 ✓
 
-  // ── Extra fine dining table ──
-  T218:{x:138,y:95},  // 2-seat top-left area — dx=56 from T207 ✓
+  // BOTTOM ROW: 5 × 2-seat below bar
+  // PDF page 4: 5 purple circles at bottom of FD, below bar
+  T213:{x:244,y:435}, T214:{x:316,y:435},
+  T215:{x:388,y:435}, T216:{x:460,y:435}, T217:{x:532,y:435},
 
-  // ── BAR STOOLS ──
-  // Top counter (B1-B10): y=188, spread x=230-486 (spacing 28px)
-  B1:{x:230,y:188},B2:{x:258,y:188},B3:{x:286,y:188},B4:{x:314,y:188},B5:{x:342,y:188},
-  B6:{x:370,y:188},B7:{x:398,y:188},B8:{x:426,y:188},B9:{x:454,y:188},B10:{x:482,y:188},
-  // Left side (B11-B15): x=212, y=218-330 (spacing 28px)
-  B11:{x:212,y:218},B12:{x:212,y:246},B13:{x:212,y:274},B14:{x:212,y:302},B15:{x:212,y:330},
-  // Bottom (B16-B20): y=362, spread x=262-462 (spacing 50px)
-  // B16 bottom: 362+11=373; T213 top chair: 420-26=394; gap=21px ✓
-  B16:{x:262,y:366},B17:{x:312,y:366},B18:{x:362,y:366},B19:{x:412,y:366},B20:{x:462,y:366},
+  // T218: extra table, upper right of fine dining
+  // PDF shows a 3-seat table in far right of FD area
+  T218:{x:605,y:58},   // Moved to complete top row (becomes 7th top table)
 
-  // ── LOUNGE / DEN ──
-  // Top row (T11-T18): y=510, spread x=42-595 evenly (spacing 79px)
-  T11:{x:42,y:510},  T12:{x:121,y:510}, T13:{x:200,y:510}, T14:{x:279,y:510},
-  T15:{x:358,y:510}, T16:{x:437,y:510}, T17:{x:516,y:510}, T18:{x:595,y:510},
-  // Bottom row (T19-T23): y=608, spread x=42-442 (spacing 100px)
-  T19:{x:42,y:608},  T20:{x:148,y:608}, T21:{x:254,y:608},
-  T22:{x:360,y:608}, T23:{x:442,y:608},
+  // ══════════════════════════════════════════════════
+  // BAR — C-shape horseshoe, OPENS to the RIGHT
+  // Outer structure: x=220-520, y=192-395
+  // Stools are on the OUTSIDE of the counter
+  // ══════════════════════════════════════════════════
 
-  // ── PATIO ──
-  // Big Booth B (6 seats): upper-left of patio
-  T101:{x:678,y:80},
-  // Big Booth A (10 seats): lower-left of patio
-  T102:{x:678,y:210},
-  // Tables for 4: two rows of 5 — x spacing 66px, starting x=766
-  // T107 right chair: 1010+27=1037, wall gap=1085-1037=48px ✓
-  T103:{x:766,y:70},  T104:{x:832,y:70},  T105:{x:898,y:70},
-  T106:{x:964,y:70},  T107:{x:1010,y:70},
-  T108:{x:766,y:200}, T109:{x:832,y:200}, T110:{x:898,y:200},
-  T111:{x:964,y:200}, T112:{x:1010,y:200},
+  // B1-B8: top counter stools (outside, above bar) y=185
+  B1:{x:244,y:185}, B2:{x:278,y:185}, B3:{x:312,y:185}, B4:{x:346,y:185},
+  B5:{x:380,y:185}, B6:{x:414,y:185}, B7:{x:448,y:185}, B8:{x:482,y:185},
+
+  // B9-B13: left side stools (outside, left of bar) x=208
+  B9:{x:208,y:218},  B10:{x:208,y:252}, B11:{x:208,y:286},
+  B12:{x:208,y:320}, B13:{x:208,y:354},
+
+  // B14-B20: bottom counter stools (outside, below bar) y=380
+  B14:{x:244,y:380}, B15:{x:278,y:380}, B16:{x:312,y:380}, B17:{x:346,y:380},
+  B18:{x:380,y:380}, B19:{x:414,y:380}, B20:{x:448,y:380},
+
+  // ══════════════════════════════════════════════════
+  // LOUNGE / DEN — x=15-645, y=495-720
+  // PDF page 5: 2 rows of booths + bottom row of booths
+  // Top row: 8 tables for 4 with booth (evenly spaced)
+  // Bottom row: 3 left + 3 center-bottom + 1 end table for 3
+  // ══════════════════════════════════════════════════
+
+  // Top row: T11-T18 (8 × 4-seat booths, evenly spaced)
+  // Width available: 630px / 8 = ~79px each
+  T11:{x:28,y:540},  T12:{x:107,y:540}, T13:{x:186,y:540}, T14:{x:265,y:540},
+  T15:{x:344,y:540}, T16:{x:423,y:540}, T17:{x:502,y:540}, T18:{x:581,y:540},
+
+  // Bottom row: T19-T23 (mixed 4-seat and end 3-seat)
+  // PDF shows 3 tables left side, gap, then 3 more center, then 1 end
+  T19:{x:28,y:648},  T20:{x:117,y:648}, T21:{x:206,y:648},
+  T22:{x:330,y:648}, T23:{x:460,y:648},
+
+  // ══════════════════════════════════════════════════
+  // PATIO — x=655-1185, y=15-445
+  // PDF page 6: Big Booth B (upper left) + Big Booth A (lower left)
+  // + 2 rows of 4-seat booth tables
+  // ══════════════════════════════════════════════════
+
+  // Big Booth B (6 seats): upper-left corner of patio
+  T101:{x:712,y:90},
+  // Big Booth A (10 seats): below Booth B, larger
+  T102:{x:712,y:270},
+
+  // Upper row of 4-seat tables: T103-T107
+  // Start x=800, spacing=76px
+  T103:{x:806,y:78},  T104:{x:882,y:78},  T105:{x:958,y:78},
+  T106:{x:1034,y:78}, T107:{x:1110,y:78},
+
+  // Lower row of 4-seat tables: T108-T112
+  T108:{x:806,y:220}, T109:{x:882,y:220}, T110:{x:958,y:220},
+  T111:{x:1034,y:220},T112:{x:1110,y:220},
 }
 
 let DATA={reservations:[],tableStates:{}};
@@ -408,14 +441,14 @@ function renderFloor(){
 
   <!-- HORSESHOE BAR STRUCTURE ──
        Outer: 225×200px, C-opens-right shape at x=228,y=200 to x=500,y=368 -->
-  <path d="M230,205 L230,388 Q230,398 245,398 L515,398 Q525,398 525,388 L525,205 Z"
+  <path d="M220,192 L220,392 Q220,400 232,400 L520,400 Q530,400 530,392 L530,192 Z"
     fill="${dk?'rgba(201,169,110,.08)':'rgba(180,140,60,.08)'}" stroke="${WS}" stroke-width="1.8"/>
   <!-- Inner cutout of bar (counter surface) -->
-  <path d="M244,218 L244,376 Q244,384 255,384 L500,384 Q510,384 510,376 L510,218 Z"
+  <path d="M234,206 L234,380 Q234,386 244,386 L510,386 Q518,386 518,380 L518,206 Z"
     fill="${dk?'rgba(201,169,110,.04)':'rgba(180,140,60,.04)'}" stroke="${dk?'rgba(201,169,110,.12)':'rgba(180,140,60,.12)'}" stroke-width="1"/>
   <!-- Bar top counter surface -->
-  <rect x="230" y="203" width="295" height="13" rx="3" fill="${dk?'rgba(201,169,110,.17)':'rgba(180,140,60,.16)'}" stroke="${WS}" stroke-width=".8"/>
-  <text x="375" y="305" font-family="Cormorant Garamond,serif" font-size="10" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="1.5" opacity=".6">BAR</text>
+  <rect x="220" y="198" width="310" height="12" rx="3" fill="${dk?'rgba(201,169,110,.17)':'rgba(180,140,60,.16)'}" stroke="${WS}" stroke-width=".8"/>
+  <text x="374" y="300" font-family="Cormorant Garamond,serif" font-size="10" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="1.5" opacity=".6">BAR</text>
 
   <!-- Fine Dining / Lounge divider -->
   <line x1="15" y1="485" x2="645" y2="485" stroke="${WS}" stroke-width="2"/>
