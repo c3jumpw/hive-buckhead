@@ -215,7 +215,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
     <div style="background:#1A1714;border:.5px solid rgba(201,169,110,.2);border-radius:12px;padding:24px 20px">
       <div style="font-size:12px;color:#A89B84;margin-bottom:14px">Select your name and enter your PIN</div>
       <select id="lg-staff-sel" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none" onchange="document.getElementById('lg-pin').focus()">
-        <option value="">Select staff member…</option>
+<option value="">Select staff member…</option>
+        <option value="S001">Admin User</option>
+        <option value="S002">Ashley Smith</option>
+        <option value="S003">Marcus Rivera</option>
+        <option value="S004">Jenna Park</option>
+        <option value="S005">Devon Harris</option>
+        <option value="S006">Floor Staff</option>
       </select>
       <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" style="width:100%;padding:12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:22px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()" id="lg-btn" style="width:100%;padding:13px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;cursor:pointer">Sign In</button>
