@@ -185,7 +185,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
   <div class="nav-center">
     <button class="view-tab active" id="nav-tab-list" onclick="switchView('list',this)">List</button>
     <button class="view-tab" id="nav-tab-kanban" onclick="switchView('kanban',this)">Board</button>
-    <button class="view-tab" id="nav-tab-cal" onclick="switchView('calendar',this)">Calendar</button>
+    <button class="view-tab" id="nav-tab-calendar" onclick="switchView('calendar',this)">Calendar</button>
   </div>
   <div class="nav-right">
     <div class="sync-indicator" id="sync-ind"><div class="sync-dot"></div><span id="sync-lbl">Synced</span></div>
@@ -609,6 +609,13 @@ function updateCounts(){
   document.getElementById('s-pend').textContent=c('RSVP Requested');
   document.getElementById('s-seat').textContent=c('Seated');
   document.getElementById('s-covers').textContent=tod.filter(r=>r.status!=='Cancelled').reduce((a,r)=>a+r.party,0);
+}
+
+function switchViewSidebar(v,btn){
+  // Called from sidebar view buttons
+  document.querySelectorAll('.sidebar-item[id^="view-btn-"]').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  switchView(v, null);
 }
 
 function switchView(v,btn){
@@ -1249,6 +1256,27 @@ function startPolling(){
   });
 }
 function stopPolling(){if(_pollInterval){clearInterval(_pollInterval);_pollInterval=null;}}
+
+// ── SHEETS PUSH HELPERS ──
+async function pushStatusToSheets(id,status,note){
+  const sess=JSON.parse(sessionStorage.getItem('hive_session')||'{}');
+  sheetsPost({action:'updateStatus',id,status,note,staffName:sess?.staff?.name||'Staff'}).catch(()=>{});
+}
+async function pushCloseTableToSheets({id,orderTotal,tipAmount,closingRemarks,receiptUrl}){
+  const sess=JSON.parse(sessionStorage.getItem('hive_session')||'{}');
+  sheetsPost({action:'closeTable',id,orderTotal,tipAmount,closingRemarks,receiptUrl,staffName:sess?.staff?.name||'Staff'}).catch(()=>{});
+}
+async function pushCancelToSheets(id,reason,remarks){
+  const sess=JSON.parse(sessionStorage.getItem('hive_session')||'{}');
+  sheetsPost({action:'cancelReservation',id,reason,remarks,staffName:sess?.staff?.name||'Staff'}).catch(()=>{});
+}
+async function pushNewReservationToSheets(rsv){
+  sheetsPost({action:'saveReservation',reservation:rsv}).catch(()=>{});
+}
+async function pushApproveChangeToSheets(id,changeReq){
+  const sess=JSON.parse(sessionStorage.getItem('hive_session')||'{}');
+  sheetsPost({action:'approveChange',id,changeReq,staffName:sess?.staff?.name||'Staff'}).catch(()=>{});
+}
 </script>
 </body>
 </html>
