@@ -1047,62 +1047,56 @@ function initMgmtPage(){
   }
 }
 
-async function doLogin(){
-  const id=document.getElementById('lg-id').value.trim();
-  const pin=document.getElementById('lg-pin').value.trim();
-  const err=document.getElementById('lg-err');
-  const btn=document.getElementById('lg-btn');
-  err.style.display='none';
-  if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
-  if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Verifying…';
-  // Show immediate visual feedback
-  if(err) err.style.display='none';
-  try{
-    let staff=null;
-    // Try Sheets with 5-second timeout - fall back to local if slow
-    const sheetsPromise=sheetsGet({action:'getStaff'}).catch(()=>null);
-    const timeoutPromise=new Promise(r=>setTimeout(()=>r(null),5000));
-    const res=await Promise.race([sheetsPromise,timeoutPromise]);
-    if(res?.staff?.length){
-      const found=res.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin);
-      if(found&&parseInt(found.accessLevel)<=2) staff=found;
-      else if(found&&parseInt(found.accessLevel)>2){
-        err.textContent='Access denied — Level 3 (Floor Only) cannot access reservations.';
-        err.style.display='block';btn.disabled=false;btn.textContent='Sign In';return;
-      }
-    }
-    // Fallback to LOCAL_STAFF_MGMT
-    if(!staff){
-      const local=LOCAL_STAFF_MGMT.find(s=>String(s.id)===id&&String(s.passcode)===pin);
-      if(local&&parseInt(local.accessLevel)<=2) staff=local;
-      else if(local&&parseInt(local.accessLevel)>2){
-        err.textContent='Access denied — Level 3 (Floor Only) cannot access reservations.';
-        err.style.display='block';btn.disabled=false;btn.textContent='Sign In';return;
-      }
-    }
-    if(staff){
-      sessionStorage.setItem('hive_session',JSON.stringify({staff,loginTime:Date.now()}));
-      document.getElementById('login-gate').style.display='none';
-      showLoggedInMgmt(staff);
-      renderView();
-      setTimeout(syncFromSheets,400);
-      startPolling();
-    }else{
-      err.textContent='Incorrect Staff ID or PIN. Try again.';err.style.display='block';
-    }
-  }catch(e){
-    // If all else fails try local only
-    const local=LOCAL_STAFF_MGMT.find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)<=2);
-    if(local){
-      sessionStorage.setItem('hive_session',JSON.stringify({staff:local,loginTime:Date.now()}));
-      document.getElementById('login-gate').style.display='none';
-      showLoggedInMgmt(local);renderView();startPolling();
-    }else{
-      err.textContent='Login error. Check connection and try again.';err.style.display='block';
-    }
+function doLogin(){
+  const id = document.getElementById('lg-id').value;
+  const pin = document.getElementById('lg-pin').value;
+  const err = document.getElementById('lg-err');
+  const btn = document.getElementById('lg-btn');
+
+  // Clear any previous error
+  err.style.display = 'none';
+  err.textContent = '';
+
+  // Validate inputs
+  if(!id){
+    err.textContent = 'Please select your name.';
+    err.style.display = 'block';
+    return;
   }
-  btn.disabled=false;btn.textContent='Sign In';
+  if(!pin || pin.length < 4){
+    err.textContent = 'Please enter your 4-digit PIN.';
+    err.style.display = 'block';
+    return;
+  }
+
+  // Find staff member locally — instant, no network needed
+  const staff = LOCAL_STAFF_MGMT.find(function(s){
+    return String(s.id) === String(id) && String(s.passcode) === String(pin);
+  });
+
+  if(!staff){
+    err.textContent = 'Incorrect name or PIN. Please try again.';
+    err.style.display = 'block';
+    return;
+  }
+
+  if(parseInt(staff.accessLevel) > 2){
+    err.textContent = 'Access denied — floor-only staff cannot access reservations.';
+    err.style.display = 'block';
+    return;
+  }
+
+  // ✓ Login success
+  sessionStorage.setItem('hive_session', JSON.stringify({staff: staff, loginTime: Date.now()}));
+  document.getElementById('login-gate').style.display = 'none';
+  showLoggedInMgmt(staff);
+  renderView();
+
+  // Sync from Sheets AFTER login (non-blocking)
+  setTimeout(function(){
+    syncFromSheets();
+    startPolling();
+  }, 300);
 }
 
 function showLoggedInMgmt(staff){
