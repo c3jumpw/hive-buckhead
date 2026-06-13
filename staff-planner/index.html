@@ -452,9 +452,31 @@ function startPlannerPolling(){
   _plannerPoll=setInterval(syncPlannerFromSheets,60000);
 }
 function getStaffList(){
-  // Try getting staff from main store first
-  try{const s=localStorage.getItem(STORE_KEY);if(s){const d=JSON.parse(s);if(d.servers&&d.servers.length)return d.servers.map(x=>({id:x.id,name:x.name,role:x.role||'Staff',accessLevel:x.accessLevel||2,color:x.color||'#A89B84',passcode:x.passcode||'0000'}));}}catch(e){}
-  return PLANNER.staff;
+  // Always use LOCAL_STAFF as the authoritative source for auth
+  // Merge with any additional staff from store (for display/scheduling)
+  let list=[...LOCAL_STAFF];
+  try{
+    const s=localStorage.getItem(STORE_KEY);
+    if(s){
+      const d=JSON.parse(s);
+      if(d.servers&&d.servers.length){
+        d.servers.forEach(x=>{
+          // Only add if not already in LOCAL_STAFF and has a valid ID format (S0xx)
+          if(!list.find(l=>l.id===x.id) && x.id && x.name){
+            list.push({
+              id:x.id,name:x.name,role:x.role||'Staff',
+              accessLevel:parseInt(x.accessLevel)||2,
+              color:x.color||'#A89B84',
+              // If no passcode in store, skip — won't be able to log in
+              // but won't break auth for LOCAL_STAFF
+              passcode:x.passcode&&x.passcode!=='0000'?x.passcode:null
+            });
+          }
+        });
+      }
+    }
+  }catch(e){}
+  return list;
 }
 
 // ── Read reservation performance metrics (cross-data with admin) ──
@@ -921,12 +943,20 @@ function exportSchedule(){
 // ── LOGIN ──
 function populateLoginDropdown(){
   const sel=document.getElementById('lg-staff-sel');
-  const staff=getStaffList().filter(s=>parseInt(s.accessLevel)<=2);
-  sel.innerHTML='<option value="">Select staff member…</option>'+staff.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  // Always seed from LOCAL_STAFF first — these have correct IDs and passcodes
+  const local=LOCAL_STAFF.filter(s=>parseInt(s.accessLevel)<=2);
+  sel.innerHTML='<option value="">Select staff member…</option>'+local.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  // Optionally add extra staff from Sheets (access level 1-2 only) — do NOT replace
   sheetsGet({action:'getStaff'}).then(r=>{
     if(r?.staff?.length){
-      const eligible=r.staff.filter(s=>parseInt(s.accessLevel)<=2);
-      if(eligible.length)sel.innerHTML='<option value="">Select staff member…</option>'+eligible.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+      const extras=r.staff.filter(s=>parseInt(s.accessLevel)<=2&&!LOCAL_STAFF.find(l=>l.id===s.id));
+      if(extras.length){
+        extras.forEach(s=>{
+          const opt=document.createElement('option');
+          opt.value=s.id;opt.textContent=s.name;
+          sel.appendChild(opt);
+        });
+      }
     }
   }).catch(()=>{});
 }
