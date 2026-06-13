@@ -313,9 +313,9 @@ const P={
   T212:{x:605,y:350},  // 4-seat lower right — bottom: 350+33=383 < 485 ✓
 
   // BOTTOM ROW: 5 × 2-seat below bar
-  // PDF page 4: 5 purple circles at bottom of FD, below bar
-  T213:{x:244,y:435}, T214:{x:316,y:435},
-  T215:{x:388,y:435}, T216:{x:460,y:435}, T217:{x:532,y:435},
+  // y=450: clears bottom bar stools (y=408+r11=419), gap=450-26-419=5px ✓
+  T213:{x:244,y:450}, T214:{x:316,y:450},
+  T215:{x:388,y:450}, T216:{x:460,y:450}, T217:{x:532,y:450},
 
   // T218: extra table, upper right of fine dining
   // PDF shows a 3-seat table in far right of FD area
@@ -335,9 +335,9 @@ const P={
   B9:{x:208,y:218},  B10:{x:208,y:252}, B11:{x:208,y:286},
   B12:{x:208,y:320}, B13:{x:208,y:354},
 
-  // B14-B20: bottom counter stools (outside, below bar) y=380
-  B14:{x:244,y:380}, B15:{x:278,y:380}, B16:{x:312,y:380}, B17:{x:346,y:380},
-  B18:{x:380,y:380}, B19:{x:414,y:380}, B20:{x:448,y:380},
+  // B14-B20: bottom counter stools (outside, below bar outer edge y=392) y=410
+  B14:{x:244,y:410}, B15:{x:278,y:410}, B16:{x:312,y:410}, B17:{x:346,y:410},
+  B18:{x:380,y:410}, B19:{x:414,y:410}, B20:{x:448,y:410},
 
   // ══════════════════════════════════════════════════
   // LOUNGE / DEN — x=15-645, y=495-720
@@ -347,14 +347,14 @@ const P={
   // ══════════════════════════════════════════════════
 
   // Top row: T11-T18 (8 × 4-seat booths, evenly spaced)
-  // Width available: 630px / 8 = ~79px each
-  T11:{x:28,y:540},  T12:{x:107,y:540}, T13:{x:186,y:540}, T14:{x:265,y:540},
-  T15:{x:344,y:540}, T16:{x:423,y:540}, T17:{x:502,y:540}, T18:{x:581,y:540},
+  // y=555: clears banquette back (y=514+10=524), top chair 555-23=532, gap=8px ✓
+  T11:{x:28,y:562},  T12:{x:107,y:562}, T13:{x:186,y:562}, T14:{x:265,y:562},
+  T15:{x:344,y:562}, T16:{x:423,y:562}, T17:{x:502,y:562}, T18:{x:581,y:562},
 
   // Bottom row: T19-T23 (mixed 4-seat and end 3-seat)
-  // PDF shows 3 tables left side, gap, then 3 more center, then 1 end
-  T19:{x:28,y:648},  T20:{x:117,y:648}, T21:{x:206,y:648},
-  T22:{x:330,y:648}, T23:{x:460,y:648},
+  // y=662: clears second banquette (y=620+10=630), top chair 662-23=639, gap=9px ✓
+  T19:{x:28,y:672},  T20:{x:117,y:672}, T21:{x:206,y:672},
+  T22:{x:330,y:672}, T23:{x:460,y:672},
 
   // ══════════════════════════════════════════════════
   // PATIO — x=655-1185, y=15-445
@@ -430,14 +430,14 @@ function renderFloor(){
       <polygon points="55,15 1185,15 1185,715 15,715 15,485 55,15"/>
     </clipPath>
   </defs>
-  <rect width="1100" height="680" fill="url(#g)"/>
+  <rect width="1200" height="730" fill="url(#g)"/>
   <!-- OUTER BUILDING — angled left wall -->
   <polygon points="55,15 1185,15 1185,715 15,715 15,485 55,15" fill="${W}" stroke="${WS}" stroke-width="2.8"/>
 
   <!-- FINE DINING ZONE (upper-left trapezoid) -->
   <polygon points="55,15 645,15 645,485 15,485 15,485 55,15" fill="${dk?'rgba(201,169,110,.025)':'rgba(201,169,110,.035)'}" stroke="none"/>
-  <text x="118" y="32" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" letter-spacing="2" text-anchor="middle">FINE DINING</text>
-  <text x="118" y="44" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 200–218 · Bar B1–B20</text>
+  <text x="340" y="32" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" letter-spacing="2" text-anchor="middle">FINE DINING</text>
+  <text x="340" y="44" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 200–218 · Bar B1–B20</text>
 
   <!-- HORSESHOE BAR STRUCTURE ──
        Outer: 225×200px, C-opens-right shape at x=228,y=200 to x=500,y=368 -->
@@ -454,18 +454,18 @@ function renderFloor(){
   <line x1="15" y1="485" x2="645" y2="485" stroke="${WS}" stroke-width="2"/>
 
   <!-- LOUNGE / DEN ZONE -->
-  <polygon points="15,440 618,440 618,650 15,650" fill="${dk?'rgba(91,150,200,.032)':'rgba(91,150,200,.04)'}" stroke="none"/>
-  <text x="320" y="502" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="2">DEN / LOUNGE 🚬</text>
-  <text x="320" y="514" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 11–23</text>
+  <polygon points="15,490 630,490 630,718 15,718" fill="${dk?'rgba(91,150,200,.032)':'rgba(91,150,200,.04)'}" stroke="none"/>
+  <text x="310" y="506" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="2">DEN / LOUNGE 🚬</text>
+  <text x="310" y="518" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 11–23</text>
   <!-- Banquette backs -->
-  <rect x="18" y="514" width="627" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
-  <rect x="18" y="620" width="460" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
+  <rect x="18" y="524" width="627" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
+  <rect x="18" y="634" width="460" height="10" rx="2" fill="${dk?'rgba(91,150,200,.1)':'rgba(91,150,200,.09)'}" stroke="${dk?'rgba(91,150,200,.2)':'rgba(91,150,200,.16)'}" stroke-width=".8"/>
 
   <!-- VERTICAL DIVIDER -->
   <line x1="648" y1="15" x2="648" y2="715" stroke="${WS}" stroke-width="2"/>
 
   <!-- PATIO ZONE -->
-  <rect x="652" y="15" width="533" height="430" rx="2" fill="${dk?'rgba(58,172,168,.04)':'rgba(58,172,168,.03)'}" stroke="${dk?'rgba(58,172,168,.28)':'rgba(58,172,168,.2)'}" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <rect x="654" y="18" width="525" height="460" rx="2" fill="${dk?'rgba(58,172,168,.04)':'rgba(58,172,168,.03)'}" stroke="${dk?'rgba(58,172,168,.28)':'rgba(58,172,168,.2)'}" stroke-width="1.2" stroke-dasharray="5,3"/>
   <text x="855" y="33" font-family="Cormorant Garamond,serif" font-size="11" font-weight="500" fill="${SEC}" text-anchor="middle" letter-spacing="2">PATIO</text>
   <text x="855" y="45" font-family="DM Sans,sans-serif" font-size="7.5" fill="${LBL}" letter-spacing="1" text-anchor="middle">Tables 101–112 · Big Booths A &amp; B</text>
 
