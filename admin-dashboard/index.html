@@ -1200,55 +1200,54 @@ function initAdminPage(){
     updateAdminBadge(sess.staff.name);
   }
 }
-async function doLoginAdmin(){
-  const id=document.getElementById('lg-id').value.trim();
-  const pin=document.getElementById('lg-pin').value.trim();
-  const err=document.getElementById('lg-err');
-  const btn=document.getElementById('lg-btn');
-  err.style.display='none';
-  if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
-  if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Verifying…';
-  const LOCAL_ADMINS=[
-    {id:'S001',name:'Admin User',role:'Admin',accessLevel:1,passcode:'1234'},
-  ];
-  try{
-    let found=null;
-    // Try Sheets first
-    const res=await sheetsGet({action:'getStaff'}).catch(()=>null);
-    if(res?.staff?.length){
-      found=res.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
-    }
-    // Fallback to local
-    if(!found){
-      found=LOCAL_ADMINS.find(s=>String(s.id)===id&&String(s.passcode)===pin);
-      if(!found)found=(_store.servers||[]).find(s=>String(s.id)===id&&String(s.passcode)===pin&&parseInt(s.accessLevel)===1);
-    }
-    btn.disabled=false;btn.textContent='Sign In';
-    if(found){
-      sessionStorage.setItem('hive_session',JSON.stringify({staff:found,loginTime:Date.now()}));
-      document.getElementById('login-gate').style.display='none';
-      updateAdminBadge(found.name);
-      renderPage('overview');
-      setTimeout(syncAdminFromSheets,500);
-      if(!window._adminPollInterval)window._adminPollInterval=setInterval(syncAdminFromSheets,30000);
-    }else{
-      err.textContent='Incorrect PIN or not an Admin (Level 1) account.';
-      err.style.display='block';
-    }
-  }catch(e){
-    // Pure local fallback
-    const local=LOCAL_ADMINS.find(s=>String(s.id)===id&&String(s.passcode)===pin);
-    btn.disabled=false;btn.textContent='Sign In';
-    if(local){
-      sessionStorage.setItem('hive_session',JSON.stringify({staff:local,loginTime:Date.now()}));
-      document.getElementById('login-gate').style.display='none';
-      updateAdminBadge(local.name);
-      renderPage('overview');
-    }else{
-      err.textContent='Login error. Try again.';err.style.display='block';
-    }
+function doLoginAdmin(){
+  const id = document.getElementById('lg-id').value;
+  const pin = document.getElementById('lg-pin').value;
+  const err = document.getElementById('lg-err');
+  const btn = document.getElementById('lg-btn');
+
+  err.style.display = 'none';
+  err.textContent = '';
+
+  if(!id){
+    err.textContent = 'Please select your name.';
+    err.style.display = 'block';
+    return;
   }
+  if(!pin || pin.length < 4){
+    err.textContent = 'Please enter your 4-digit PIN.';
+    err.style.display = 'block';
+    return;
+  }
+
+  // Local admin list — always works, no network needed
+  const LOCAL_ADMINS = [
+    {id:'S001', name:'Admin User', role:'Admin', accessLevel:1, passcode:'1234'},
+  ].concat((_store.servers||[]).filter(function(s){ return parseInt(s.accessLevel)===1; }));
+
+  const staff = LOCAL_ADMINS.find(function(s){
+    return String(s.id) === String(id) && String(s.passcode) === String(pin);
+  });
+
+  if(!staff){
+    err.textContent = 'Incorrect credentials or not an admin account.';
+    err.style.display = 'block';
+    return;
+  }
+
+  // ✓ Login success
+  sessionStorage.setItem('hive_session', JSON.stringify({staff: staff, loginTime: Date.now()}));
+  document.getElementById('login-gate').style.display = 'none';
+  updateAdminBadge(staff.name);
+  renderPage('overview');
+
+  // Sync from Sheets after login
+  setTimeout(function(){
+    syncAdminFromSheets();
+    if(!window._adminPollInterval){
+      window._adminPollInterval = setInterval(syncAdminFromSheets, 30000);
+    }
+  }, 500);
 }
 function updateAdminBadge(name){
   const tag=document.querySelector('.sync-tag');
