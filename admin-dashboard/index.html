@@ -161,7 +161,7 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Configuration</div>
-    <button class="sb" onclick="showPage('servers',this)">
+    <button class="sb" onclick="showPage('servers',this)" title="Staff Management">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>Servers
     </button>
     <button class="sb" onclick="showPage('tableconfig',this)">
@@ -398,10 +398,10 @@ h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:v
 
 <!-- SERVERS CONFIG -->
 <div class="page" id="page-servers">
-  <h2>Server Management</h2>
-  <div class="page-sub">Add, edit, and remove floor staff. Changes sync to all pages.</div>
+  <h2>Staff Management</h2>
+  <div class="page-sub">Add, edit, and view all staff members. Changes sync to all pages and the Staff Planner.</div>
   <div class="card">
-    <div class="card-title">Current Servers
+    <div class="card-title">Current Staff Members
       <button class="btn btn-sm btn-primary" onclick="openAddServer()">+ Add Server</button>
     </div>
     <div id="server-list"></div>
@@ -1078,66 +1078,73 @@ function renderGuests(){
 
 // ── SERVERS ──
 function renderServers(){
-  const servers = window_HiveData_servers();
-  document.getElementById('server-list').innerHTML=servers.map(s=>`
-    <div class="sv-row">
-      <div class="sv-avatar" style="background:${s.color}22;color:${s.color}">${s.initials}</div>
-      <div><div style="font-weight:500;font-size:13px">${s.name}</div><div style="font-size:11px;color:var(--text-m)">${s.role}</div></div>
-      <div style="margin-left:auto;display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="openEditServer('${s.id}')">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="removeServer('${s.id}')">Remove</button>
-      </div>
-    </div>`).join('');
+  // Pull fresh from Sheets on each render
+  sheetsGet({action:'getStaff'}).then(r=>{
+    if(r?.staff?.length){
+      _store.servers=r.staff.map(s=>({
+        id:s.id,name:s.name,role:s.role||'Staff',
+        accessLevel:parseInt(s.accessLevel)||2,
+        passcode:String(s.passcode||''),
+        color:s.color||'#C9A96E',
+        initials:(s.name||'').split(' ').map(w=>w[0]||'').join('').toUpperCase(),
+        section:s.section||'',active:s.active!==false,
+      }));
+      saveStore(_store);
+      _doRenderServers();
+    } else {
+      _doRenderServers();
+    }
+  }).catch(()=>_doRenderServers());
 }
 
-function openAddServer(){
-  document.getElementById('sv-modal-title').textContent='Add Server';
-  document.getElementById('sv-edit-id').value='';
-  ['sv-first','sv-last','sv-role'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('sv-color').value='#C9A96E';
-  document.getElementById('server-modal').classList.add('show');
-}
-function openEditServer(id){
-  const s=window_HiveData_servers().find(x=>x.id===id);if(!s)return;
-  document.getElementById('sv-modal-title').textContent='Edit Server';
-  document.getElementById('sv-edit-id').value=id;
-  const [first,...rest]=s.name.split(' ');
-  document.getElementById('sv-first').value=first;
-  document.getElementById('sv-last').value=rest.join(' ');
-  document.getElementById('sv-role').value=s.role;
-  document.getElementById('sv-color').value=s.color;
-  document.getElementById('server-modal').classList.add('show');
-}
-function submitServer(){
-  const first=document.getElementById('sv-first').value.trim();
-  const last=document.getElementById('sv-last').value.trim();
-  if(!first){showToast('Name required','warning');return;}
-  const d=window_HiveData_get();
-  const editId=document.getElementById('sv-edit-id').value;
-  const name=`${first} ${last}`.trim();
-  const initials=(first[0]+(last?last[0]:'')).toUpperCase();
-  const color=document.getElementById('sv-color').value;
-  const role=document.getElementById('sv-role').value||'Server';
-  if(editId){
-    const idx=d.servers.findIndex(s=>s.id===editId);
-    if(idx>=0)d.servers[idx]={...d.servers[idx],name,initials,color,role};
-  }else{
-    d.servers.push({id:'s'+Date.now(),name,initials,color,role});
+function _doRenderServers(){
+  const servers=window_HiveData_servers();
+  const lvlLabel={1:'Admin',2:'Manager/Server',3:'Host/Floor'}; 
+  const lvlColor={1:'var(--gold)',2:'var(--blue)',3:'var(--teal)'};
+  const d30=new Date(Date.now()-30*864e5).toISOString().split('T')[0];
+  let plannerShifts=[],plannerCallouts=[];
+  try{const pd=JSON.parse(localStorage.getItem('hive_planner_v1')||'{}');plannerShifts=pd.shifts||[];plannerCallouts=pd.callouts||[];}catch(e){}
+  function shiftHrs(sh){if(!sh.start||!sh.end)return 0;const[sh_h,sh_m]=sh.start.split(':').map(Number);const[eh,em]=sh.end.split(':').map(Number);return Math.max(0,((eh*60+em)-(sh_h*60+sh_m))/60);}
+  
+  if(!servers.length){
+    document.getElementById('server-list').innerHTML=`
+      <div style="padding:20px;text-align:center;color:var(--text-d);font-size:13px">
+        No staff members loaded yet.<br>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="syncAdminFromSheets()">↺ Sync from Sheets</button>
+      </div>`;
+    return;
   }
-  Object.assign(_store, d); persistStore();
-  closeModal('server-modal');
-  renderServers();
-  showToast(`${name} saved`,'success');
-}
-function removeServer(id){
-  const d=window_HiveData_get();
-  d.servers=d.servers.filter(s=>s.id!==id);
-  Object.assign(_store, d); persistStore();
-  renderServers();
-  showToast('Server removed','info');
+  
+  document.getElementById('server-list').innerHTML=servers.map(s=>{
+    const rsv=(_store.reservations||[]).filter(r=>r.server===s.name);
+    const rev=rsv.filter(r=>r.status==='Completed').reduce((a,r)=>a+(r.orderTotal||0),0);
+    const myShifts=plannerShifts.filter(sh=>sh.staffId===s.id&&sh.date>=d30);
+    const myHrs=Math.round(myShifts.reduce((a,sh)=>a+shiftHrs(sh),0)*10)/10;
+    const callouts=plannerCallouts.filter(co=>co.staffId===s.id&&co.date>=d30).length;
+    return`<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid var(--border)">
+      <div style="width:40px;height:40px;border-radius:50%;background:${s.color||'#C9A96E'}22;color:${s.color||'#C9A96E'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;font-family:'Cormorant Garamond',serif;flex-shrink:0">${s.initials||s.name?.charAt(0)||'?'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500;font-size:13px">${s.name}</div>
+        <div style="font-size:11px;color:var(--text-m);margin-top:2px">${s.role||'Staff'} · <span style="color:${lvlColor[s.accessLevel]||'var(--text-m)'}">Level ${s.accessLevel} — ${lvlLabel[s.accessLevel]||'Staff'}</span></div>
+        <div style="font-size:10px;color:var(--text-d);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
+          <span>${rsv.length} reservations</span>
+          <span style="color:var(--green)">$${rev.toFixed(0)} revenue</span>
+          ${myHrs>0?`<span style="color:var(--blue)">${myHrs}h scheduled (30d)</span>`:''}
+          ${callouts>0?`<span style="color:var(--red)">${callouts} callout${callouts>1?'s':''}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${s.active!==false?'var(--green-bg)':'var(--red-bg)'};color:${s.active!==false?'var(--green)':'var(--red)'}">${s.active!==false?'Active':'Inactive'}</span>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm" onclick="openEditServer('${s.id}')">Edit</button>
+          <button class="btn btn-sm" style="color:var(--red);border-color:rgba(196,82,74,.3)" onclick="toggleServerActive('${s.id}')">Deactivate</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-// ── TABLE CONFIG ──
+
 function renderTableConfig(){
   const tables=window_HiveData_tables();
   const sections=['indoor','den','bar_main','bar_service','bar_lounge','patio'];
@@ -1252,14 +1259,32 @@ function adminLogout(){if(confirm('Sign out of admin?')){sessionStorage.removeIt
 
 async function syncAdminFromSheets(){
   try{
-    const r=await sheetsGet({action:'getReservations'});
-    if(r&&r.reservations&&r.reservations.length>0){
-      _store.reservations=r.reservations;
+    const[rr,sr]=await Promise.all([
+      sheetsGet({action:'getReservations'}),
+      sheetsGet({action:'getStaff'}),
+    ]);
+    let changed=false;
+    if(rr?.reservations?.length){_store.reservations=rr.reservations;changed=true;}
+    if(sr?.staff?.length){
+      // Merge Sheets staff into store, preserving colors
+      _store.servers=sr.staff.map(s=>({
+        id:s.id, name:s.name, role:s.role||'Staff',
+        accessLevel:parseInt(s.accessLevel)||2,
+        passcode:String(s.passcode||''),
+        color:s.color||'#C9A96E',
+        initials:(s.name||'').split(' ').map(w=>w[0]||'').join('').toUpperCase(),
+        section:s.section||'',
+        active:s.active!==false,
+      }));
+      changed=true;
+    }
+    if(changed){
       saveStore(_store);
       const active=document.querySelector('.page.active');
       if(active) renderPage(active.id.replace('page-',''));
-      document.getElementById('sync-label').textContent='Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     }
+    const el=document.getElementById('sync-label');
+    if(el) el.textContent='Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   }catch(e){console.warn('Admin sync:',e);}
 }
 
@@ -1492,7 +1517,8 @@ window.addEventListener('DOMContentLoaded',()=>{populateAdminStaffDropdown();ini
       <select id="lg-id"
         style="width:100%;padding:11px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none"
         onchange="document.getElementById('lg-pin').focus()">
-        <option value="">Select staff member…</option>
+<option value="">Select staff member…</option>
+        <option value="S001">Admin User</option>
       </select>
       <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN"
         style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:20px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px"
