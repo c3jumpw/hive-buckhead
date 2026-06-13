@@ -504,6 +504,7 @@ tr:hover td{background:var(--surface2);cursor:pointer}
         <option value="S005">Devon Harris</option>
       </select>
       <input id="lg-pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN"
+        onkeydown="if(event.key==='Enter')doLogin()"
         style="width:100%;padding:10px 12px;background:#242018;border:.5px solid rgba(201,169,110,.2);border-radius:7px;color:#F5EFE4;font-size:20px;font-family:'DM Sans',sans-serif;outline:none;text-align:center;letter-spacing:.25em;margin-bottom:16px"
         onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()" id="lg-btn" style="width:100%;padding:11px;background:#C9A96E;color:#0B0907;border:none;border-radius:7px;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;cursor:pointer">Sign In</button>
@@ -1056,10 +1057,14 @@ async function doLogin(){
   if(!id){err.textContent='Please select your name.';err.style.display='block';return;}
   if(pin.length<4){err.textContent='Please enter your 4-digit PIN.';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Verifying…';
+  // Show immediate visual feedback
+  if(err) err.style.display='none';
   try{
     let staff=null;
-    // Try Sheets first
-    const res=await sheetsGet({action:'getStaff'}).catch(()=>null);
+    // Try Sheets with 5-second timeout - fall back to local if slow
+    const sheetsPromise=sheetsGet({action:'getStaff'}).catch(()=>null);
+    const timeoutPromise=new Promise(r=>setTimeout(()=>r(null),5000));
+    const res=await Promise.race([sheetsPromise,timeoutPromise]);
     if(res?.staff?.length){
       const found=res.staff.find(s=>String(s.id)===id&&String(s.passcode)===pin);
       if(found&&parseInt(found.accessLevel)<=2) staff=found;
