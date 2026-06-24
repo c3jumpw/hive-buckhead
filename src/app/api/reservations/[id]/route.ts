@@ -362,10 +362,10 @@ async function handleApproveChange(
       data: {
         status: "CONFIRMED",
         changeRequest: null,
-        ...(cr.newDate && { date: new Date(cr.newDate as string) }),
-        ...(cr.newTime && { arrivalTime: cr.newTime as string }),
-        ...(cr.newPartySize && { partySize: cr.newPartySize as number }),
-        ...(cr.newSection && { section: cr.newSection as never }),
+...(cr.newDate      ? { date: new Date(cr.newDate as string) }  : {}),
+...(cr.newTime      ? { arrivalTime: cr.newTime as string }      : {}),
+...(cr.newPartySize ? { partySize: cr.newPartySize as number }   : {}),
+...(cr.newSection   ? { section: cr.newSection as string }       : {}),
       },
       include: {
         server: { select: { id: true, name: true, color: true } },
