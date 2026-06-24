@@ -8,7 +8,6 @@ import { createServerSupabaseClient } from "@/lib/auth/supabase-server";
 import { getSession } from "@/lib/auth/session";
 import { createReservationSchema } from "@/lib/validations/reservation";
 import { generateRsvpCode } from "@/lib/utils";
-import { ActivityLogger } from "@/lib/db/activity-logger";
 
 // ── GET /api/reservations ──────────────────────────────────────────────────
 

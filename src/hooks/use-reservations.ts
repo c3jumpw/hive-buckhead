@@ -11,8 +11,6 @@ import {
 import type {
   Reservation,
   ReservationStatus,
-  CloseTableInput,
-  CancelReservationInput,
 } from "@/types";
 import type {
   CreateReservationInput,
@@ -126,7 +124,7 @@ export function useCloseTable(reservationId: string) {
 
   return useMutation({
     mutationFn: async (
-      input: Omit<CloseTableInput, "reservationId">
+      input: Omit<object, "reservationId">
     ) => {
       const res = await fetch(`/api/reservations/${reservationId}`, {
         method: "PATCH",
@@ -152,7 +150,7 @@ export function useCancelReservation(reservationId: string) {
 
   return useMutation({
     mutationFn: async (
-      input: Omit<CancelReservationInput, "reservationId">
+      input: Omit<object, "reservationId">
     ) => {
       const res = await fetch(`/api/reservations/${reservationId}`, {
         method: "PATCH",

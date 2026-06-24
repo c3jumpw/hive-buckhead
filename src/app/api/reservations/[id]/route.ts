@@ -1,4 +1,5 @@
 // src/app/api/reservations/[id]/route.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // GET    /api/reservations/:id
 // PATCH  /api/reservations/:id
 // DELETE /api/reservations/:id (admin only)
@@ -182,7 +183,7 @@ async function handleUpdate(
     select: { status: true },
   });
 
-  const reservation = await prisma.$transaction(async (tx) => {
+  const reservation = await prisma.$transaction(async (tx: any) => {
     // Update main record
     const updated = await tx.reservation.update({
       where: { id },
@@ -253,7 +254,7 @@ async function handleCloseTable(
 
   const { orderTotal, tipAmount, closingRemarks } = parsed.data;
 
-  const reservation = await prisma.$transaction(async (tx) => {
+  const reservation = await prisma.$transaction(async (tx: any) => {
     // Update reservation
     const updated = await tx.reservation.update({
       where: { id },
@@ -273,7 +274,7 @@ async function handleCloseTable(
     });
 
     // Mark assigned tables as dirty (need bussing)
-    const tableIds = updated.tables.map((rt) => rt.tableId);
+    const tableIds = updated.tables.map((rt: {tableId: string}) => rt.tableId);
     if (tableIds.length > 0) {
       await tx.table.updateMany({
         where: { id: { in: tableIds } },
@@ -314,7 +315,7 @@ async function handleCancel(
 
   const { reason, remarks } = parsed.data;
 
-  const reservation = await prisma.$transaction(async (tx) => {
+  const reservation = await prisma.$transaction(async (tx: any) => {
     const updated = await tx.reservation.update({
       where: { id },
       data: {
@@ -356,16 +357,16 @@ async function handleApproveChange(
 ) {
   const cr = body.changeRequest ?? {};
 
-  const reservation = await prisma.$transaction(async (tx) => {
+  const reservation = await prisma.$transaction(async (tx: any) => {
     const updated = await tx.reservation.update({
       where: { id },
       data: {
         status: "CONFIRMED",
-        changeRequest: null,
-...(cr.newDate      ? { date: new Date(cr.newDate as string) }  : {}),
-...(cr.newTime      ? { arrivalTime: cr.newTime as string }      : {}),
-...(cr.newPartySize ? { partySize: cr.newPartySize as number }   : {}),
-...(cr.newSection   ? { section: cr.newSection as string }       : {}),
+        changeRequest: null as any,
+        ...(cr.newDate     ? { date: new Date(cr.newDate as string) }      : {}),
+        ...(cr.newTime     ? { arrivalTime: cr.newTime as string }          : {}),
+        ...(cr.newPartySize? { partySize: cr.newPartySize as number }       : {}),
+        ...(cr.newSection  ? { section: cr.newSection as string }           : {}),
       },
       include: {
         server: { select: { id: true, name: true, color: true } },
@@ -396,10 +397,10 @@ async function handleDenyChange(
   _body: unknown,
   session: { id: string; name: string }
 ) {
-  const reservation = await prisma.$transaction(async (tx) => {
+  const reservation = await prisma.$transaction(async (tx: any) => {
     const updated = await tx.reservation.update({
       where: { id },
-      data: { status: "CONFIRMED", changeRequest: null },
+      data: { status: "CONFIRMED", changeRequest: null as any },
       include: {
         server: { select: { id: true, name: true, color: true } },
         tables: { include: { table: true } },

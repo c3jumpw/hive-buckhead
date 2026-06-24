@@ -2,7 +2,10 @@
 // Run: npm run db:seed
 // Seeds staff, tables, and operating hours with real Hive Buckhead data
 
-import { PrismaClient, AccessLevel, Section, ShiftType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client"
+const AccessLevel = { ADMIN: "ADMIN", STAFF: "STAFF", FLOOR: "FLOOR" } as const
+const Section = { FINE_DINING: "FINE_DINING", BAR: "BAR", DEN: "DEN", PATIO: "PATIO" } as const
+const ShiftType = { OPEN: "OPEN", CLOSE: "CLOSE", DOUBLE: "DOUBLE", MID: "MID" } as const;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const bcrypt = require("bcryptjs");
 

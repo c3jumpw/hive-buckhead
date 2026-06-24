@@ -57,8 +57,8 @@ function TableShape({ table: t, selected, onClick }: { table: FloorTable; select
         <rect x={t.svgX} y={t.svgY} width={bw} height={bk} rx={2} fill="rgba(160,130,80,.22)" stroke={selected ? "#C9A96E" : s.stroke} strokeWidth={1} />
         <rect x={t.svgX + 2} y={t.svgY + bk + 1} width={bw - 4} height={bh - bk * 2 - 2} rx={2} fill={s.fill} stroke={selected ? "#C9A96E" : s.stroke} strokeWidth={selected ? 2 : 1.5} />
         <rect x={t.svgX} y={t.svgY + bh - bk} width={bw} height={bk} rx={2} fill="rgba(160,130,80,.22)" stroke={selected ? "#C9A96E" : s.stroke} strokeWidth={1} />
-        {Array.from({ length: topS }, (_, i) => <circle key={`t${i}`} cx={t.svgX + 6 + i * ((bw - 12) / Math.max(topS - 1, 1))} cy={t.svgY + bk / 2} r={2.5} fill={s.seatFill} key={`ts${i}`} />)}
-        {Array.from({ length: botS }, (_, i) => <circle key={`b${i}`} cx={t.svgX + 6 + i * ((bw - 12) / Math.max(botS - 1, 1))} cy={t.svgY + bh - bk / 2} r={2.5} fill={s.seatFill} key={`bs${i}`} />)}
+        {Array.from({ length: topS }, (_, i) => <circle cx={t.svgX + 6 + i * ((bw - 12) / Math.max(topS - 1, 1))} cy={t.svgY + bk / 2} r={2.5} fill={s.seatFill} key={`ts${i}`} />)}
+        {Array.from({ length: botS }, (_, i) => <circle cx={t.svgX + 6 + i * ((bw - 12) / Math.max(botS - 1, 1))} cy={t.svgY + bh - bk / 2} r={2.5} fill={s.seatFill} key={`bs${i}`} />)}
         <text x={t.svgX + bw / 2} y={t.svgY + bh / 2 - 2} textAnchor="middle" fontSize={isBig ? 8 : 7} fill={s.text} fontWeight={700}>{t.label ?? t.displayId}</text>
         <text x={t.svgX + bw / 2} y={t.svgY + bh / 2 + 7} textAnchor="middle" fontSize={6} fill={s.text} opacity={0.75}>{rsv ? `${rsv.firstName} ${rsv.lastName[0]}.` : s.label}</text>
       </g>
@@ -74,8 +74,8 @@ function TableShape({ table: t, selected, onClick }: { table: FloorTable; select
         <rect x={t.svgX} y={t.svgY} width={bw} height={bk} rx={3} fill="rgba(160,130,80,.25)" stroke={selected ? "#C9A96E" : s.stroke} strokeWidth={1} />
         <rect x={t.svgX + 2} y={t.svgY + bk + 1} width={bw - 4} height={bh - bk * 2 - 2} rx={3} fill={s.fill} stroke={selected ? "#C9A96E" : s.stroke} strokeWidth={selected ? 2 : 1.5} />
         <rect x={t.svgX} y={t.svgY + bh - bk} width={bw} height={bk} rx={3} fill="rgba(160,130,80,.25)" stroke={selected ? "#C9A96E" : s.stroke} strokeWidth={1} />
-        {Array.from({ length: 5 }, (_, i) => <circle key={`t${i}`} cx={t.svgX + 8 + i * 18} cy={t.svgY + bk / 2} r={3} fill={s.seatFill} />)}
-        {Array.from({ length: 5 }, (_, i) => <circle key={`b${i}`} cx={t.svgX + 8 + i * 18} cy={t.svgY + bh - bk / 2} r={3} fill={s.seatFill} />)}
+        {Array.from({ length: 5 }, (_, i) => <circle cx={t.svgX + 8 + i * 18} cy={t.svgY + bk / 2} r={3} fill={s.seatFill} />)}
+        {Array.from({ length: 5 }, (_, i) => <circle cx={t.svgX + 8 + i * 18} cy={t.svgY + bh - bk / 2} r={3} fill={s.seatFill} />)}
         <text x={t.svgX + bw / 2} y={t.svgY + bh / 2 - 2} textAnchor="middle" fontSize={8} fill={s.text} fontWeight={700}>{t.label ?? t.displayId}</text>
         <text x={t.svgX + bw / 2} y={t.svgY + bh / 2 + 8} textAnchor="middle" fontSize={6.5} fill={s.text} opacity={0.75}>{rsv ? `${rsv.firstName} ${rsv.lastName[0]}.` : `${s.label} · 10s`}</text>
       </g>
@@ -104,6 +104,7 @@ function TableShape({ table: t, selected, onClick }: { table: FloorTable; select
 }
 
 export function FloorClient({ tables: initialTables, session, upcomingReservations = [] }: Props) {
+  const dark = true // floor view always uses dark theme
   const router = useRouter()
   const [tables, setTables] = useState(initialTables)
   const [selectedIds, setSelectedIds] = useState<string[]>([])

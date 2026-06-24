@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { getSession } from "@/lib/auth/session"
@@ -37,7 +38,7 @@ export async function POST() {
                    daysOffset === 0 ? rand(["CONFIRMED","SEATED","REQUESTED"]) :
                    rand(["REQUESTED","CONFIRMED","CONFIRMED"])
     const orderTotal = (status==="COMPLETED") ? randInt(80,400) : null
-    const serverId = rand(staff).id
+    const serverId = (rand(staff as any[]) as any).id
 
     reservations.push({
       rsvpCode: generateCode(),

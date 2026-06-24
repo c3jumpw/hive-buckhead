@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // /api/rsvp — public endpoint for guest-facing lookup and change requests
 // No staff auth required — guests use their RSVP code as the key
 
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   const newStatus = type === "cancellation" ? "CANCELLATION_REQUESTED" : "CHANGE_REQUESTED"
 
-  const updated = await prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx: any) => {
     const rsv = await tx.reservation.update({
       where: { id: reservation.id },
       data: {
