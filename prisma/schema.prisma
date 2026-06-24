@@ -1,0 +1,352 @@
+// prisma/schema.prisma
+// Hive Buckhead — Complete Data Model
+// Run: npx prisma generate && npx prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum AccessLevel {
+  ADMIN        // Level 1 — full access
+  STAFF        // Level 2 — reservations + floor + schedule
+  FLOOR        // Level 3 — floor view only
+}
+
+enum ReservationStatus {
+  REQUESTED
+  CONFIRMED
+  SEATED
+  COMPLETED
+  CANCELLED
+  CHANGE_REQUESTED
+  CANCELLATION_REQUESTED
+}
+
+enum Section {
+  FINE_DINING
+  BAR
+  DEN
+  PATIO
+}
+
+enum TableState {
+  AVAILABLE
+  RESERVED
+  SEATED
+  DIRTY
+  MAINTENANCE
+}
+
+enum ShiftType {
+  OPEN
+  MID
+  CLOSE
+  DOUBLE
+}
+
+enum CalloutReason {
+  SICK
+  PERSONAL
+  FAMILY_EMERGENCY
+  NO_CALL_NO_SHOW
+  APPROVED_PTO
+  OTHER
+}
+
+enum MessageChannel {
+  EMAIL
+  SMS
+}
+
+// ─────────────────────────────────────────────
+// STAFF / AUTH
+// ─────────────────────────────────────────────
+
+model Staff {
+  id           String      @id @default(cuid())
+  // supabaseUserId links to Supabase Auth — null until they complete setup
+  supabaseId   String?     @unique @map("supabase_id")
+  name         String
+  email        String      @unique
+  phone        String?
+  role         String      // e.g. "Lead Server", "Bartender"
+  accessLevel  AccessLevel @default(STAFF) @map("access_level")
+  pin          String      // bcrypt-hashed 4-digit PIN
+  color        String      @default("#C9A96E") // UI accent color
+  section      Section?    // preferred/assigned section
+  active       Boolean     @default(true)
+  avatarUrl    String?     @map("avatar_url")
+  notes        String?
+
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  reservations      Reservation[]    @relation("ServerReservations")
+  confirmedBy       Reservation[]    @relation("ConfirmedBy")
+  closedBy          Reservation[]    @relation("ClosedBy")
+  shifts            Shift[]
+  callouts          Callout[]
+  coveredCallouts   Callout[]        @relation("CoveredBy")
+  activityLogs      ActivityLog[]
+  messageLogs       MessageLog[]
+
+  @@map("staff")
+}
+
+// ─────────────────────────────────────────────
+// TABLES (floor configuration)
+// ─────────────────────────────────────────────
+
+model Table {
+  id          String     @id @default(cuid())
+  displayId   String     @unique @map("display_id") // "T200", "B1", "T101"
+  label       String?    // "Big Booth A"
+  capacity    Int
+  section     Section
+  state       TableState @default(AVAILABLE)
+  // SVG position for floor plan rendering
+  svgX        Float      @map("svg_x")
+  svgY        Float      @map("svg_y")
+  svgW        Float?     @map("svg_w")
+  svgH        Float?     @map("svg_h")
+  svgShape    String?    @map("svg_shape") // "round" | "booth" | "stool"
+  active      Boolean    @default(true)
+  notes       String?
+
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  reservationTables ReservationTable[]
+  stateHistory      TableStateLog[]
+
+  @@map("tables")
+}
+
+model TableStateLog {
+  id        String     @id @default(cuid())
+  tableId   String     @map("table_id")
+  table     Table      @relation(fields: [tableId], references: [id])
+  fromState TableState @map("from_state")
+  toState   TableState @map("to_state")
+  changedBy String?    @map("changed_by") // staff name
+  note      String?
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@map("table_state_logs")
+}
+
+// ─────────────────────────────────────────────
+// RESERVATIONS
+// ─────────────────────────────────────────────
+
+model Reservation {
+  id            String            @id @default(cuid())
+  // Human-readable RSVP # (8-char alphanumeric, shown to guests)
+  rsvpCode      String            @unique @map("rsvp_code")
+
+  // Guest info
+  firstName     String            @map("first_name")
+  lastName      String            @map("last_name")
+  phone         String
+  email         String?
+  
+  // Booking details
+  date          DateTime          @db.Date
+  arrivalTime   String            @map("arrival_time") // "19:30"
+  partySize     Int               @map("party_size")
+  section       Section?
+  occasion      String?           // "Birthday", "Anniversary"
+  notes         String?           // dietary, special requests
+  source        String            @default("web_form") // "web_form" | "staff" | "walk_in" | "phone"
+
+  // Status
+  status        ReservationStatus @default(REQUESTED)
+  
+  // Order (post-seating)
+  orderTotal    Decimal?          @db.Decimal(10, 2) @map("order_total")
+  tipAmount     Decimal?          @db.Decimal(10, 2) @map("tip_amount")
+  closingRemarks String?          @map("closing_remarks")
+  receiptUrl    String?           @map("receipt_url")
+
+  // Change/cancel request data (stored as JSON)
+  changeRequest Json?             @map("change_request")
+
+  // Relations — staff
+  serverId      String?           @map("server_id")
+  server        Staff?            @relation("ServerReservations", fields: [serverId], references: [id])
+  confirmedById String?           @map("confirmed_by_id")
+  confirmedBy   Staff?            @relation("ConfirmedBy", fields: [confirmedById], references: [id])
+  closedById    String?           @map("closed_by_id")
+  closedBy      Staff?            @relation("ClosedBy", fields: [closedById], references: [id])
+
+  // Timestamps
+  confirmedAt   DateTime?         @map("confirmed_at")
+  seatedAt      DateTime?         @map("seated_at")
+  completedAt   DateTime?         @map("completed_at")
+  cancelledAt   DateTime?         @map("cancelled_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  // Relations — tables, messages, activity
+  tables        ReservationTable[]
+  messages      MessageLog[]
+  activity      ActivityLog[]
+
+  @@index([date])
+  @@index([status])
+  @@index([phone])
+  @@index([rsvpCode])
+  @@map("reservations")
+}
+
+// Many-to-many: reservations ↔ tables (a reservation can span multiple tables)
+model ReservationTable {
+  reservationId String      @map("reservation_id")
+  tableId       String      @map("table_id")
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  table         Table       @relation(fields: [tableId], references: [id])
+  assignedAt    DateTime    @default(now()) @map("assigned_at")
+
+  @@id([reservationId, tableId])
+  @@map("reservation_tables")
+}
+
+// ─────────────────────────────────────────────
+// ACTIVITY LOG (audit trail)
+// ─────────────────────────────────────────────
+
+model ActivityLog {
+  id            String       @id @default(cuid())
+  reservationId String?      @map("reservation_id")
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  staffId       String?      @map("staff_id")
+  staff         Staff?       @relation(fields: [staffId], references: [id])
+  
+  type          String       // "created" | "status_change" | "assigned" | "message" | "close" | "cancel"
+  description   String
+  metadata      Json?        // flexible extra data
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@index([reservationId])
+  @@map("activity_logs")
+}
+
+// ─────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────
+
+model MessageLog {
+  id            String         @id @default(cuid())
+  reservationId String         @map("reservation_id")
+  reservation   Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  staffId       String?        @map("staff_id")
+  staff         Staff?         @relation(fields: [staffId], references: [id])
+
+  channel       MessageChannel
+  recipient     String         // phone or email
+  subject       String?        // email only
+  body          String
+  sentAt        DateTime       @default(now()) @map("sent_at")
+  status        String         @default("sent") // "sent" | "delivered" | "failed"
+  externalId    String?        @map("external_id") // SendGrid/Twilio message ID
+
+  @@map("message_logs")
+}
+
+// ─────────────────────────────────────────────
+// STAFF SCHEDULING
+// ─────────────────────────────────────────────
+
+model Shift {
+  id          String    @id @default(cuid())
+  staffId     String    @map("staff_id")
+  staff       Staff     @relation(fields: [staffId], references: [id])
+  date        DateTime  @db.Date
+  startTime   String    @map("start_time") // "17:00"
+  endTime     String    @map("end_time")   // "23:00"
+  type        ShiftType @default(CLOSE)
+  role        String?   // "Fine Dining Server"
+  notes       String?
+  createdBy   String?   @map("created_by")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([date])
+  @@index([staffId])
+  @@map("shifts")
+}
+
+model Callout {
+  id            String        @id @default(cuid())
+  staffId       String        @map("staff_id")
+  staff         Staff         @relation(fields: [staffId], references: [id])
+  date          DateTime      @db.Date
+  reason        CalloutReason
+  coveredById   String?       @map("covered_by_id")
+  coveredBy     Staff?        @relation("CoveredBy", fields: [coveredById], references: [id])
+  notes         String?
+  loggedBy      String?       @map("logged_by")
+
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@index([date])
+  @@index([staffId])
+  @@map("callouts")
+}
+
+// ─────────────────────────────────────────────
+// OPERATING HOURS
+// ─────────────────────────────────────────────
+
+model OperatingHours {
+  id          String   @id @default(cuid())
+  dayOfWeek   Int      @map("day_of_week") // 0=Sun, 1=Mon ... 6=Sat
+  openTime    String?  @map("open_time")   // null = closed
+  closeTime   String?  @map("close_time")
+  closed      Boolean  @default(false)
+  
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([dayOfWeek])
+  @@map("operating_hours")
+}
+
+model SpecialHours {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date @unique
+  openTime  String?  @map("open_time")
+  closeTime String?  @map("close_time")
+  closed    Boolean  @default(false)
+  note      String?  // "Thanksgiving", "Private Event"
+
+  @@map("special_hours")
+}
+
+model AppSettings {
+  id              String  @id @default("singleton")
+  maxPartySize    Int     @default(20) @map("max_party_size")
+  bookingWindowDays Int   @default(60) @map("booking_window_days")
+  autoConfirm     Boolean @default(false) @map("auto_confirm")
+  restaurantName  String  @default("Hive Buckhead") @map("restaurant_name")
+  restaurantPhone String  @default("") @map("restaurant_phone")
+  restaurantEmail String  @default("reservations@hivebuckhead.com") @map("restaurant_email")
+  rsvpFormUrl     String  @default("/rsvp") @map("rsvp_form_url")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

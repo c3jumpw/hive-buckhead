@@ -1,0 +1,225 @@
+/* src/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── shadcn/ui CSS variables — dark theme (default) ─────────────────────── */
+/* These map to the Tailwind color names in tailwind.config.ts               */
+
+@layer base {
+  :root {
+    /* Hive dark theme — gold on dark */
+    --background: 30 14% 5%;          /* #0E0C0A */
+    --foreground: 38 38% 92%;         /* #F5EFE4 */
+
+    --card: 30 12% 9%;                /* #1A1714 */
+    --card-foreground: 38 38% 92%;
+
+    --popover: 30 12% 9%;
+    --popover-foreground: 38 38% 92%;
+
+    --primary: 38 47% 60%;            /* #C9A96E gold */
+    --primary-foreground: 30 14% 5%;  /* dark text on gold */
+
+    --secondary: 30 11% 13%;          /* #242018 */
+    --secondary-foreground: 35 22% 55%;
+
+    --muted: 30 11% 13%;
+    --muted-foreground: 30 15% 45%;   /* #6B5E4A */
+
+    --accent: 30 14% 18%;             /* #2E2920 */
+    --accent-foreground: 38 38% 92%;
+
+    --destructive: 3 55% 53%;         /* #C4524A */
+    --destructive-foreground: 38 38% 92%;
+
+    --border: 38 47% 60% / 0.18;      /* gold at 18% opacity */
+    --input: 30 11% 13%;
+    --ring: 38 47% 60%;
+
+    --radius: 0.5rem;
+
+    /* Semantic colors for reservation statuses */
+    --color-amber: 42 80% 47%;        /* #D4A020 */
+    --color-green: 152 42% 49%;       /* #4CAF82 */
+    --color-blue: 207 45% 57%;        /* #5B96C8 */
+    --color-purple: 271 38% 64%;      /* #9B7EC8 */
+    --color-teal: 178 49% 51%;        /* #3AACA8 */
+    --color-red: 3 55% 53%;           /* #C4524A */
+  }
+
+  /* Light theme (admin reports, print views) */
+  .light {
+    --background: 40 33% 95%;
+    --foreground: 30 14% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 14% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 14% 9%;
+    --primary: 38 47% 60%;
+    --primary-foreground: 30 14% 5%;
+    --secondary: 40 22% 94%;
+    --secondary-foreground: 30 14% 20%;
+    --muted: 40 22% 94%;
+    --muted-foreground: 30 15% 45%;
+    --accent: 40 18% 90%;
+    --accent-foreground: 30 14% 9%;
+    --destructive: 3 55% 53%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 38 20% 75%;
+    --input: 40 22% 94%;
+    --ring: 38 47% 60%;
+  }
+}
+
+/* ── Base resets ──────────────────────────────────────────────────────────── */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Thin scrollbar throughout */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-accent rounded-full;
+  }
+
+  /* Prevent zoom on iOS inputs */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  @media (min-width: 768px) {
+    input, select, textarea {
+      font-size: 14px;
+    }
+  }
+}
+
+/* ── Sidebar label shorthand */
+@layer components {
+  .sb-section-label {
+    @apply mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+}
+
+/* ── Component utilities ──────────────────────────────────────────────────── */
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-cormorant), Georgia, serif;
+  }
+
+  /* Gold gradient text — used for headings */
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #E8D4B0 0%, #C9A96E 50%, #a8823d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Subtle gold border glow — used on focused cards */
+  .ring-gold {
+    box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.35);
+  }
+
+  /* Live pulsing dot for real-time indicators */
+  .live-dot::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+    margin-right: 5px;
+  }
+
+  /* Full-height layout helper */
+  .h-screen-minus-nav {
+    height: calc(100vh - 54px);
+  }
+
+  /* Prevent text selection on SVG floor plan */
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ── Light mode overrides for hardcoded dark hive-* utility classes ───────── */
+.light .bg-hive-bg      { background-color: hsl(40 33% 97%) !important; }
+.light .bg-hive-surface { background-color: hsl(38 30% 93%) !important; }
+.light .bg-hive-surface2{ background-color: hsl(38 28% 89%) !important; }
+.light .bg-hive-surface3{ background-color: hsl(38 25% 84%) !important; }
+.light .hover\:bg-hive-surface2:hover { background-color: hsl(38 28% 85%) !important; }
+.light .hover\:bg-hive-surface3:hover { background-color: hsl(38 25% 80%) !important; }
+.light aside { background-color: hsl(38 30% 91%) !important; border-color: hsl(38 20% 78%) !important; }
+.light aside a { color: hsl(30 14% 30%) !important; }
+.light aside a:hover { background-color: hsl(38 25% 82%) !important; color: hsl(30 14% 9%) !important; }
+.light nav, .light header { background-color: hsl(38 30% 91%) !important; border-color: hsl(38 20% 78%) !important; }
+.light input, .light textarea, .light select {
+  background-color: hsl(0 0% 100%) !important;
+  border-color: hsl(38 20% 72%) !important;
+  color: hsl(30 14% 9%) !important;
+}
+
+/* ── Mobile responsiveness ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Sidebar collapses — main content takes full width */
+  aside { display: none !important; }
+  main  { margin-left: 0 !important; }
+
+  /* Top nav: hide text labels, keep icons */
+  nav .hidden-mobile { display: none !important; }
+
+  /* Floor plan: enable horizontal scroll */
+  #floor-svg-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Reservations: stack filters vertically */
+  .rsv-filters { flex-direction: column !important; gap: 8px !important; }
+
+  /* Admin tabs: horizontal scroll */
+  .admin-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+
+  /* Cards: full width */
+  .card-grid { grid-template-columns: 1fr !important; }
+
+  /* Modals: full screen on mobile */
+  [role="dialog"] > div { 
+    margin: 0 !important; 
+    border-radius: 0 !important; 
+    max-height: 100vh !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+  }
+
+  /* Property panels: hide on mobile, show below */
+  .floor-props-panel { display: none; }
+
+  /* Tables in reservations list */
+  .rsv-table-col-server,
+  .rsv-table-col-rsvp,
+  .rsv-table-col-order { display: none; }
+
+  /* Font size adjustments */
+  h1.font-serif { font-size: 1.5rem !important; }
+}
+
+@media (max-width: 480px) {
+  /* Very small screens */
+  .stat-cards { grid-template-columns: 1fr 1fr !important; }
+  .top-nav-links { display: none !important; }
+}
