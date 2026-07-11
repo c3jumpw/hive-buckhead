@@ -271,6 +271,6 @@ export interface SessionStaff {
   name: string;
   email: string;
   role: string;
-  accessLevel: AccessLevel;
+  accessLevel: string;  // OWNER | MANAGER | STAFF | ADMIN | FLOOR
   color: string;
 }

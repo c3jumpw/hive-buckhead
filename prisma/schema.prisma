@@ -1,6 +1,19 @@
+// =============================================================================
 // prisma/schema.prisma
-// Hive Buckhead — Complete Data Model
+// Hive Buckhead — Complete Data Model v3.0
+//
+// Purpose: Single source of truth for all database tables.
+// Responsibilities:
+//   - Staff authentication, roles, profiles, onboarding, offboarding
+//   - Reservations, tables, floor management
+//   - Scheduling (recurring + override), callouts
+//   - Messaging logs (SendGrid/Twilio)
+//   - System settings, operating hours
+//   - Staff feedback, announcements, message blasts
+//   - Onboarding portal with rotating access code
+//
 // Run: npx prisma generate && npx prisma db push
+// =============================================================================
 
 generator client {
   provider = "prisma-client-js"
@@ -12,14 +25,26 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─────────────────────────────────────────────
+// =============================================================================
 // ENUMS
-// ─────────────────────────────────────────────
+// =============================================================================
 
+// Access hierarchy: OWNER > MANAGER > STAFF
+// OWNER   — full system access including destructive actions + staff portal
+// MANAGER — all operational features + staff portal, no system-level destructive ops
+// STAFF   — staff portal only (schedule, floor read-only, announcements, feedback)
 enum AccessLevel {
-  ADMIN        // Level 1 — full access
-  STAFF        // Level 2 — reservations + floor + schedule
-  FLOOR        // Level 3 — floor view only
+  OWNER
+  MANAGER
+  STAFF
+}
+
+// Staff employment status — tracks lifecycle from active to terminated
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+  ON_LEAVE
 }
 
 enum ReservationStatus {
@@ -47,11 +72,12 @@ enum TableState {
   MAINTENANCE
 }
 
+// Shift types used in scheduling
 enum ShiftType {
-  OPEN
-  MID
-  CLOSE
-  DOUBLE
+  OPEN    // morning open shift
+  MID     // midday shift
+  CLOSE   // evening close shift
+  DOUBLE  // full day
 }
 
 enum CalloutReason {
@@ -68,66 +94,199 @@ enum MessageChannel {
   SMS
 }
 
-// ─────────────────────────────────────────────
+// Onboarding document signing status
+enum SigningStatus {
+  PENDING
+  SIGNED
+  DECLINED
+}
+
+// =============================================================================
+// STAFF POSITIONS (admin-managed list of roles/positions)
+// =============================================================================
+
+// Represents a job position that can be assigned to staff members.
+// Admins can create new positions without touching code.
+model Position {
+  id          String   @id @default(cuid())
+  name        String   @unique  // e.g. "Server", "Bartender", "Busser", "Kitchen"
+  description String?
+  department  String?  // e.g. "FOH", "BOH", "Management"
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  staff       Staff[]
+
+  @@map("positions")
+}
+
+// =============================================================================
 // STAFF / AUTH
-// ─────────────────────────────────────────────
+// =============================================================================
 
+// Core staff record. Covers both admin-level and portal-level users.
+// PIN is hashed with bcrypt. TeamId format: AA-001 (auto-generated on onboarding).
 model Staff {
-  id           String      @id @default(cuid())
-  // supabaseUserId links to Supabase Auth — null until they complete setup
-  supabaseId   String?     @unique @map("supabase_id")
-  name         String
-  email        String      @unique
-  phone        String?
-  role         String      // e.g. "Lead Server", "Bartender"
-  accessLevel  AccessLevel @default(STAFF) @map("access_level")
-  pin          String      // bcrypt-hashed 4-digit PIN
-  color        String      @default("#C9A96E") // UI accent color
-  section      Section?    // preferred/assigned section
-  active       Boolean     @default(true)
-  avatarUrl    String?     @map("avatar_url")
-  notes        String?
+  id              String           @id @default(cuid())
+  teamId          String?          @unique @map("team_id")       // "AA-001" format
+  name            String
+  email           String           @unique
+  phone           String?
+  positionId      String?          @map("position_id")
+  position        Position?        @relation(fields: [positionId], references: [id])
+  role            String           // legacy field, keep for display
+  accessLevel     AccessLevel      @default(STAFF) @map("access_level")
+  employmentStatus EmploymentStatus @default(ACTIVE) @map("employment_status")
+  pin             String           // bcrypt-hashed PIN code
+  color           String           @default("#C9A96E")
+  section         Section?
+  active          Boolean          @default(true)
+  avatarUrl       String?          @map("avatar_url")
+  notes           String?          // admin-only internal notes
 
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
+  // Onboarding tracking
+  onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+
+  // Offboarding tracking
+  terminatedAt    DateTime?        @map("terminated_at")
+  terminationNotes String?         @map("termination_notes")
+  terminatedBy    String?          @map("terminated_by")  // staff name who processed
+
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  reservations      Reservation[]    @relation("ServerReservations")
-  confirmedBy       Reservation[]    @relation("ConfirmedBy")
-  closedBy          Reservation[]    @relation("ClosedBy")
+  reservations      Reservation[]       @relation("ServerReservations")
+  confirmedBy       Reservation[]       @relation("ConfirmedBy")
+  closedBy          Reservation[]       @relation("ClosedBy")
   shifts            Shift[]
+  recurringShifts   RecurringShift[]
   callouts          Callout[]
-  coveredCallouts   Callout[]        @relation("CoveredBy")
+  coveredCallouts   Callout[]           @relation("CoveredBy")
   activityLogs      ActivityLog[]
   messageLogs       MessageLog[]
+  onboardingRecord  OnboardingRecord?
+  feedback          StaffFeedback[]
+  receivedAnnouncements AnnouncementRead[]
 
   @@map("staff")
 }
 
-// ─────────────────────────────────────────────
+// =============================================================================
+// ONBOARDING
+// =============================================================================
+
+// Controls access to the onboarding portal.
+// Password rotates weekly (cron) or manually via admin button.
+// Format: random 8-char alphanumeric, stored hashed in DB, plain shown to admin.
+model OnboardingPortalConfig {
+  id              String   @id @default("singleton")
+  // Hashed password — compare with bcrypt on portal entry
+  accessCodeHash  String   @map("access_code_hash")
+  // Plain text shown ONLY to admins in the dashboard (never to portal users)
+  accessCodePlain String   @map("access_code_plain")
+  // When the code was last rotated — used to trigger weekly auto-rotation
+  rotatedAt       DateTime @default(now()) @map("rotated_at")
+  // Next scheduled rotation date
+  nextRotationAt  DateTime @map("next_rotation_at")
+
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("onboarding_portal_config")
+}
+
+// One onboarding record per staff member.
+// Tracks document signing, uploaded files, and completion status.
+model OnboardingRecord {
+  id              String        @id @default(cuid())
+  staffId         String        @unique @map("staff_id")
+  staff           Staff         @relation(fields: [staffId], references: [id])
+
+  // Personal info captured during onboarding
+  legalName       String?       @map("legal_name")
+  dateOfBirth     String?       @map("date_of_birth")   // stored as string for privacy
+  address         String?
+  emergencyContact String?      @map("emergency_contact")
+  emergencyPhone  String?       @map("emergency_phone")
+  tshirtSize      String?       @map("tshirt_size")
+  startDate       DateTime?     @map("start_date") @db.Date
+
+  // Document uploads — stored as Supabase Storage URLs
+  idDocumentUrl   String?       @map("id_document_url")
+  additionalDocsUrls String[]   @map("additional_docs_urls")
+
+  // Legal document signing — each doc tracked separately
+  employmentAgreementStatus SigningStatus @default(PENDING) @map("employment_agreement_status")
+  employmentAgreementSignedAt DateTime?   @map("employment_agreement_signed_at")
+  
+  codeOfConductStatus SigningStatus @default(PENDING) @map("code_of_conduct_status")
+  codeOfConductSignedAt DateTime?   @map("code_of_conduct_signed_at")
+
+  ipAddressOnSign String?       @map("ip_address_on_sign") // audit trail for signatures
+
+  completedAt     DateTime?     @map("completed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("onboarding_records")
+}
+
+// =============================================================================
+// OFFBOARDING
+// =============================================================================
+
+// Records the offboarding process when a staff member is terminated.
+// Preserves history without deleting staff record.
+model OffboardingRecord {
+  id              String   @id @default(cuid())
+  staffId         String   @map("staff_id")   // staff.id — not a relation, preserve after deactivation
+  staffName       String   @map("staff_name") // denormalized for historical record
+  staffEmail      String   @map("staff_email")
+  staffTeamId     String?  @map("staff_team_id")
+
+  // Offboarding details
+  terminationDate DateTime @map("termination_date") @db.Date
+  terminationType String   @map("termination_type")  // "voluntary" | "involuntary" | "layoff" | "contract_end"
+  reason          String?
+  notes           String?  // admin internal notes
+  processedBy     String   @map("processed_by")  // admin name
+
+  // Checklist — what was completed during offboarding
+  accessRevoked   Boolean  @default(false) @map("access_revoked")
+  equipmentReturned Boolean @default(false) @map("equipment_returned")
+  finalPayProcessed Boolean @default(false) @map("final_pay_processed")
+  exitInterviewDone Boolean @default(false) @map("exit_interview_done")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("offboarding_records")
+}
+
+// =============================================================================
 // TABLES (floor configuration)
-// ─────────────────────────────────────────────
+// =============================================================================
 
 model Table {
   id          String     @id @default(cuid())
-  displayId   String     @unique @map("display_id") // "T200", "B1", "T101"
-  label       String?    // "Big Booth A"
+  displayId   String     @unique @map("display_id")
+  label       String?
   capacity    Int
   section     Section
   state       TableState @default(AVAILABLE)
-  // SVG position for floor plan rendering
   svgX        Float      @map("svg_x")
   svgY        Float      @map("svg_y")
   svgW        Float?     @map("svg_w")
   svgH        Float?     @map("svg_h")
-  svgShape    String?    @map("svg_shape") // "round" | "booth" | "stool"
+  svgShape    String?    @map("svg_shape")
   active      Boolean    @default(true)
   notes       String?
 
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
-  // Relations
   reservationTables ReservationTable[]
   stateHistory      TableStateLog[]
 
@@ -140,50 +299,38 @@ model TableStateLog {
   table     Table      @relation(fields: [tableId], references: [id])
   fromState TableState @map("from_state")
   toState   TableState @map("to_state")
-  changedBy String?    @map("changed_by") // staff name
+  changedBy String?    @map("changed_by")
   note      String?
   createdAt DateTime   @default(now()) @map("created_at")
 
   @@map("table_state_logs")
 }
 
-// ─────────────────────────────────────────────
+// =============================================================================
 // RESERVATIONS
-// ─────────────────────────────────────────────
+// =============================================================================
 
 model Reservation {
   id            String            @id @default(cuid())
-  // Human-readable RSVP # (8-char alphanumeric, shown to guests)
   rsvpCode      String            @unique @map("rsvp_code")
-
-  // Guest info
   firstName     String            @map("first_name")
   lastName      String            @map("last_name")
   phone         String
   email         String?
-  
-  // Booking details
   date          DateTime          @db.Date
-  arrivalTime   String            @map("arrival_time") // "19:30"
+  arrivalTime   String            @map("arrival_time")
   partySize     Int               @map("party_size")
   section       Section?
-  occasion      String?           // "Birthday", "Anniversary"
-  notes         String?           // dietary, special requests
-  source        String            @default("web_form") // "web_form" | "staff" | "walk_in" | "phone"
-
-  // Status
+  occasion      String?
+  notes         String?
+  source        String            @default("web_form")
   status        ReservationStatus @default(REQUESTED)
-  
-  // Order (post-seating)
   orderTotal    Decimal?          @db.Decimal(10, 2) @map("order_total")
   tipAmount     Decimal?          @db.Decimal(10, 2) @map("tip_amount")
   closingRemarks String?          @map("closing_remarks")
   receiptUrl    String?           @map("receipt_url")
-
-  // Change/cancel request data (stored as JSON)
   changeRequest Json?             @map("change_request")
 
-  // Relations — staff
   serverId      String?           @map("server_id")
   server        Staff?            @relation("ServerReservations", fields: [serverId], references: [id])
   confirmedById String?           @map("confirmed_by_id")
@@ -191,7 +338,6 @@ model Reservation {
   closedById    String?           @map("closed_by_id")
   closedBy      Staff?            @relation("ClosedBy", fields: [closedById], references: [id])
 
-  // Timestamps
   confirmedAt   DateTime?         @map("confirmed_at")
   seatedAt      DateTime?         @map("seated_at")
   completedAt   DateTime?         @map("completed_at")
@@ -199,7 +345,6 @@ model Reservation {
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
 
-  // Relations — tables, messages, activity
   tables        ReservationTable[]
   messages      MessageLog[]
   activity      ActivityLog[]
@@ -211,7 +356,6 @@ model Reservation {
   @@map("reservations")
 }
 
-// Many-to-many: reservations ↔ tables (a reservation can span multiple tables)
 model ReservationTable {
   reservationId String      @map("reservation_id")
   tableId       String      @map("table_id")
@@ -223,9 +367,9 @@ model ReservationTable {
   @@map("reservation_tables")
 }
 
-// ─────────────────────────────────────────────
-// ACTIVITY LOG (audit trail)
-// ─────────────────────────────────────────────
+// =============================================================================
+// ACTIVITY & MESSAGING LOGS
+// =============================================================================
 
 model ActivityLog {
   id            String       @id @default(cuid())
@@ -233,10 +377,9 @@ model ActivityLog {
   reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   staffId       String?      @map("staff_id")
   staff         Staff?       @relation(fields: [staffId], references: [id])
-  
-  type          String       // "created" | "status_change" | "assigned" | "message" | "close" | "cancel"
+  type          String
   description   String
-  metadata      Json?        // flexible extra data
+  metadata      Json?
 
   createdAt     DateTime     @default(now()) @map("created_at")
 
@@ -244,42 +387,40 @@ model ActivityLog {
   @@map("activity_logs")
 }
 
-// ─────────────────────────────────────────────
-// MESSAGING
-// ─────────────────────────────────────────────
-
 model MessageLog {
   id            String         @id @default(cuid())
-  reservationId String         @map("reservation_id")
-  reservation   Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationId String?        @map("reservation_id")
+  reservation   Reservation?   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   staffId       String?        @map("staff_id")
   staff         Staff?         @relation(fields: [staffId], references: [id])
-
   channel       MessageChannel
-  recipient     String         // phone or email
-  subject       String?        // email only
+  recipient     String
+  subject       String?
   body          String
   sentAt        DateTime       @default(now()) @map("sent_at")
-  status        String         @default("sent") // "sent" | "delivered" | "failed"
-  externalId    String?        @map("external_id") // SendGrid/Twilio message ID
+  status        String         @default("sent")
+  externalId    String?        @map("external_id")
 
   @@map("message_logs")
 }
 
-// ─────────────────────────────────────────────
-// STAFF SCHEDULING
-// ─────────────────────────────────────────────
+// =============================================================================
+// SCHEDULING
+// =============================================================================
 
+// Individual shift (specific date)
 model Shift {
   id          String    @id @default(cuid())
   staffId     String    @map("staff_id")
   staff       Staff     @relation(fields: [staffId], references: [id])
   date        DateTime  @db.Date
-  startTime   String    @map("start_time") // "17:00"
-  endTime     String    @map("end_time")   // "23:00"
+  startTime   String    @map("start_time")
+  endTime     String    @map("end_time")
   type        ShiftType @default(CLOSE)
-  role        String?   // "Fine Dining Server"
+  role        String?
   notes       String?
+  // Flag: was this shift generated from a recurring schedule?
+  isRecurring Boolean   @default(false) @map("is_recurring")
   createdBy   String?   @map("created_by")
 
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -288,6 +429,30 @@ model Shift {
   @@index([date])
   @@index([staffId])
   @@map("shifts")
+}
+
+// Recurring shift template — defines a staff member's default weekly schedule.
+// Day 0=Sunday, 1=Monday, ... 6=Saturday.
+// Admin can set defaults per staff member; individual weeks can override via Shift.
+model RecurringShift {
+  id          String    @id @default(cuid())
+  staffId     String    @map("staff_id")
+  staff       Staff     @relation(fields: [staffId], references: [id])
+  // Day of week this recurring shift applies to
+  dayOfWeek   Int       @map("day_of_week")  // 0-6
+  startTime   String    @map("start_time")
+  endTime     String    @map("end_time")
+  type        ShiftType @default(CLOSE)
+  role        String?
+  // If false, this day is a regular day off for this staff member
+  isWorkDay   Boolean   @default(true) @map("is_work_day")
+  active      Boolean   @default(true)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([staffId, dayOfWeek])  // one recurring shift per day per staff member
+  @@map("recurring_shifts")
 }
 
 model Callout {
@@ -308,17 +473,73 @@ model Callout {
   @@map("callouts")
 }
 
-// ─────────────────────────────────────────────
-// OPERATING HOURS
-// ─────────────────────────────────────────────
+// =============================================================================
+// STAFF COMMUNICATION
+// =============================================================================
+
+// Announcements sent from admin/manager to all or specific staff.
+// Supports message blasts to the whole team.
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  // Target: "all" | "servers" | "bartenders" | specific accessLevel
+  targetGroup String   @default("all") @map("target_group")
+  pinned      Boolean  @default(false)  // pinned announcements stay at top
+  authorId    String?  @map("author_id")  // staff.id of sender
+  authorName  String   @map("author_name")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  reads       AnnouncementRead[]
+
+  @@map("announcements")
+}
+
+// Tracks which staff have read each announcement
+model AnnouncementRead {
+  announcementId String   @map("announcement_id")
+  staffId        String   @map("staff_id")
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  staff          Staff        @relation(fields: [staffId], references: [id])
+  readAt         DateTime @default(now()) @map("read_at")
+
+  @@id([announcementId, staffId])
+  @@map("announcement_reads")
+}
+
+// Feedback submitted by staff to admins/managers.
+// Anonymous submission is optional (staffId can be null if anonymized).
+model StaffFeedback {
+  id          String   @id @default(cuid())
+  staffId     String?  @map("staff_id")    // null if submitted anonymously
+  staff       Staff?   @relation(fields: [staffId], references: [id])
+  staffName   String?  @map("staff_name")  // denormalized for display
+  category    String   @default("general") // "general" | "schedule" | "safety" | "suggestion"
+  message     String
+  isAnonymous Boolean  @default(false) @map("is_anonymous")
+  // Status tracked by admins: "new" | "reviewed" | "resolved"
+  status      String   @default("new")
+  adminNotes  String?  @map("admin_notes")
+  resolvedBy  String?  @map("resolved_by")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("staff_feedback")
+}
+
+// =============================================================================
+// OPERATING HOURS & SETTINGS
+// =============================================================================
 
 model OperatingHours {
   id          String   @id @default(cuid())
-  dayOfWeek   Int      @map("day_of_week") // 0=Sun, 1=Mon ... 6=Sat
-  openTime    String?  @map("open_time")   // null = closed
+  dayOfWeek   Int      @map("day_of_week")
+  openTime    String?  @map("open_time")
   closeTime   String?  @map("close_time")
   closed      Boolean  @default(false)
-  
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@unique([dayOfWeek])
@@ -331,20 +552,20 @@ model SpecialHours {
   openTime  String?  @map("open_time")
   closeTime String?  @map("close_time")
   closed    Boolean  @default(false)
-  note      String?  // "Thanksgiving", "Private Event"
+  note      String?
 
   @@map("special_hours")
 }
 
 model AppSettings {
-  id              String  @id @default("singleton")
-  maxPartySize    Int     @default(20) @map("max_party_size")
-  bookingWindowDays Int   @default(60) @map("booking_window_days")
-  autoConfirm     Boolean @default(false) @map("auto_confirm")
-  restaurantName  String  @default("Hive Buckhead") @map("restaurant_name")
-  restaurantPhone String  @default("") @map("restaurant_phone")
-  restaurantEmail String  @default("reservations@hivebuckhead.com") @map("restaurant_email")
-  rsvpFormUrl     String  @default("/rsvp") @map("rsvp_form_url")
+  id                String  @id @default("singleton")
+  maxPartySize      Int     @default(20) @map("max_party_size")
+  bookingWindowDays Int     @default(60) @map("booking_window_days")
+  autoConfirm       Boolean @default(false) @map("auto_confirm")
+  restaurantName    String  @default("Hive Buckhead") @map("restaurant_name")
+  restaurantPhone   String  @default("") @map("restaurant_phone")
+  restaurantEmail   String  @default("reservations@thehivebuckhead.com") @map("restaurant_email")
+  rsvpFormUrl       String  @default("/rsvp") @map("rsvp_form_url")
 
   updatedAt DateTime @updatedAt @map("updated_at")
 

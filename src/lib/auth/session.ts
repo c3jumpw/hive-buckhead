@@ -1,122 +1,99 @@
-// src/lib/auth/session.ts
-// Server-side session utilities.
+/**
+ * src/lib/auth/session.ts
+ * Session management — PIN-based auth for all staff roles.
+ * OWNER > MANAGER > STAFF access hierarchy.
+ */
 
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { prisma } from "@/lib/db/prisma";
-import type { SessionStaff, AccessLevel } from "@/types";
+import { cookies } from "next/headers"
+import { prisma } from "@/lib/db/prisma"
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const bcrypt = require("bcryptjs");
+export type SessionStaff = {
+  id: string; name: string; email: string
+  role: string; accessLevel: string; color: string
+}
 
-// ── Session cookie name ────────────────────────────────────────────────────
+const COOKIE_NAME = "hive-session"
+const COOKIE_MAX_AGE = 60 * 60 * 12  // 12 hours
 
-const SESSION_COOKIE = "hive-session";
+// Ordered from lowest to highest privilege — used for rank comparison
+const ACCESS_RANK: Record<string, number> = { STAFF: 0, FLOOR: 0, MANAGER: 1, ADMIN: 1, OWNER: 2 }
 
-// ── Get current session from cookie ───────────────────────────────────────
-
+/** Read and validate session cookie. Returns null if missing or invalid. */
 export async function getSession(): Promise<SessionStaff | null> {
   try {
-    const cookieStore = cookies();
-    const raw = cookieStore.get(SESSION_COOKIE)?.value;
-    if (!raw) return null;
-
-    const session = JSON.parse(raw) as {
-      staffId: string;
-      name: string;
-      accessLevel: string;
-      loginAt: number;
-    };
-
-    // Expire after 12 hours
-    if (Date.now() - session.loginAt > 12 * 60 * 60 * 1000) return null;
-
-    // Verify staff still exists and is active
+    const cookieStore = cookies()
+    const cookie = cookieStore.get(COOKIE_NAME)
+    if (!cookie?.value) return null
+    const session = JSON.parse(Buffer.from(cookie.value, "base64").toString("utf-8")) as SessionStaff
+    // Revalidate against DB to catch deactivated accounts
     const staff = await prisma.staff.findUnique({
-      where: { id: session.staffId, active: true },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        accessLevel: true,
-        color: true,
-      },
-    });
-
-    if (!staff) return null;
-
-    return {
-      ...staff,
-      accessLevel: staff.accessLevel as AccessLevel,
-    };
-  } catch {
-    return null;
-  }
+      where: { id: session.id, active: true },
+      select: { id: true, name: true, email: true, role: true, accessLevel: true, color: true },
+    })
+    if (!staff) return null
+    return { ...staff, accessLevel: staff.accessLevel as string }
+  } catch { return null }
 }
 
-// ── Require auth — redirects to login if not authenticated ─────────────────
-
-export async function requireAuth(): Promise<SessionStaff> {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  return session;
+/** Requires any valid session. Redirects to /login if missing. */
+export async function requireSession(): Promise<SessionStaff> {
+  const { redirect } = await import("next/navigation")
+  const session = await getSession()
+  if (!session) redirect("/login")
+  return session!
 }
 
-// ── Access level helpers ───────────────────────────────────────────────────
-
-const ACCESS_LEVEL_ORDER: Record<AccessLevel, number> = {
-  FLOOR: 1,
-  STAFF: 2,
-  ADMIN: 3,
-};
-
-export async function requireAccessLevel(
-  minimum: AccessLevel
-): Promise<SessionStaff> {
-  const session = await requireAuth();
-  if (ACCESS_LEVEL_ORDER[session.accessLevel] < ACCESS_LEVEL_ORDER[minimum]) {
-    redirect("/unauthorized");
-  }
-  return session;
+/** Requires MANAGER or OWNER. Redirects STAFF to staff portal. */
+export async function requireAdmin(): Promise<SessionStaff> {
+  const { redirect } = await import("next/navigation")
+  const session = await getSession()
+  if (!session) redirect("/login")
+  const level = session!.accessLevel
+  if (level === "STAFF" || level === "FLOOR") redirect("/staff-portal")
+  return session!
 }
 
-export function hasAccess(
-  userLevel: AccessLevel,
-  required: AccessLevel
-): boolean {
-  return ACCESS_LEVEL_ORDER[userLevel] >= ACCESS_LEVEL_ORDER[required];
+/** Requires OWNER only. Used for destructive operations. */
+export async function requireOwner(): Promise<SessionStaff> {
+  const { redirect } = await import("next/navigation")
+  const session = await getSession()
+  if (!session) redirect("/login")
+  if (session!.accessLevel !== "OWNER") redirect("/unauthorized")
+  return session!
 }
 
-// ── PIN verification ───────────────────────────────────────────────────────
+/** Backward-compatible — maps old ADMIN/FLOOR to new levels */
+export async function requireAccessLevel(level: string): Promise<SessionStaff> {
+  if (level === "ADMIN" || level === "OWNER" || level === "MANAGER") return requireAdmin()
+  return requireSession()
+}
 
-export async function verifyStaffPin(
-  staffId: string,
-  pin: string
-): Promise<SessionStaff | null> {
+/** Legacy alias used by some existing routes */
+export async function requireAuth(): Promise<SessionStaff> { return requireSession() }
+
+/** Verify a staff PIN against bcrypt hash — used in login route */
+export async function verifyStaffPin(email: string, pin: string): Promise<SessionStaff | null> {
+  const bcrypt = await import("bcryptjs")
   const staff = await prisma.staff.findUnique({
-    where: { id: staffId, active: true },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      accessLevel: true,
-      color: true,
-      pin: true,
-    },
-  });
+    where: { email, active: true },
+    select: { id: true, name: true, email: true, role: true, accessLevel: true, color: true, pin: true },
+  })
+  if (!staff) return null
+  const valid = await bcrypt.compare(String(pin), staff.pin)
+  if (!valid) return null
+  const { pin: _, ...sessionData } = staff
+  return { ...sessionData, accessLevel: sessionData.accessLevel as string }
+}
 
-  if (!staff) return null;
+export function createSessionValue(staff: SessionStaff): string {
+  return Buffer.from(JSON.stringify(staff)).toString("base64")
+}
 
-  const valid = await bcrypt.compare(pin, staff.pin);
-  if (!valid) return null;
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { pin: _pin, ...safeStaff } = staff;
-
+export function getSessionCookieOptions(maxAge?: number) {
   return {
-    ...safeStaff,
-    accessLevel: safeStaff.accessLevel as AccessLevel,
-  };
+    name: COOKIE_NAME, httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+    maxAge: maxAge ?? COOKIE_MAX_AGE, path: "/",
+  }
 }
