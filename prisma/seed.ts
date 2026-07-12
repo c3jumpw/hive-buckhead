@@ -3,7 +3,7 @@
 // Seeds staff, tables, and operating hours with real Hive Buckhead data
 
 import { PrismaClient } from "@prisma/client"
-const AccessLevel = { ADMIN: "ADMIN", STAFF: "STAFF", FLOOR: "FLOOR" } as const
+const AccessLevel = { OWNER: "OWNER", MANAGER: "MANAGER", STAFF: "STAFF" } as const
 const Section = { FINE_DINING: "FINE_DINING", BAR: "BAR", DEN: "DEN", PATIO: "PATIO" } as const
 const ShiftType = { OPEN: "OPEN", CLOSE: "CLOSE", DOUBLE: "DOUBLE", MID: "MID" } as const;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,7 +20,7 @@ async function main() {
       name: "Admin User",
       email: "admin@hivebuckhead.com",
       role: "Manager on Duty",
-      accessLevel: AccessLevel.ADMIN,
+      accessLevel: AccessLevel.OWNER,
       pin: "1234",
       color: "#C9A96E",
     },
@@ -60,7 +60,7 @@ async function main() {
       name: "Floor Staff",
       email: "floor@hivebuckhead.com",
       role: "Host",
-      accessLevel: AccessLevel.FLOOR,
+      accessLevel: AccessLevel.STAFF,
       pin: "6789",
       color: "#A89B84",
     },
