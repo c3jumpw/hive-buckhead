@@ -19,10 +19,23 @@ export const createReservationSchema = z.object({
     .string()
     .transform(v => v.replace(/\D/g, ""))  // strip formatting
     .pipe(z.string().regex(/^\d{10}$/, "Enter a 10-digit phone number")),
+  // Email is optional on the public RSVP form. Three states must all validate:
+  //   1. Field omitted entirely           -> undefined  (covered by .optional())
+  //   2. Guest leaves it blank in the UI  -> ""          (covered by .or(z.literal("")))
+  //   3. Client explicitly sends null     -> null        (covered by .nullable())
+  // BUG HISTORY: .nullable() was missing here through 2026-07-14. The RSVP form
+  // sends `email: email || null` whenever the guest leaves email blank, which
+  // evaluates to `null` (not undefined) — Zod's .optional() does NOT accept an
+  // explicit null unless .nullable() is also chained. Every guest who omitted
+  // their email hit a silent 400 "Validation failed" response, surfaced to the
+  // user only as a generic "Something went wrong" message with no indication
+  // of the actual cause. Fixed by adding .nullable() to match how section,
+  // occasion, and notes below already handle the same null-vs-undefined case.
   email: z
     .string()
     .email("Enter a valid email address")
     .optional()
+    .nullable()
     .or(z.literal("")),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
   arrivalTime: z

@@ -1,5 +1,33 @@
 "use client"
 
+/**
+ * src/components/rsvp/manage-rsvp-client.tsx
+ * =============================================================================
+ * Guest-facing "manage my reservation" page. Public, no login required.
+ *
+ * Responsibilities:
+ *   - Look up an existing reservation by RSVP code, OR by phone + last name
+ *   - Display reservation details and current status
+ *   - Submit a change request (date/time/party size/section) for staff review
+ *   - Submit a cancellation request
+ *
+ * Data flow:
+ *   All requests go through GET/POST /api/rsvp (src/app/api/rsvp/route.ts).
+ *   Changes and cancellations do NOT immediately modify the reservation —
+ *   they set status to CHANGE_REQUESTED / CANCELLATION_REQUESTED and store
+ *   the request details in the reservation's changeRequest JSON field. Staff
+ *   review and approve/deny from the admin reservations page.
+ *
+ * BUG HISTORY (2026-07-14): the phone+lastName lookup path here always built
+ * a valid request (?phone=...&lastName=...), but the backend GET handler in
+ * /api/rsvp/route.ts only ever read the `code` query param and rejected
+ * everything else with 400 "RSVP code required" — silently breaking this
+ * entire lookup path for any guest without their code handy. Fixed on the
+ * server side; no changes were needed in this file, since it was already
+ * calling the endpoint correctly.
+ * =============================================================================
+ */
+
 import { useState } from "react"
 import { Search, CheckCircle2, AlertCircle, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"

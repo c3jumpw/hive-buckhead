@@ -154,8 +154,27 @@ export function RsvpForm() {
   }
   function goBack() { setStep(s => Math.max(s - 1, 1) as Step) }
 
+  /**
+   * Submits the completed RSVP to POST /api/reservations.
+   *
+   * Error handling history (2026-07-14): this previously caught every
+   * failure — network errors, 400 validation failures, 500 server errors —
+   * into one generic "Something went wrong" message with no detail. That
+   * masked a real bug (missing .nullable() on the email schema field) for
+   * an unknown period, because nobody could see *why* submission failed.
+   *
+   * Now: on a non-2xx response, we parse the JSON body and surface the
+   * server's actual message. For Zod validation failures specifically
+   * (shape: { error, details: { fieldErrors } }), we pull the first
+   * field-specific message so the guest sees something actionable like
+   * "Enter a valid email address" instead of a dead end. Network-level
+   * failures (fetch itself throwing, e.g. offline) fall through to the
+   * catch block, which still shows a generic message since there's no
+   * server response to parse in that case.
+   */
   async function handleSubmit() {
     setSubmitting(true)
+    setErrors({})
     try {
       const res = await fetch("/api/reservations", {
         method: "POST",
@@ -173,12 +192,30 @@ export function RsvpForm() {
           source: "web_form",
         }),
       })
-      if (!res.ok) throw new Error("Booking failed")
+
+      if (!res.ok) {
+        // Try to extract a specific, actionable error message from the
+        // server response before falling back to a generic one.
+        let message = "Something went wrong. Please try again."
+        try {
+          const errJson = await res.json()
+          const fieldErrors = errJson?.details?.fieldErrors as Record<string, string[]> | undefined
+          const firstFieldMessage = fieldErrors ? Object.values(fieldErrors).flat()[0] : undefined
+          message = firstFieldMessage || errJson?.error || message
+        } catch { /* response wasn't JSON — keep the generic message */ }
+        throw new Error(message)
+      }
+
       const json = await res.json()
       setRsvpCode(json.data.rsvpCode)
       setSubmitted(true)
-    } catch {
-      setErrors({ submit: "Something went wrong. Please try again." })
+    } catch (err) {
+      // err is our own Error with a real message when it came from the
+      // !res.ok branch above; for network-level failures (fetch rejecting
+      // before we get a response) err.message is generic/browser-provided,
+      // so we still fall back to a friendly default in that case.
+      const message = err instanceof Error && err.message ? err.message : "Something went wrong. Please try again."
+      setErrors({ submit: message })
     } finally { setSubmitting(false) }
   }
 

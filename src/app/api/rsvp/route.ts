@@ -5,26 +5,73 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 
-// GET /api/rsvp?code=XXXXXXXX — look up reservation by RSVP code
+// Fields returned to the guest-facing manage/cancel page. Kept as a shared
+// constant so both lookup paths (by code, and by phone+lastName) return an
+// identical shape — the frontend's FoundReservation type expects this exact set.
+const GUEST_RESERVATION_FIELDS = {
+  id: true, rsvpCode: true, firstName: true, lastName: true,
+  phone: true, email: true, date: true, arrivalTime: true,
+  partySize: true, section: true, occasion: true, notes: true,
+  status: true, changeRequest: true,
+} as const
+
+/**
+ * GET /api/rsvp — guest reservation lookup, two supported modes:
+ *   ?code=XXXXXXXX                    — exact match on RSVP code (primary path)
+ *   ?phone=4045551234&lastName=Smith  — fallback for guests without their code
+ *
+ * BUG HISTORY (2026-07-14): the manage/cancel page's UI has always offered
+ * "look up by phone + last name" as an alternative to entering an RSVP code
+ * (see manage-rsvp-client.tsx handleLookup, which builds a
+ * ?phone=...&lastName=... query when no code is entered). This handler
+ * previously only ever read the `code` param and returned 400 "RSVP code
+ * required" for every phone/lastName request, silently breaking that entire
+ * lookup path for any guest who didn't have their code handy — with no
+ * indication to the guest or staff that the feature was non-functional.
+ *
+ * Phone+lastName can match multiple past reservations for a repeat guest,
+ * so we pick the most relevant one: prefer an upcoming (not completed/
+ * cancelled) reservation over a historical one, and among ties prefer the
+ * most recently created. This mirrors what a guest actually wants when they
+ * say "find my reservation" — their current booking, not old history.
+ */
 export async function GET(request: NextRequest) {
-  const code = request.nextUrl.searchParams.get("code")?.toUpperCase()
-  if (!code) return NextResponse.json({ error: "RSVP code required" }, { status: 400 })
+  const params = request.nextUrl.searchParams
+  const code = params.get("code")?.toUpperCase()
+  const phone = params.get("phone")?.replace(/\D/g, "")
+  const lastName = params.get("lastName")?.trim()
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { rsvpCode: code },
-    select: {
-      id: true, rsvpCode: true, firstName: true, lastName: true,
-      phone: true, email: true, date: true, arrivalTime: true,
-      partySize: true, section: true, occasion: true, notes: true,
-      status: true, changeRequest: true,
-    },
-  })
-
-  if (!reservation) {
-    return NextResponse.json({ error: "Reservation not found. Please check your RSVP code." }, { status: 404 })
+  if (code) {
+    const reservation = await prisma.reservation.findUnique({
+      where: { rsvpCode: code },
+      select: GUEST_RESERVATION_FIELDS,
+    })
+    if (!reservation) {
+      return NextResponse.json({ error: "Reservation not found. Please check your RSVP code." }, { status: 404 })
+    }
+    return NextResponse.json({ data: reservation })
   }
 
-  return NextResponse.json({ data: reservation })
+  if (phone && lastName) {
+    // Find all reservations matching phone + last name (case-insensitive),
+    // most recently created first, so we can prefer an active one below.
+    const matches = await prisma.reservation.findMany({
+      where: { phone, lastName: { equals: lastName, mode: "insensitive" } },
+      select: GUEST_RESERVATION_FIELDS,
+      orderBy: { createdAt: "desc" },
+    })
+
+    if (matches.length === 0) {
+      return NextResponse.json({ error: "No reservation found with that phone number and last name." }, { status: 404 })
+    }
+
+    // Prefer the first match that's still active (not completed/cancelled);
+    // fall back to the most recent one overall if everything is historical.
+    const activeMatch = matches.find((r: (typeof matches)[number]) => !["COMPLETED", "CANCELLED"].includes(r.status))
+    return NextResponse.json({ data: activeMatch ?? matches[0] })
+  }
+
+  return NextResponse.json({ error: "Provide either an RSVP code, or both phone number and last name." }, { status: 400 })
 }
 
 // POST /api/rsvp — guest submits change or cancellation request
