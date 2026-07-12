@@ -15,7 +15,7 @@ export async function GET() {
       accessLevel: true,
     },
     orderBy: [
-      { accessLevel: "asc" }, // ADMIN first
+      { accessLevel: "asc" }, // MANAGER, OWNER, STAFF — alphabetical by enum name
       { name: "asc" },
     ],
   });

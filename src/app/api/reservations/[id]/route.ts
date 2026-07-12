@@ -5,6 +5,9 @@
 // DELETE /api/reservations/:id (admin only)
 
 import { NextRequest, NextResponse } from "next/server";
+import { sendReservationConfirmation, sendCancellationEmail } from "@/lib/integrations/sendgrid";
+import { upsertSystemeContact } from "@/lib/integrations/systeme";
+import { SYSTEME_CONFIG } from "@/lib/config";
 import { prisma } from "@/lib/db/prisma";
 import { getSession } from "@/lib/auth/session";
 import {
@@ -37,75 +40,47 @@ async function sendNotification(
   const dateStr = formatDate(r.date)
   const timeStr = formatTime(r.arrivalTime)
 
-  let subject = "", body = ""
-  if (type === "confirm") {
-    subject = `Your Hive Buckhead Reservation is Confirmed! 🥂`
-    body = `Hi ${r.firstName},
-
-Your reservation at Hive Buckhead is confirmed!
-
-📅 ${dateStr}
-🕐 ${timeStr}
-👥 Party of ${r.partySize}
-📋 RSVP #: ${r.rsvpCode}
-
-Need to make changes? Visit:
-${changeUrl}
-
-We look forward to seeing you!
-
-— Hive Buckhead`
-  } else {
-    subject = `Your Hive Buckhead Reservation Has Been Cancelled`
-    body = `Hi ${r.firstName},
-
-Your reservation at Hive Buckhead on ${dateStr} at ${timeStr} has been cancelled.
-
-RSVP #: ${r.rsvpCode}
-
-We hope to see you again soon.
-
-— Hive Buckhead`
-  }
-
-  // 1. Always log to MessageLog
+  // Always log the notification attempt regardless of whether email actually sends —
+  // this preserves an audit trail even if SendGrid is unconfigured or the guest has no email.
   try {
     await prisma.messageLog.create({
       data: {
         channel: "EMAIL",
         recipient: r.email ?? r.phone ?? r.firstName,
-        subject,
-        body,
+        subject: type === "confirm" ? "Reservation Confirmed" : "Reservation Cancelled",
+        body: `${type} notification for RSVP ${r.rsvpCode}`,
         status: "PENDING",
         reservationId,
       },
     })
   } catch { /* MessageLog may not have reservationId field yet — non-fatal */ }
 
-  // 2. Send via SendGrid if API key is configured
-  const sgKey = process.env.SENDGRID_API_KEY
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL ?? "noreply@hivebuckhead.com"
-  if (sgKey && r.email) {
-    try {
-      const resp = await fetch("https://api.sendgrid.com/v3/mail/send", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${sgKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          personalizations: [{ to: [{ email: r.email, name: `${r.firstName} ${r.lastName}` }] }],
-          from: { email: fromEmail, name: "Hive Buckhead" },
-          subject,
-          content: [{ type: "text/plain", value: body }],
-        }),
-      })
-      // Update log status
-      if (resp.ok) {
-        await prisma.messageLog.updateMany({
-          where: { reservationId, status: "PENDING" },
-          data: { status: "SENT", sentAt: new Date() },
-        }).catch(() => {})
-      }
-    } catch { /* SendGrid failure is non-fatal — message is logged */ }
+  if (!r.email) return  // nothing further to do without an email address
+
+  // Send via the shared SendGrid module (src/lib/integrations/sendgrid.ts) —
+  // this is the single source of truth for email templates and the verified
+  // sender address, replacing the old inline fetch() implementation that
+  // duplicated this logic with a stale fallback domain.
+  const result = type === "confirm"
+    ? await sendReservationConfirmation(r.email, { firstName: r.firstName, date: dateStr, time: timeStr, partySize: r.partySize, rsvpCode: r.rsvpCode })
+    : await sendCancellationEmail(r.email, { firstName: r.firstName, rsvpCode: r.rsvpCode, date: dateStr })
+
+  if (result.success) {
+    await prisma.messageLog.updateMany({
+      where: { reservationId, status: "PENDING" },
+      data: { status: "SENT", sentAt: new Date(), externalId: result.messageId ?? null },
+    }).catch(() => {})
   }
+
+  // Sync the guest to Systeme.io CRM. Tag depends on the transition:
+  //   confirm -> hive-club-member is reserved for manual VIP tagging, so we use
+  //              past-customer here since they now have a confirmed upcoming visit
+  //   cancel  -> inquirer, since the booking did not result in a completed visit
+  // Non-blocking — CRM sync failure should never affect the reservation flow itself.
+  const tag = type === "confirm" ? SYSTEME_CONFIG.tags.pastCustomer : SYSTEME_CONFIG.tags.inquirer
+  upsertSystemeContact(r.email, r.firstName, r.lastName, r.phone ?? undefined, [tag]).catch(err =>
+    console.error("[Systeme.io] sync failed for reservation", reservationId, err)
+  )
 }
 
 // ── GET /api/reservations/:id ──────────────────────────────────────────────

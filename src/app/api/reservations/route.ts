@@ -71,15 +71,23 @@ export async function GET(request: NextRequest) {
 }
 
 // ── POST /api/reservations ─────────────────────────────────────────────────
+// Two callers use this endpoint:
+//   1. Public guest RSVP form (source: "web_form") — NO session, guest is anonymous
+//   2. Staff creating a reservation on a guest's behalf — REQUIRES session
+// The distinction matters: we cannot require login for the public booking form,
+// but staff-created reservations still need an authenticated staffId for the
+// activity log. Auth is enforced conditionally based on the declared source.
 
 export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const isPublicSubmission = body.source === "web_form";
+
   const session = await getSession();
-  if (!session) {
+  if (!session && !isPublicSubmission) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const body = await request.json();
     const parsed = createReservationSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -119,8 +127,8 @@ export async function POST(request: NextRequest) {
         activity: {
           create: {
             type: "created",
-            description: `Reservation created by ${session.name}`,
-            staffId: session.id,
+            description: session ? `Reservation created by ${session.name}` : `Reservation submitted via public RSVP form`,
+            staffId: session?.id ?? null,
           },
         },
       },

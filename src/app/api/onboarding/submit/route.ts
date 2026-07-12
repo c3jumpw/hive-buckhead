@@ -15,7 +15,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized — complete access code verification first" }, { status: 401 })
   }
   const body = await request.json()
-  const { name, email, phone, role, pin, positionId, legalName, dateOfBirth, address, emergencyContact, emergencyPhone, startDate, tshirtSize } = body
+  const { name, email, phone, role, pin, positionId, legalName, dateOfBirth, address, emergencyContact, emergencyPhone, startDate, tshirtSize, employmentSigned, codeOfConductSigned } = body
+
+  // Both legal documents must be acknowledged before an onboarding record can be created.
+  // The client already gates this in the UI, but we re-verify server-side since the
+  // client can't be trusted — this is the actual point at which signing is legally recorded.
+  if (!employmentSigned || !codeOfConductSigned) {
+    return NextResponse.json({ error: "Both legal documents must be signed to complete onboarding" }, { status: 400 })
+  }
   if (!name || !email || !pin || pin.length < 4) {
     return NextResponse.json({ error: "Name, email, and 4-digit PIN required" }, { status: 400 })
   }
@@ -32,7 +39,16 @@ export async function POST(request: NextRequest) {
       data: { teamId, name, email, phone: phone || null, role: role || "Staff", positionId: positionId || null, accessLevel: "STAFF", pin: hashedPin, onboardingCompleted: true, onboardingCompletedAt: new Date() },
     })
     await prisma.onboardingRecord.create({
-      data: { staffId: staff.id, legalName: legalName || name, dateOfBirth: dateOfBirth || null, address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null, tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null, employmentAgreementStatus: "PENDING", codeOfConductStatus: "PENDING", completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null },
+      data: {
+        staffId: staff.id, legalName: legalName || name, dateOfBirth: dateOfBirth || null,
+        address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null,
+        tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null,
+        // Both docs are required (checked above) — record as SIGNED with timestamp,
+        // not the default PENDING, since the user just acknowledged them in this request.
+        employmentAgreementStatus: "SIGNED", employmentAgreementSignedAt: new Date(),
+        codeOfConductStatus: "SIGNED", codeOfConductSignedAt: new Date(),
+        completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null,
+      },
     })
     logStaffToSheet({ teamId, name, email, phone, role: role || "Staff", startDate, createdAt: new Date().toISOString() }).catch(console.error)
     logOnboardingToSheet({ teamId, name, email, position: role || "Staff", completedAt: new Date().toISOString() }).catch(console.error)

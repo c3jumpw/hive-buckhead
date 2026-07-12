@@ -71,17 +71,24 @@ export async function requireAccessLevel(level: string): Promise<SessionStaff> {
 /** Legacy alias used by some existing routes */
 export async function requireAuth(): Promise<SessionStaff> { return requireSession() }
 
-/** Verify a staff PIN against bcrypt hash — used in login route */
-export async function verifyStaffPin(email: string, pin: string): Promise<SessionStaff | null> {
+/**
+ * Verify a staff PIN against bcrypt hash — used by the login route.
+ * Looks up by staff.id (the login dropdown selects staff by database id,
+ * since display names are not guaranteed unique and PIN is the real secret).
+ * @param staffId - Staff record's database id (cuid), selected from login dropdown
+ * @param pin - 4-digit PIN entered by the user
+ * @returns SessionStaff on success, null if staff not found, inactive, or PIN wrong
+ */
+export async function verifyStaffPin(staffId: string, pin: string): Promise<SessionStaff | null> {
   const bcrypt = await import("bcryptjs")
   const staff = await prisma.staff.findUnique({
-    where: { email, active: true },
+    where: { id: staffId, active: true },
     select: { id: true, name: true, email: true, role: true, accessLevel: true, color: true, pin: true },
   })
   if (!staff) return null
   const valid = await bcrypt.compare(String(pin), staff.pin)
   if (!valid) return null
-  const { pin: _, ...sessionData } = staff
+  const { pin: _unused, ...sessionData } = staff
   return { ...sessionData, accessLevel: sessionData.accessLevel as string }
 }
 

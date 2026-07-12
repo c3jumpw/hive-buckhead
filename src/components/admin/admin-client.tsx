@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
 import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard } from "@/components/admin/onboarding-manager"
+import { PositionManager, RecurringScheduleEditor, OffboardingForm } from "@/components/admin/staff-tools"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   Users, Table2, CalendarDays, Edit3, Eye, EyeOff, Save, X,
@@ -51,6 +52,9 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
   const router = useRouter()
   const searchParams = useSearchParams()
   const [tablesSubTab, setTablesSubTab] = useState("list")
+  const [showPositionManager, setShowPositionManager] = useState(false)
+  const [scheduleEditorStaff, setScheduleEditorStaff] = useState<{ id: string; name: string } | null>(null)
+  const [offboardingStaff, setOffboardingStaff] = useState<{ id: string; name: string } | null>(null)
   // Sync tab with URL so sidebar links work (useState doesn't re-init on prop change)
   const tab = searchParams.get("tab") || initialTab || "overview"
   const setTab = (t: string) => router.push(`/admin?tab=${t}`, { scroll: false })
@@ -247,6 +251,9 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
               </div>
               <p className="text-xs text-amber-400">⚠ Change all PINs before go-live</p>
             </div>
+            <Button size="sm" variant="outline" className="w-full h-9 mb-1" onClick={() => setShowPositionManager(true)}>
+              Manage Positions
+            </Button>
             {/* Add new staff member */}
             {!addingNewStaff ? (
               <Button size="sm" variant="outline" className="w-full h-10 border-dashed" onClick={() => setAddingNewStaff(true)}>
@@ -337,8 +344,14 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
                       <div className="text-xs text-muted-foreground">{member.role as string} · {member.email as string}</div>
                     </div>
                     <div className="text-xs text-muted-foreground font-mono mr-2">PIN: ••••</div>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setScheduleEditorStaff({ id: member.id as string, name: member.name as string })}>
+                      Schedule
+                    </Button>
                     <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => startEditStaff(member)}>
                       <Edit3 className="h-3 w-3 mr-1" />Edit
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs text-red-400 hover:text-red-300" onClick={() => setOffboardingStaff({ id: member.id as string, name: member.name as string })}>
+                      Offboard
                     </Button>
                   </div>
                 )}
@@ -590,6 +603,27 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
         )}
 
       </div>
+
+      {/* ── Modals for Positions, Recurring Schedule, Offboarding ── */}
+      {showPositionManager && <PositionManager onClose={() => setShowPositionManager(false)} />}
+      {scheduleEditorStaff && (
+        <RecurringScheduleEditor
+          staffId={scheduleEditorStaff.id}
+          staffName={scheduleEditorStaff.name}
+          onClose={() => setScheduleEditorStaff(null)}
+        />
+      )}
+      {offboardingStaff && (
+        <OffboardingForm
+          staffId={offboardingStaff.id}
+          staffName={offboardingStaff.name}
+          onClose={() => setOffboardingStaff(null)}
+          onComplete={() => {
+            setStaff(prev => prev.filter(s => s.id !== offboardingStaff.id))
+            setOffboardingStaff(null)
+          }}
+        />
+      )}
     </div>
   )
 }
