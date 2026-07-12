@@ -11,18 +11,46 @@ import { cn } from "@/lib/utils"
 type Step = 1 | 2 | 3 | 4 | 5
 
 // TIME_SLOTS generated dynamically from operating hours (see useOperatingHours hook below)
+/**
+ * Generates 30-minute reservation time slots between an open and close time.
+ *
+ * Handles overnight hours correctly — e.g. open 12:00 PM, close 12:00 AM
+ * (midnight) the following day. Native <input type="time"> stores midnight
+ * as "00:00", which numerically comes BEFORE any afternoon opening time.
+ * A naive h < closeH comparison fails immediately in that case and silently
+ * produces zero slots (which the RSVP form then displays as "closed" even
+ * though the restaurant is genuinely open) — this is why every day showed
+ * "We are closed" regardless of the admin-configured hours.
+ *
+ * Fix: work in total minutes from midnight, and if the close time is
+ * numerically <= the open time, treat it as happening after midnight by
+ * adding 24 hours (1440 minutes) to the close time before comparing.
+ * Display hours are wrapped back into the normal 0-23 range with `% 24`
+ * so "25:30" renders as "1:30 AM", not an invalid hour.
+ *
+ * @param openTime  - "HH:MM" 24-hour format, e.g. "12:00"
+ * @param closeTime - "HH:MM" 24-hour format, e.g. "00:00" (midnight)
+ * @returns array of { value, label } slots in 30-minute increments
+ */
 function generateTimeSlots(openTime: string, closeTime: string): { value: string; label: string }[] {
   const slots: { value: string; label: string }[] = []
   const [openH, openM] = openTime.split(":").map(Number)
   const [closeH, closeM] = closeTime.split(":").map(Number)
-  let h = openH, m = openM
-  while (h < closeH || (h === closeH && m < closeM)) {
-    const value = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`
-    const hour12 = h % 12 || 12
-    const ampm = h < 12 ? "AM" : "PM"
+
+  const openMinutes = openH * 60 + openM
+  let closeMinutes = closeH * 60 + closeM
+  // Close time is on/before open time numerically -> it's actually past midnight.
+  // Push it into the next day's minute-range so the loop below runs correctly.
+  if (closeMinutes <= openMinutes) closeMinutes += 24 * 60
+
+  for (let mins = openMinutes; mins < closeMinutes; mins += 30) {
+    const dayHour = Math.floor(mins / 60) % 24  // wrap 24+ back to 0-23 for display
+    const m = mins % 60
+    const value = `${String(dayHour).padStart(2,"0")}:${String(m).padStart(2,"0")}`
+    const hour12 = dayHour % 12 || 12
+    const ampm = dayHour < 12 ? "AM" : "PM"
     const label = `${hour12}:${String(m).padStart(2,"0")} ${ampm}`
     slots.push({ value, label })
-    m += 30; if (m >= 60) { m -= 60; h++ }
   }
   return slots
 }
