@@ -7,8 +7,20 @@
 import sgMail from "@sendgrid/mail"
 import { SENDGRID_CONFIG } from "@/lib/config"
 
-// Initialize SDK — runs once per server process
-sgMail.setApiKey(SENDGRID_CONFIG.apiKey)
+// Tracks whether the SDK has been initialized with a valid key.
+// Initialization is deferred to first use (not module load) so a missing
+// key never crashes the Next.js build — it only fails the specific send call.
+let initialized = false
+function ensureInitialized(): boolean {
+  if (initialized) return true
+  if (!SENDGRID_CONFIG.apiKey) {
+    console.error("[SendGrid] SENDGRID_API_KEY is not set — email sending disabled")
+    return false
+  }
+  sgMail.setApiKey(SENDGRID_CONFIG.apiKey)
+  initialized = true
+  return true
+}
 
 type EmailResult = { success: boolean; messageId?: string; error?: string }
 
@@ -17,6 +29,7 @@ export async function sendReservationConfirmation(
   to: string,
   data: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string; section?: string }
 ): Promise<EmailResult> {
+  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -36,6 +49,7 @@ export async function sendCancellationEmail(
   to: string,
   data: { firstName: string; rsvpCode: string; date: string }
 ): Promise<EmailResult> {
+  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -55,6 +69,7 @@ export async function sendOnboardingWelcome(
   to: string,
   data: { name: string; portalUrl: string; startDate?: string }
 ): Promise<EmailResult> {
+  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -79,6 +94,7 @@ export async function sendOnboardingWelcome(
 export async function sendStaffBlast(
   toEmails: string[], subject: string, message: string, fromName: string
 ): Promise<{ sent: number; failed: number }> {
+  if (!ensureInitialized()) return { sent: 0, failed: toEmails.length }
   let sent = 0, failed = 0
   for (const email of toEmails) {
     try {

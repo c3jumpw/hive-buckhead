@@ -45,10 +45,9 @@ export const SENDGRID_CONFIG = {
   fromEmail: "reservations@thehivebuckhead.com",
   fromName: "Hive Buckhead",
   // SECRET — loaded from environment variable
+  // Returns empty string if unset — callers check before use, never throws at import time
   get apiKey() {
-    const key = process.env.SENDGRID_API_KEY
-    if (!key) throw new Error("SENDGRID_API_KEY environment variable is not set")
-    return key
+    return process.env.SENDGRID_API_KEY ?? ""
   },
 } as const
 
@@ -71,9 +70,7 @@ export const SYSTEME_CONFIG = {
   },
   // SECRET — loaded from environment variable
   get apiKey() {
-    const key = process.env.SYSTEME_IO_API_KEY
-    if (!key) throw new Error("SYSTEME_IO_API_KEY environment variable is not set")
-    return key
+    return process.env.SYSTEME_IO_API_KEY ?? ""
   },
 } as const
 
@@ -111,8 +108,7 @@ export const GOOGLE_SHEETS_CONFIG = {
   serviceAccountEmail: "hive-sheets@gen-lang-client-0286055899.iam.gserviceaccount.com",
   // SECRET — private key from service account JSON
   get privateKey() {
-    const key = process.env.GOOGLE_PRIVATE_KEY
-    if (!key) throw new Error("GOOGLE_PRIVATE_KEY environment variable is not set")
+    const key = process.env.GOOGLE_PRIVATE_KEY ?? ""
     return key.replace(/\\n/g, "\n")  // Vercel escapes newlines in env vars
   },
 } as const
