@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { X, Phone, Mail, Users, Clock, Table2, CheckCircle, UserCheck, XCircle, Edit3, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "./status-badge"
-import { formatDate, formatTime, formatCurrency, cn } from "@/lib/utils"
+import { formatDate, formatTime, formatCurrency, renderTemplate, cn } from "@/lib/utils"
 import type { ReservationStatus } from "@/types"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,6 +19,21 @@ interface DetailPanelProps {
 
 export function ReservationDetailPanel({ reservation: r, onClose, onAction }: DetailPanelProps) {
   const [msgTab, setMsgTab] = useState<"email" | "sms">("email")
+
+  // BUG HISTORY (2026-07-15): this component previously rendered three
+  // templates hardcoded directly in this file, completely disconnected
+  // from the admin "Messages" tab's template editor — editing a template
+  // there had zero effect on what these buttons actually sent. Now fetches
+  // the same /api/message-templates endpoint the admin editor reads/writes,
+  // so both surfaces share one real source of truth.
+  const [templates, setTemplates] = useState<{ id: string; name: string; channel: string; subject: string | null; body: string }[]>([])
+
+  useEffect(() => {
+    fetch("/api/message-templates")
+      .then(res => res.ok ? res.json() : null)
+      .then(json => { if (json?.data) setTemplates(json.data) })
+      .catch(() => {})
+  }, [])
 
   if (!r) return null
 
@@ -182,25 +197,32 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction }: De
             ))}
           </div>
           <div className="space-y-1.5">
-            {[
-              { label: "Confirm", body: msgTab === "email"
-                ? `Hi ${r.firstName},\n\nYour reservation at Hive Buckhead is confirmed for ${formatDate(r.date)} at ${formatTime(r.arrivalTime)}, party of ${r.partySize}.\n\nRSVP # ${r.rsvpCode}\n\nHive Buckhead`
-                : `Hi ${r.firstName}! Confirmed: Hive Buckhead ${formatDate(r.date)} at ${formatTime(r.arrivalTime)}, party of ${r.partySize}. RSVP #${r.rsvpCode}` },
-              { label: "Reminder", body: msgTab === "email"
-                ? `Hi ${r.firstName},\n\nReminder: your Hive Buckhead reservation is today at ${formatTime(r.arrivalTime)} for ${r.partySize}.\n\nHive Buckhead`
-                : `Hi ${r.firstName}, reminder: your Hive Buckhead table is today at ${formatTime(r.arrivalTime)} 🍸` },
-              { label: "Thank You", body: msgTab === "email"
-                ? `Hi ${r.firstName},\n\nThank you for dining with us at Hive Buckhead!\n\nHive Buckhead`
-                : `Hi ${r.firstName}! Thank you for dining at Hive Buckhead — hope to see you again! 🥂` },
-            ].map(({ label, body }) => (
-              <button
-                key={label}
-                onClick={() => onAction("message", { ...r, _msgBody: body, _msgChannel: msgTab })}
-                className="w-full text-left px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-hive-surface2 hover:text-foreground border border-border transition-colors"
-              >
-                {label}
-              </button>
-            ))}
+            {templates.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">No templates configured — add some in Admin → Messages.</p>
+            ) : (
+              templates
+                .filter(t => t.channel === (msgTab === "email" ? "EMAIL" : "SMS"))
+                .map(t => {
+                  // Substitute {{firstName}}, {{date}}, etc. with this reservation's
+                  // real values — same rendering logic the admin editor's preview
+                  // would use, so what's previewed matches what's actually sent.
+                  const vars = {
+                    firstName: r.firstName, lastName: r.lastName,
+                    date: formatDate(r.date), time: formatTime(r.arrivalTime),
+                    partySize: String(r.partySize), rsvpCode: r.rsvpCode,
+                  }
+                  const renderedBody = renderTemplate(t.body, vars)
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => onAction("message", { ...r, _msgBody: renderedBody, _msgChannel: msgTab })}
+                      className="w-full text-left px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-hive-surface2 hover:text-foreground border border-border transition-colors"
+                    >
+                      {t.name}
+                    </button>
+                  )
+                })
+            )}
           </div>
         </div>
 

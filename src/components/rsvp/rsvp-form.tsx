@@ -119,7 +119,25 @@ export function RsvpForm() {
   const [notes,     setNotes]       = useState("")
 
   const today = new Date().toISOString().split("T")[0]
-  const maxDate = new Date(); maxDate.setDate(maxDate.getDate() + 60)
+
+  /**
+   * BUG HISTORY (2026-07-15): the booking window was hardcoded to 60 days
+   * here, completely disconnected from AppSettings.bookingWindowDays —
+   * which the admin Settings tab now lets an owner/manager actually edit.
+   * Without this fix, changing that setting would persist to the database
+   * but have zero real effect on what guests could actually book, since
+   * this component never read it. Now fetches the live value on mount and
+   * falls back to 60 only if the settings endpoint is unreachable.
+   */
+  const [bookingWindowDays, setBookingWindowDays] = useState(60)
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(r => r.ok ? r.json() : null)
+      .then(json => { if (typeof json?.data?.bookingWindowDays === "number") setBookingWindowDays(json.data.bookingWindowDays) })
+      .catch(() => {})
+  }, [])
+
+  const maxDate = new Date(); maxDate.setDate(maxDate.getDate() + bookingWindowDays)
   const maxDateStr = maxDate.toISOString().split("T")[0]
   const party = parseInt(partySize) || 0
 

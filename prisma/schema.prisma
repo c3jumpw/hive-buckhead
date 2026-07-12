@@ -128,6 +128,22 @@ model Position {
 
 // Core staff record. Covers both admin-level and portal-level users.
 // PIN is hashed with bcrypt. TeamId format: AA-001 (auto-generated on onboarding).
+// Approval gate for staff created through the public onboarding portal.
+// BUG HISTORY (2026-07-15): before this field existed, onboarding/submit
+// created Staff records with the schema default `active: true`, meaning a
+// new hire was immediately visible everywhere (staff lists, login dropdown,
+// dashboard counts) the moment they finished the form — with no admin
+// review step at all. This enum + the approvalStatus field on Staff close
+// that gap: onboarding submissions now default to PENDING + active:false,
+// and every existing query that already filters `active: true` (staff-list,
+// admin staff tab, dashboard) automatically excludes them with zero further
+// changes, until an admin explicitly approves.
+enum OnboardingApprovalStatus {
+  PENDING   // awaiting admin review — set by onboarding/submit
+  APPROVED  // admin approved — staff.active flips to true
+  REJECTED  // admin rejected — stays inactive permanently, record kept for audit
+}
+
 model Staff {
   id              String           @id @default(cuid())
   teamId          String?          @unique @map("team_id")       // "AA-001" format
@@ -142,6 +158,10 @@ model Staff {
   pin             String           // bcrypt-hashed PIN code
   color           String           @default("#C9A96E")
   section         Section?
+  // Master visibility switch. false = invisible to login, staff lists,
+  // dashboards, everywhere. Staff added directly by an admin default to
+  // true (the admin IS the approval). Onboarding-portal submissions
+  // explicitly override this to false at creation — see submit route.
   active          Boolean          @default(true)
   avatarUrl       String?          @map("avatar_url")
   notes           String?          // admin-only internal notes
@@ -149,6 +169,13 @@ model Staff {
   // Onboarding tracking
   onboardingCompleted Boolean   @default(false) @map("onboarding_completed")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+
+  // Approval gate — only meaningful when onboardingCompleted is true.
+  // Staff created directly by an admin (not through the portal) default to
+  // APPROVED since no review step applies to them.
+  approvalStatus  OnboardingApprovalStatus @default(APPROVED) @map("approval_status")
+  approvedAt      DateTime?        @map("approved_at")
+  approvedBy      String?          @map("approved_by")  // admin name who approved/rejected
 
   // Offboarding tracking
   terminatedAt    DateTime?        @map("terminated_at")
@@ -385,6 +412,41 @@ model ActivityLog {
 
   @@index([reservationId])
   @@map("activity_logs")
+}
+
+// =============================================================================
+// MESSAGE TEMPLATES
+// =============================================================================
+
+// Reusable message templates for the quick-send buttons on a reservation's
+// detail panel (Confirm / Reminder / Thank You, etc.), editable by admins.
+//
+// BUG HISTORY (2026-07-15): before this model existed, the "Messages" admin
+// tab had a fully-built editor UI whose Save button only updated in-memory
+// React state — every edit vanished on page refresh, because there was
+// nothing to persist to. Separately, the actual quick-send buttons on each
+// reservation's detail panel used a completely different, hardcoded set of
+// three templates baked directly into that component. The two systems never
+// talked to each other: editing a template in the admin tab had zero effect
+// on what staff actually sent to guests. This model unifies both into one
+// real, persisted source of truth.
+//
+// `body` supports {{placeholder}} tokens — firstName, lastName, date, time,
+// partySize, rsvpCode — substituted at send time by renderTemplate() in
+// src/lib/utils/index.ts. Admins can edit wording freely without touching
+// code, as long as they keep the {{...}} tokens they want populated.
+model MessageTemplate {
+  id        String         @id @default(cuid())
+  name      String         // e.g. "Confirm", "Reminder", "Thank You"
+  channel   MessageChannel // EMAIL or SMS — body content and length expectations differ
+  subject   String?        // email only; ignored for SMS
+  body      String         // supports {{firstName}} {{date}} {{time}} {{partySize}} {{rsvpCode}}
+  active    Boolean        @default(true)
+
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  @@map("message_templates")
 }
 
 model MessageLog {

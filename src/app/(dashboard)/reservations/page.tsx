@@ -19,12 +19,36 @@ export default async function ReservationsPage() {
   const session = await requireAuth();
   const today = format(new Date(), "yyyy-MM-dd");
 
-  // Fetch today's reservations server-side for instant first render
+  /**
+   * BUG HISTORY (2026-07-15): this query previously fetched ONLY today's
+   * reservations (gte today, lt tomorrow). The client component's own
+   * "Today" / "Upcoming" / "Past" filters operate entirely on whatever is
+   * in this initial dataset — there is no client-side fetch for other
+   * dates (see reservations-client.tsx, which never calls GET
+   * /api/reservations at all). The practical effect: switching to
+   * "Upcoming" just re-filtered the same today-only list, which is why
+   * any reservation dated even one day out — including every public RSVP
+   * submission for a future date — silently never appeared anywhere in
+   * the list/kanban/calendar views, even though it existed correctly in
+   * the database (visible only in unfiltered widgets like "recent
+   * activity" on the dashboard, which query separately).
+   *
+   * Fix: fetch a real window — 7 days back (covers "Past" and any
+   * same-week edits) through 90 days ahead (covers the booking window
+   * most guests use). This is still bounded (not the entire table) but
+   * wide enough that every filter in the client actually has data.
+   */
+  const windowStart = new Date(today);
+  windowStart.setDate(windowStart.getDate() - 7);
+  const windowEnd = new Date(today);
+  windowEnd.setDate(windowEnd.getDate() + 90);
+
+  // Fetch server-side for instant first render
   const reservations = await prisma.reservation.findMany({
     where: {
       date: {
-        gte: new Date(today),
-        lt: new Date(new Date(today).getTime() + 86400000),
+        gte: windowStart,
+        lt: windowEnd,
       },
     },
     include: {

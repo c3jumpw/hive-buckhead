@@ -1,12 +1,38 @@
 /**
- * POST — final onboarding form submission
- * Creates Staff + OnboardingRecord, logs to Google Sheets, sends welcome email
+ * src/app/api/onboarding/submit/route.ts
+ * =============================================================================
+ * Final onboarding form submission handler.
+ *
+ * Flow:
+ *   1. Verify onboarding portal session (access code was checked earlier)
+ *   2. Validate both legal documents were acknowledged
+ *   3. Generate a team ID (HB-001 format)
+ *   4. Create Staff record — active:false, approvalStatus:PENDING (NOT
+ *      immediately visible anywhere — see BUG HISTORY below)
+ *   5. Create OnboardingRecord with signed-document timestamps
+ *   6. Log the submission to the "Onboarding Log" Google Sheet (audit trail
+ *      of all submissions, pending or not — distinct from the "Staff
+ *      Records" sheet, which only gets the roster once approved)
+ *   7. Send the new hire a "received, pending review" email — no portal
+ *      link, since the account isn't active yet
+ *   8. Notify all active OWNER/MANAGER staff that a submission needs review
+ *
+ * BUG HISTORY (2026-07-15): this route previously created Staff with no
+ * explicit `active` value, which meant the Prisma schema default (`true`)
+ * applied — every new hire was immediately live in staff lists, the login
+ * dropdown, and dashboard counts, with zero admin review. It also called
+ * logStaffToSheet() here (at submission), meaning unapproved staff were
+ * already written into the "Staff Records" backup sheet before any human
+ * had reviewed them. Both are fixed: active/approvalStatus now explicitly
+ * gate visibility, and the Staff Records sheet write moved to the approval
+ * route (src/app/api/onboarding/approve/route.ts).
+ * =============================================================================
  */
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { TEAM_ID_CONFIG } from "@/lib/config"
-import { logStaffToSheet, logOnboardingToSheet } from "@/lib/integrations/google-sheets"
-import { sendOnboardingWelcome } from "@/lib/integrations/sendgrid"
+import { logOnboardingToSheet } from "@/lib/integrations/google-sheets"
+import { sendOnboardingReceived, sendAdminOnboardingAlert } from "@/lib/integrations/sendgrid"
 import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
@@ -14,48 +40,85 @@ export async function POST(request: NextRequest) {
   if (session?.value !== "verified") {
     return NextResponse.json({ error: "Unauthorized — complete access code verification first" }, { status: 401 })
   }
-  const body = await request.json()
-  const { name, email, phone, role, pin, positionId, legalName, dateOfBirth, address, emergencyContact, emergencyPhone, startDate, tshirtSize, employmentSigned, codeOfConductSigned } = body
 
-  // Both legal documents must be acknowledged before an onboarding record can be created.
-  // The client already gates this in the UI, but we re-verify server-side since the
-  // client can't be trusted — this is the actual point at which signing is legally recorded.
+  const body = await request.json()
+  const { name, email, phone, role, pin, positionId, legalName, dateOfBirth, address,
+          emergencyContact, emergencyPhone, startDate, tshirtSize,
+          employmentSigned, codeOfConductSigned } = body
+
+  // Both legal documents must be acknowledged before a record can be created.
+  // The client already gates this in the UI, but we re-verify server-side
+  // since the client can't be trusted — this is the actual point at which
+  // signing is legally recorded.
   if (!employmentSigned || !codeOfConductSigned) {
     return NextResponse.json({ error: "Both legal documents must be signed to complete onboarding" }, { status: 400 })
   }
   if (!name || !email || !pin || pin.length < 4) {
     return NextResponse.json({ error: "Name, email, and 4-digit PIN required" }, { status: 400 })
   }
+
+  // Generate the next sequential team ID (HB-001, HB-002, ...)
   const prefix = TEAM_ID_CONFIG.prefix
-  const existingIds = await prisma.staff.findMany({ where: { teamId: { startsWith: prefix } }, select: { teamId: true }, orderBy: { teamId: "desc" } })
-  const lastNum = existingIds.reduce((max: number, s: any) => {
+  const existingIds = await prisma.staff.findMany({
+    where: { teamId: { startsWith: prefix } }, select: { teamId: true }, orderBy: { teamId: "desc" },
+  })
+  const lastNum = existingIds.reduce((max: number, s: { teamId: string | null }) => {
     const num = parseInt(s.teamId?.replace(prefix + "-", "") ?? "0")
     return num > max ? num : max
   }, 0)
   const teamId = prefix + "-" + String(lastNum + 1).padStart(TEAM_ID_CONFIG.digits, "0")
   const hashedPin = await bcrypt.hash(pin, 10)
+
   try {
     const staff = await prisma.staff.create({
-      data: { teamId, name, email, phone: phone || null, role: role || "Staff", positionId: positionId || null, accessLevel: "STAFF", pin: hashedPin, onboardingCompleted: true, onboardingCompletedAt: new Date() },
+      data: {
+        teamId, name, email, phone: phone || null,
+        role: role || "Staff", positionId: positionId || null,
+        accessLevel: "STAFF", pin: hashedPin,
+        onboardingCompleted: true, onboardingCompletedAt: new Date(),
+        // Gate: invisible everywhere until an admin approves.
+        // active:false is what actually excludes this record from every
+        // existing `where: { active: true }` query across the app — no
+        // other query changes were needed once this was set correctly.
+        active: false,
+        approvalStatus: "PENDING",
+      },
     })
+
     await prisma.onboardingRecord.create({
       data: {
         staffId: staff.id, legalName: legalName || name, dateOfBirth: dateOfBirth || null,
         address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null,
         tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null,
-        // Both docs are required (checked above) — record as SIGNED with timestamp,
-        // not the default PENDING, since the user just acknowledged them in this request.
         employmentAgreementStatus: "SIGNED", employmentAgreementSignedAt: new Date(),
         codeOfConductStatus: "SIGNED", codeOfConductSignedAt: new Date(),
         completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null,
       },
     })
-    logStaffToSheet({ teamId, name, email, phone, role: role || "Staff", startDate, createdAt: new Date().toISOString() }).catch(console.error)
+
+    // Audit trail of the submission itself — separate from the roster sheet.
+    // Non-blocking: a Sheets failure must never block the onboarding flow.
     logOnboardingToSheet({ teamId, name, email, position: role || "Staff", completedAt: new Date().toISOString() }).catch(console.error)
-    sendOnboardingWelcome(email, { name, portalUrl: "https://staffportal.thehivebuckhead.com", startDate: startDate ? new Date(startDate).toLocaleDateString() : undefined }).catch(console.error)
+
+    // New hire: "we got it, pending review" — no portal link, account isn't active.
+    sendOnboardingReceived(email, { name }).catch(console.error)
+
+    // Admins: notify everyone with review authority. Query fresh rather than
+    // relying on any cached list, since this needs to reflect current staff.
+    prisma.staff.findMany({
+      where: { active: true, accessLevel: { in: ["OWNER", "MANAGER"] } },
+      select: { email: true },
+    }).then((admins: { email: string }[]) => {
+      const emails = admins.map((a: { email: string }) => a.email)
+      if (emails.length > 0) sendAdminOnboardingAlert(emails, { name, role: role || "Staff" }).catch(console.error)
+    }).catch(console.error)
+
     return NextResponse.json({ data: { staffId: staff.id, teamId }, success: true }, { status: 201 })
-  } catch (e: any) {
-    if (e.code === "P2002") return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
+  } catch (e: unknown) {
+    const err = e as { code?: string }
+    if (err.code === "P2002") {
+      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
+    }
     console.error("[Onboarding] Submission error:", e)
     return NextResponse.json({ error: "Submission failed" }, { status: 500 })
   }

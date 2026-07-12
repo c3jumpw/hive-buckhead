@@ -80,12 +80,28 @@ export const SYSTEME_CONFIG = {
 // API key for sending messages via Quo (if supported).
 // =============================================================================
 
+// =============================================================================
+// QUO (customer messaging + SMS)
+// REVISION HISTORY (2026-07-15): initially built as "link-only mode" — an
+// API key existed but sending capability was unconfirmed, so the app only
+// linked out to the Quo inbox rather than sending programmatically. User
+// clarified Quo IS the platform for automated texts (previously referred to
+// as "OpenPhone," which is Quo's former brand name — same company/account,
+// rebranded, not a separate service) and confirmed the sending number.
+// Real sends now implemented in src/lib/integrations/quo.ts.
+// =============================================================================
+
 export const QUO_CONFIG = {
-  // Direct link to Hive Buckhead's Quo inbox — opens in new tab
+  // Direct link to Hive Buckhead's Quo inbox — opens in new tab for staff
+  // to view/reply to conversations manually.
   inboxUrl: "https://my.quo.com/inbox/PNiXqWFx95",
-  // SECRET — loaded from environment variable (used if Quo supports API sends)
+  // The Quo phone number automated texts are sent FROM. Not a secret — it's
+  // the number guests see and can call/text back, same treatment as
+  // SENDGRID_CONFIG.fromEmail below. Confirmed by user 2026-07-15.
+  fromNumber: "+16785396865",
+  // SECRET — loaded from environment variable
   get apiKey() {
-    return process.env.QUO_API_KEY ?? null  // null = link-only mode, no API sends
+    return process.env.QUO_API_KEY ?? null
   },
 } as const
 

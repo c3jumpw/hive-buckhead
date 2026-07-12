@@ -226,3 +226,25 @@ export function hasAccess(
 ): boolean {
   return (ACCESS_LEVEL_ORDER[userLevel] ?? 0) >= (ACCESS_LEVEL_ORDER[required] ?? 0);
 }
+
+// ── Message template rendering ──────────────────────────────────────────────
+
+/**
+ * Substitutes {{placeholder}} tokens in a message template with real values.
+ * Used by both the admin template editor's preview and the actual send path
+ * (reservation-detail-panel.tsx), so what an admin sees while editing matches
+ * exactly what a guest receives — no separate rendering logic to drift apart.
+ *
+ * @param template - raw template body/subject containing zero or more
+ *   {{key}} tokens (e.g. "Hi {{firstName}}, see you at {{time}}!")
+ * @param vars - key/value map of substitutions. Unmatched tokens in the
+ *   template (a key present in the text but not in `vars`) are left as-is
+ *   rather than silently deleted — this makes a missing variable visible
+ *   and debuggable instead of producing a confusing blank in the message.
+ * @returns the template with all matching tokens replaced
+ */
+export function renderTemplate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(vars, key) ? vars[key] : match
+  )
+}

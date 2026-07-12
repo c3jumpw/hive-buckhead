@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
-import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard } from "@/components/admin/onboarding-manager"
+import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel } from "@/components/admin/onboarding-manager"
 import { PositionManager, RecurringScheduleEditor, OffboardingForm } from "@/components/admin/staff-tools"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
-  Users, Table2, CalendarDays, Edit3, Eye, EyeOff, Save, X,
+  Users, Table2, CalendarDays, Edit3, Eye, EyeOff, Save, X, Plus,
   Settings, Clock, MessageSquare, Database, BarChart3, CheckCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -61,6 +61,21 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
   const [staff, setStaff] = useState<AnyRecord[]>(initStaff)
   const [hours, setHours] = useState<AnyRecord[]>(initHours)
   const [templates, setTemplates] = useState(initTemplates)
+
+  // BUG HISTORY (2026-07-15): templates previously came ONLY from the
+  // initTemplates prop, which several admin sub-routes (settings, staff,
+  // hours pages) hardcode to an empty array — meaning this tab showed no
+  // templates at all unless mounted from the one route that happened to
+  // query real data. Now fetches independently on mount, matching the
+  // pattern already used by OnboardingManager/PendingApprovalsPanel below,
+  // so the Messages tab works correctly regardless of which admin route
+  // rendered it.
+  useEffect(() => {
+    fetch("/api/message-templates")
+      .then(r => r.ok ? r.json() : null)
+      .then(json => { if (json?.data) setTemplates(json.data) })
+      .catch(() => {})
+  }, [])
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null)
   const [addingNewStaff, setAddingNewStaff] = useState(false)
   const [newStaffForm, setNewStaffForm] = useState({ name: '', email: '', role: '', accessLevel: 'STAFF', pin: '', color: '#5B96C8' })
@@ -70,6 +85,50 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null)
   const [templateForm, setTemplateForm] = useState({ name: "", channel: "EMAIL", subject: "", body: "" })
   const [seedLoading, setSeedLoading] = useState(false)
+
+  /**
+   * BUG HISTORY (2026-07-15): the "Reservation Settings" card in the
+   * Settings tab displayed hardcoded values ("20", "60", "No") as
+   * plain read-only text — not connected to anything, not editable —
+   * despite a fully-working, correctly-authorized AppSettings model and
+   * GET/PATCH /api/settings route already existing in the codebase.
+   * Wired up for real: fetches on mount, each field is now editable,
+   * saves persist via PATCH.
+   */
+  const [appSettings, setAppSettings] = useState<{ maxPartySize: number; bookingWindowDays: number; autoConfirm: boolean } | null>(null)
+  const [savingSettings, setSavingSettings] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        setAppSettings({
+          maxPartySize: json?.data?.maxPartySize ?? 20,
+          bookingWindowDays: json?.data?.bookingWindowDays ?? 60,
+          autoConfirm: json?.data?.autoConfirm ?? false,
+        })
+      })
+      .catch(() => setAppSettings({ maxPartySize: 20, bookingWindowDays: 60, autoConfirm: false }))
+  }, [])
+
+  async function saveAppSettings(patch: Partial<{ maxPartySize: number; bookingWindowDays: number; autoConfirm: boolean }>) {
+    if (!appSettings) return
+    const next = { ...appSettings, ...patch }
+    setAppSettings(next)  // optimistic
+    setSavingSettings(true)
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      })
+      if (res.ok) toast({ title: "Settings saved" })
+      else toast({ title: "Failed to save settings", variant: "destructive" })
+    } catch {
+      toast({ title: "Failed to save settings", variant: "destructive" })
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   // ── Staff edit ──────────────────────────────────────────────────────────
 
@@ -135,10 +194,68 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
     setTemplateForm({ name: t.name, channel: t.channel, subject: t.subject, body: t.body })
   }
 
-  function saveTemplate() {
-    setTemplates(prev => prev.map(t => t.id === editingTemplate ? { ...t, ...templateForm } : t))
+  /**
+   * BUG HISTORY (2026-07-15): this previously only updated local React
+   * state via setTemplates — no API call at all. Every edit was lost the
+   * moment the page refreshed, and had zero effect on what the actual
+   * quick-send buttons in the reservation detail panel sent to guests
+   * (that component used its own hardcoded, disconnected template text).
+   * Now PATCHes /api/message-templates/:id for real, and the reservation
+   * panel fetches from the same endpoint — one source of truth.
+   */
+  async function saveTemplate() {
+    if (!editingTemplate) return
+    try {
+      const res = await fetch(`/api/message-templates/${editingTemplate}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(templateForm),
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        setTemplates(prev => prev.map(t => t.id === editingTemplate ? data : t))
+        toast({ title: "Template saved" })
+      } else {
+        toast({ title: "Failed to save template", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Failed to save template", variant: "destructive" })
+    }
     setEditingTemplate(null)
-    toast({ title: "Template saved" })
+  }
+
+  /** Creates a new blank template and immediately opens it for editing. */
+  async function createTemplate() {
+    try {
+      const res = await fetch("/api/message-templates", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "New Template", channel: "EMAIL", subject: "", body: "Hi {{firstName}}," }),
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        setTemplates(prev => [...prev, data])
+        startEditTemplate(data)
+      } else {
+        toast({ title: "Failed to create template", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Failed to create template", variant: "destructive" })
+    }
+  }
+
+  /** Soft-deletes a template (active: false) — kept for audit, hidden from send buttons. */
+  async function deleteTemplate(id: string) {
+    if (!confirm("Delete this template? It will no longer appear in the quick-send list.")) return
+    try {
+      const res = await fetch(`/api/message-templates/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        setTemplates(prev => prev.filter(t => t.id !== id))
+        toast({ title: "Template deleted" })
+      } else {
+        toast({ title: "Failed to delete template", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Failed to delete template", variant: "destructive" })
+    }
   }
 
   // ── Load sample data ────────────────────────────────────────────────────
@@ -467,11 +584,14 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
         {/* ── Message Templates ────────────────────────────────────────── */}
         {tab === "messages" && (
           <div className="max-w-2xl space-y-4">
-            <div>
-              <h2 className="font-medium">Message Templates</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Variables: {"{{firstName}}"} {"{{date}}"} {"{{time}}"} {"{{partySize}}"} {"{{rsvpCode}}"} {"{{changeUrl}}"}
-              </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="font-medium">Message Templates</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Variables: {"{{firstName}}"} {"{{date}}"} {"{{time}}"} {"{{partySize}}"} {"{{rsvpCode}}"} {"{{changeUrl}}"}
+                </p>
+              </div>
+              <Button size="sm" onClick={createTemplate}><Plus className="h-3.5 w-3.5 mr-1.5" />New Template</Button>
             </div>
             {templates.map(t => (
               <div key={t.id} className="bg-hive-surface border border-border rounded-xl overflow-hidden">
@@ -512,6 +632,9 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
                       <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => startEditTemplate(t)}>
                         <Edit3 className="h-3 w-3 mr-1" />Edit
                       </Button>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs text-red-400 hover:text-red-300" onClick={() => deleteTemplate(t.id)}>
+                        <X className="h-3 w-3 mr-1" />Delete
+                      </Button>
                     </div>
                     {t.subject && <p className="text-xs text-muted-foreground mb-1">Subject: <span className="text-foreground">{t.subject}</span></p>}
                     <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-sans bg-hive-surface2 rounded-lg p-3 max-h-32 overflow-y-auto">{t.body}</pre>
@@ -530,6 +653,7 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
               <p className="text-xs text-muted-foreground mt-0.5">Onboarding access, staff announcements, feedback inbox, and customer messaging</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <PendingApprovalsPanel />
               <OnboardingManager />
               <QuoLinkCard />
               <MessageBlastTool />
@@ -585,19 +709,34 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
             {/* Reservation settings */}
             <div className="bg-hive-surface border border-border rounded-xl p-5 space-y-4">
               <h3 className="font-medium text-sm">Reservation Settings</h3>
-              <div className="space-y-3">
-                {[
-                  { label: "Max party size for online booking", value: "20" },
-                  { label: "Booking window (days in advance)", value: "60" },
-                  { label: "Auto-confirm reservations", value: "No" },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <span className="text-sm">{label}</span>
-                    <span className="text-sm text-muted-foreground">{value}</span>
+              {!appSettings ? (
+                <p className="text-xs text-muted-foreground">Loading…</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between py-2 border-b border-border">
+                    <span className="text-sm">Max party size for online booking</span>
+                    <Input type="number" min={1} max={100} value={appSettings.maxPartySize}
+                      onChange={e => setAppSettings(s => s ? { ...s, maxPartySize: Number(e.target.value) } : s)}
+                      onBlur={() => saveAppSettings({ maxPartySize: appSettings.maxPartySize })}
+                      className="w-20 h-8 text-xs text-right" disabled={savingSettings} />
                   </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">Full settings configuration coming in a future update.</p>
+                  <div className="flex items-center justify-between py-2 border-b border-border">
+                    <span className="text-sm">Booking window (days in advance)</span>
+                    <Input type="number" min={1} max={365} value={appSettings.bookingWindowDays}
+                      onChange={e => setAppSettings(s => s ? { ...s, bookingWindowDays: Number(e.target.value) } : s)}
+                      onBlur={() => saveAppSettings({ bookingWindowDays: appSettings.bookingWindowDays })}
+                      className="w-20 h-8 text-xs text-right" disabled={savingSettings} />
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm">Auto-confirm reservations</span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs"
+                      onClick={() => saveAppSettings({ autoConfirm: !appSettings.autoConfirm })} disabled={savingSettings}>
+                      {appSettings.autoConfirm ? "Yes — click to disable" : "No — click to enable"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">Changes save automatically.</p>
             </div>
           </div>
         )}

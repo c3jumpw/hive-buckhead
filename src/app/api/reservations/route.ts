@@ -8,6 +8,11 @@ import { createServerSupabaseClient } from "@/lib/auth/supabase-server";
 import { getSession } from "@/lib/auth/session";
 import { createReservationSchema } from "@/lib/validations/reservation";
 import { generateRsvpCode } from "@/lib/utils";
+import { sendReservationReceived, sendReservationConfirmation } from "@/lib/integrations/sendgrid";
+import { sendReservationReceivedSms, sendReservationConfirmationSms } from "@/lib/integrations/quo";
+import { upsertSystemeContact } from "@/lib/integrations/systeme";
+import { SYSTEME_CONFIG } from "@/lib/config";
+import { formatDate, formatTime } from "@/lib/utils";
 
 // ── GET /api/reservations ──────────────────────────────────────────────────
 
@@ -99,6 +104,36 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data;
 
+    /**
+     * BUG HISTORY (2026-07-15): AppSettings (maxPartySize, autoConfirm) is
+     * now editable from Admin → Settings, but neither value previously had
+     * any real effect on reservation creation — maxPartySize was a static
+     * Zod .max(50), and autoConfirm wasn't read anywhere at all, meaning
+     * toggling it in the admin UI persisted to the database but changed
+     * nothing about what actually happened when a guest booked. Both are
+     * now enforced here, in the one place a public reservation gets
+     * created. Only fetched/applied for public submissions — a staff
+     * member creating a reservation directly is already the "confirming"
+     * action, these limits are specifically about the unattended public
+     * booking flow.
+     */
+    const settings = isPublicSubmission
+      ? await prisma.appSettings.findUnique({ where: { id: "singleton" } })
+      : null;
+
+    if (isPublicSubmission) {
+      const maxPartySize = settings?.maxPartySize ?? 20;
+      if (data.partySize > maxPartySize) {
+        return NextResponse.json(
+          { error: `For parties larger than ${maxPartySize}, please call us directly to arrange your reservation.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const autoConfirm = isPublicSubmission && (settings?.autoConfirm ?? false);
+    const initialStatus = autoConfirm ? "CONFIRMED" : "REQUESTED";
+
     // Generate a unique RSVP code
     let rsvpCode = generateRsvpCode();
     let attempts = 0;
@@ -123,7 +158,7 @@ export async function POST(request: NextRequest) {
         occasion: data.occasion || null,
         notes: data.notes || null,
         source: body.source || "staff",
-        status: "REQUESTED",
+        status: initialStatus,
         activity: {
           create: {
             type: "created",
@@ -138,6 +173,78 @@ export async function POST(request: NextRequest) {
         activity: { orderBy: { createdAt: "desc" }, take: 5 },
       },
     });
+
+    // ── Public-submission side effects (email + CRM sync) ──────────────
+    // BUG HISTORY (2026-07-15): neither of these fired at all — the guest
+    // got no confirmation email/text on submission, and Systeme.io never
+    // received the contact. Both integration modules existed and worked
+    // correctly (verified separately), they were simply never called from
+    // this route. Only fires for public submissions (source: "web_form")
+    // with an email address — staff-created reservations don't need a
+    // "we received your request" email (the staff member IS the receipt),
+    // and Systeme.io upsert requires an email to key off of.
+    //
+    // Branches on autoConfirm (see BUG HISTORY above initialStatus): if
+    // the admin has auto-confirm enabled, this reservation was created
+    // with status CONFIRMED directly, so the guest gets the real
+    // confirmation email/SMS and a past-customer CRM tag immediately —
+    // not the "received, pending review" messaging, which would be
+    // inaccurate since there's no pending review step in that mode.
+    // Otherwise, behavior is unchanged from before: "received" messaging
+    // + inquirer tag, with the existing Systeme.io automation removing
+    // "inquirer" once a human later confirms and it becomes past-customer.
+    if (isPublicSubmission && reservation.email) {
+      if (autoConfirm) {
+        sendReservationConfirmation(reservation.email, {
+          firstName: reservation.firstName,
+          date: formatDate(reservation.date),
+          time: formatTime(reservation.arrivalTime),
+          partySize: reservation.partySize,
+          rsvpCode: reservation.rsvpCode,
+        }).catch((err: unknown) => console.error("[Reservations] auto-confirm email failed:", err));
+
+        upsertSystemeContact(
+          reservation.email, reservation.firstName, reservation.lastName,
+          reservation.phone ?? undefined, [SYSTEME_CONFIG.tags.pastCustomer]
+        ).catch((err: unknown) => console.error("[Reservations] Systeme.io past-customer tag failed:", err));
+      } else {
+        sendReservationReceived(reservation.email, {
+          firstName: reservation.firstName,
+          date: formatDate(reservation.date),
+          time: formatTime(reservation.arrivalTime),
+          partySize: reservation.partySize,
+          rsvpCode: reservation.rsvpCode,
+        }).catch((err: unknown) => console.error("[Reservations] received-email failed:", err));
+
+        upsertSystemeContact(
+          reservation.email, reservation.firstName, reservation.lastName,
+          reservation.phone ?? undefined, [SYSTEME_CONFIG.tags.inquirer]
+        ).catch((err: unknown) => console.error("[Reservations] Systeme.io inquirer tag failed:", err));
+      }
+    }
+
+    // SMS confirmation — fulfills the "confirmation text" half of the RSVP
+    // form's consent language (see rsvp-form.tsx). Sent whenever a phone
+    // number is present, independent of whether email was also provided —
+    // phone is a required field on every reservation, email is optional.
+    if (isPublicSubmission && reservation.phone) {
+      if (autoConfirm) {
+        sendReservationConfirmationSms(reservation.phone, {
+          firstName: reservation.firstName,
+          date: formatDate(reservation.date),
+          time: formatTime(reservation.arrivalTime),
+          partySize: reservation.partySize,
+          rsvpCode: reservation.rsvpCode,
+        }).catch((err: unknown) => console.error("[Reservations] auto-confirm SMS failed:", err));
+      } else {
+        sendReservationReceivedSms(reservation.phone, {
+          firstName: reservation.firstName,
+          date: formatDate(reservation.date),
+          time: formatTime(reservation.arrivalTime),
+          rsvpCode: reservation.rsvpCode,
+        }).catch((err: unknown) => console.error("[Reservations] received-SMS failed:", err));
+      }
+    }
 
     return NextResponse.json({ data: reservation }, { status: 201 });
   } catch (error) {

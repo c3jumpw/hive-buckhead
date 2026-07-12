@@ -220,3 +220,101 @@ export function QuoLinkCard() {
     </div>
   )
 }
+
+/**
+ * PendingApprovalsPanel
+ * Shows every staff member who completed onboarding but hasn't been
+ * approved/rejected yet. Approve makes them fully active (login, staff
+ * lists, dashboards, Google Sheets roster). Reject keeps the record for
+ * audit purposes but they never become visible anywhere.
+ */
+export function PendingApprovalsPanel() {
+  const [pending, setPending] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [processingId, setProcessingId] = useState<string | null>(null)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/onboarding/pending")
+      if (res.ok) { const { data } = await res.json(); setPending(data) }
+    } finally { setLoading(false) }
+  }
+
+  async function approve(staffId: string, name: string) {
+    setProcessingId(staffId)
+    try {
+      const res = await fetch("/api/onboarding/approve", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId }),
+      })
+      if (res.ok) {
+        toast({ title: `${name} approved`, description: "They can now log in and appear in staff lists." })
+        setPending(prev => prev.filter(p => p.id !== staffId))
+      } else {
+        const err = await res.json()
+        toast({ title: err.error || "Approval failed", variant: "destructive" })
+      }
+    } finally { setProcessingId(null) }
+  }
+
+  async function reject(staffId: string, name: string) {
+    if (!confirm(`Reject ${name}'s onboarding? This cannot be undone from here.`)) return
+    setProcessingId(staffId)
+    try {
+      const res = await fetch("/api/onboarding/reject", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId }),
+      })
+      if (res.ok) {
+        toast({ title: `${name}'s onboarding rejected` })
+        setPending(prev => prev.filter(p => p.id !== staffId))
+      } else {
+        const err = await res.json()
+        toast({ title: err.error || "Rejection failed", variant: "destructive" })
+      }
+    } finally { setProcessingId(null) }
+  }
+
+  return (
+    <div className="bg-hive-surface border border-gold-500/30 rounded-xl p-5 space-y-3 md:col-span-2">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-sm flex items-center gap-2">
+          Pending Approvals
+          {pending.length > 0 && <span className="text-[10px] bg-gold-500/20 text-gold-400 px-2 py-0.5 rounded-full">{pending.length}</span>}
+        </h3>
+        <button onClick={load} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : pending.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No submissions awaiting approval.</p>
+      ) : (
+        <div className="space-y-2">
+          {pending.map(p => (
+            <div key={p.id} className="bg-hive-surface2 border border-border rounded-lg p-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">{p.name}</div>
+                <div className="text-xs text-muted-foreground">{p.email} · {p.role}{p.position?.name ? ` (${p.position.name})` : ""}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">Submitted {new Date(p.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => reject(p.id, p.name)} disabled={processingId === p.id}
+                  className="px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs hover:bg-red-500/10 disabled:opacity-50">
+                  Reject
+                </button>
+                <button onClick={() => approve(p.id, p.name)} disabled={processingId === p.id}
+                  className="px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-600 text-black text-xs font-medium disabled:opacity-50">
+                  {processingId === p.id ? "…" : "Approve"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

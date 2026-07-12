@@ -196,10 +196,35 @@ async function main() {
     });
   }
 
+  // Seed default message templates — matches the wording previously
+  // hardcoded in reservation-detail-panel.tsx, now editable by admins via
+  // the Messages tab and shared as a single source of truth with the
+  // reservation quick-send buttons. {{placeholder}} tokens are substituted
+  // at send time by renderTemplate() in src/lib/utils/index.ts.
+  const templateData = [
+    { name: "Confirm", channel: "EMAIL" as const, subject: "Your reservation is confirmed",
+      body: "Hi {{firstName}},\n\nYour reservation at Hive Buckhead is confirmed for {{date}} at {{time}}, party of {{partySize}}.\n\nRSVP # {{rsvpCode}}\n\nHive Buckhead" },
+    { name: "Confirm", channel: "SMS" as const, subject: null,
+      body: "Hi {{firstName}}! Confirmed: Hive Buckhead {{date}} at {{time}}, party of {{partySize}}. RSVP #{{rsvpCode}}" },
+    { name: "Reminder", channel: "EMAIL" as const, subject: "Reminder: your reservation today",
+      body: "Hi {{firstName}},\n\nReminder: your Hive Buckhead reservation is today at {{time}} for {{partySize}}.\n\nHive Buckhead" },
+    { name: "Reminder", channel: "SMS" as const, subject: null,
+      body: "Hi {{firstName}}, reminder: your Hive Buckhead table is today at {{time}} 🍸" },
+    { name: "Thank You", channel: "EMAIL" as const, subject: "Thank you for dining with us",
+      body: "Hi {{firstName}},\n\nThank you for dining with us at Hive Buckhead!\n\nHive Buckhead" },
+    { name: "Thank You", channel: "SMS" as const, subject: null,
+      body: "Hi {{firstName}}! Thank you for dining at Hive Buckhead — hope to see you again! 🥂" },
+  ]
+  for (const t of templateData) {
+    const existing = await prisma.messageTemplate.findFirst({ where: { name: t.name, channel: t.channel } })
+    if (!existing) await prisma.messageTemplate.create({ data: t })
+  }
+
   console.log("✅ Seed complete!");
   console.log(`   Staff: ${staffData.length}`);
   console.log(`   Tables: ${tablesData.length}`);
   console.log(`   Operating hours: 7 days`);
+  console.log(`   Message templates: ${templateData.length}`);
   console.log("");
   console.log("⚠️  IMPORTANT: Change all staff PINs before going live!");
 }

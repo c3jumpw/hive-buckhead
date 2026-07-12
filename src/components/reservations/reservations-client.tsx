@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   Search, Plus, Download, RefreshCw,
@@ -16,7 +16,6 @@ import { NewRsvpModal, CloseTableModal, CancelModal } from "./reservation-modals
 import { SeatGuestModal } from "./reservation-modals"
 import { formatDate, formatTime, formatCurrency, cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
-import { useRealtimeReservations } from "@/lib/realtime/use-realtime-reservations"
 import type { SessionStaff, ReservationStatus } from "@/types"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,8 +56,27 @@ export function ReservationsClient({ initialReservations, staff, tables, session
   const [closeRsv, setCloseRsv] = useState<Reservation | null>(null)
   const [cancelRsv, setCancelRsv] = useState<Reservation | null>(null)
 
-  // Connect realtime updates
-  useRealtimeReservations()
+  /**
+   * BUG HISTORY (2026-07-15): this component previously called
+   * useRealtimeReservations(), which subscribes to Supabase Realtime and
+   * invalidates a React Query cache key (reservationKeys.lists()) on any
+   * change. That would be correct IF this component read its data via
+   * useReservations() from src/hooks/use-reservations.ts — but it doesn't;
+   * `reservations` above is plain useState seeded once from server props.
+   * Invalidating a cache nothing reads is a no-op, so newly created
+   * reservations (e.g. public RSVP submissions) never appeared without a
+   * manual full page reload — and even then, only if the page's own
+   * server-side query happened to include that date (see the date-range
+   * fix in reservations/page.tsx).
+   *
+   * Fixed by matching the pattern already proven elsewhere in this exact
+   * codebase (see floor-client.tsx): periodic router.refresh(), which
+   * re-runs the server component's data fetch and passes fresh props back
+   * down. Simpler than wiring this component onto React Query, and
+   * consistent with how the rest of the app already handles this same
+   * problem.
+   */
+  useEffect(() => { const i = setInterval(() => router.refresh(), 30000); return () => clearInterval(i) }, [router])
 
   const selected = useMemo(() => reservations.find(r => r.id === selectedId) ?? null, [reservations, selectedId])
 
@@ -122,7 +140,25 @@ export function ReservationsClient({ initialReservations, staff, tables, session
       } else if (action === "cancel") {
         setCancelRsv(r)
       } else if (action === "message") {
-        toast({ title: `Message queued for ${r.firstName}`, description: r._msgChannel === "sms" ? "SMS via Twilio" : "Email via SendGrid" })
+        // BUG HISTORY (2026-07-15): this previously just showed a success
+        // toast with zero backend call — "Message queued... SMS via
+        // Twilio" was shown regardless of whether any message was sent,
+        // because none ever was. Now calls the real send route
+        // (/api/reservations/:id/message), which uses the same
+        // SendGrid/Twilio modules as the automatic confirm/cancel
+        // notifications, and only shows success after a real send.
+        const channel = (r as Reservation & { _msgChannel?: string })._msgChannel ?? "email"
+        const msgBody = (r as Reservation & { _msgBody?: string })._msgBody ?? ""
+        const res = await fetch(`/api/reservations/${r.id}/message`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel, body: msgBody }),
+        })
+        if (res.ok) {
+          toast({ title: `Message sent to ${r.firstName}`, description: channel === "sms" ? "via SMS" : "via Email" })
+        } else {
+          const err = await res.json().catch(() => ({}))
+          toast({ title: err.error || "Failed to send message", variant: "destructive" })
+        }
       }
     } catch (e) {
       toast({ title: "Action failed", description: String(e), variant: "destructive" })

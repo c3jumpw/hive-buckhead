@@ -67,13 +67,24 @@ export default function OnboardingPortalPage() {
     } finally { setSubmitting(false) }
   }
 
-  const fieldClass = "w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+  // BUG HISTORY (2026-07-15): this class set bg-white but no explicit text
+  // color. Without one, inputs inherited the app-wide dark-theme default
+  // text color (near-white), which is effectively invisible on a white
+  // input background. text-gray-900 fixes this explicitly rather than
+  // relying on inheritance from wherever this page happens to be mounted.
+  const fieldClass = "w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-lg mx-auto">
-        {/* Header */}
+        {/* Header — logo mark matches the gold hexagon/bee branding used on the staff login screen */}
         <div className="text-center mb-8">
+          <svg width="56" height="56" viewBox="0 0 56 56" className="mx-auto mb-3" aria-label="Hive Buckhead logo">
+            <circle cx="28" cy="28" r="26" fill="#0E0C0A" stroke="#C9A96E" strokeWidth="2" />
+            <path d="M28 14 L38 20 L38 34 L28 40 L18 34 L18 20 Z" fill="none" stroke="#C9A96E" strokeWidth="1.5" />
+            <path d="M28 20 L22 24 L22 30 L28 34 L34 30 L34 24 Z" fill="#C9A96E" fillOpacity="0.15" stroke="#C9A96E" strokeWidth="1.2" />
+            <circle cx="28" cy="27" r="3" fill="#C9A96E" />
+          </svg>
           <h1 className="text-2xl font-serif font-bold text-gray-900">HIVE BUCKHEAD</h1>
           <p className="text-sm text-gray-500 mt-1">Staff Onboarding Portal</p>
           <p className="text-xs text-gray-400 mt-0.5">Hive Restaurant Buckhead, LLC</p>
@@ -221,15 +232,25 @@ export default function OnboardingPortalPage() {
             </div>
           )}
 
-          {/* ── STEP: Complete ── */}
+          {/* ── STEP: Complete ──
+              BUG HISTORY (2026-07-15): this previously told every new hire
+              to "log into the staff portal using your PIN" immediately —
+              but at this point their account is active:false and they
+              cannot log in at all until an admin approves them (see
+              /api/onboarding/submit and /api/onboarding/approve). Telling
+              them to log in right away just produced a confusing "invalid
+              PIN" experience. Rewritten to accurately describe the actual
+              next step: their manager has been notified and will review
+              the submission; a separate email follows once approved with
+              their employee ID and the real portal link. */}
           {step === "complete" && (
             <div className="text-center py-8 space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-3xl">✓</div>
-              <h2 className="font-semibold text-xl">Welcome to the Team!</h2>
-              <p className="text-sm text-gray-500">Your onboarding is complete. You\'ll receive a welcome email shortly. Your manager will walk you through your first shift.</p>
-              <p className="text-xs text-gray-400">Log into the staff portal at <strong>staffportal.thehivebuckhead.com</strong> using your PIN.</p>
-              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-700">
-                Keep your PIN private — do not share it with anyone.
+              <h2 className="font-semibold text-xl text-gray-900">Onboarding Received!</h2>
+              <p className="text-sm text-gray-500">Thanks for completing your paperwork. Your manager has been notified and will review your submission shortly.</p>
+              <p className="text-sm text-gray-500">You'll receive a follow-up email as soon as your account is approved — it will include your employee ID and a link to log in.</p>
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-700 text-left">
+                Keep the 4-digit PIN you just created somewhere safe — you'll use it to log in once your account is approved.
               </div>
             </div>
           )}

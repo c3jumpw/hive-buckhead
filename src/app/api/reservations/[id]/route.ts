@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { sendReservationConfirmation, sendCancellationEmail } from "@/lib/integrations/sendgrid";
+import { sendReservationConfirmationSms, sendCancellationSms } from "@/lib/integrations/quo";
 import { upsertSystemeContact } from "@/lib/integrations/systeme";
 import { SYSTEME_CONFIG } from "@/lib/config";
 import { prisma } from "@/lib/db/prisma";
@@ -40,8 +41,9 @@ async function sendNotification(
   const dateStr = formatDate(r.date)
   const timeStr = formatTime(r.arrivalTime)
 
-  // Always log the notification attempt regardless of whether email actually sends —
-  // this preserves an audit trail even if SendGrid is unconfigured or the guest has no email.
+  // Always log the notification attempt regardless of whether it actually
+  // sends — preserves an audit trail even if SendGrid/Twilio are
+  // unconfigured or the guest is missing a contact method.
   try {
     await prisma.messageLog.create({
       data: {
@@ -55,32 +57,60 @@ async function sendNotification(
     })
   } catch { /* MessageLog may not have reservationId field yet — non-fatal */ }
 
-  if (!r.email) return  // nothing further to do without an email address
+  // ── Email ──
+  // BUG HISTORY (2026-07-15): this function previously started with
+  // `if (!r.email) return`, which skipped EVERYTHING below it — including
+  // the SMS send and the Systeme.io sync — for any guest without an email
+  // on file. Email and SMS are independent contact methods (phone is a
+  // required field on every reservation, email is optional), so a missing
+  // email should only skip the email send, not silently skip SMS too.
+  if (r.email) {
+    // Send via the shared SendGrid module (src/lib/integrations/sendgrid.ts) —
+    // single source of truth for email templates and the verified sender
+    // address, replacing the old inline fetch() implementation that
+    // duplicated this logic with a stale fallback domain.
+    const emailResult = type === "confirm"
+      ? await sendReservationConfirmation(r.email, { firstName: r.firstName, date: dateStr, time: timeStr, partySize: r.partySize, rsvpCode: r.rsvpCode })
+      : await sendCancellationEmail(r.email, { firstName: r.firstName, rsvpCode: r.rsvpCode, date: dateStr })
 
-  // Send via the shared SendGrid module (src/lib/integrations/sendgrid.ts) —
-  // this is the single source of truth for email templates and the verified
-  // sender address, replacing the old inline fetch() implementation that
-  // duplicated this logic with a stale fallback domain.
-  const result = type === "confirm"
-    ? await sendReservationConfirmation(r.email, { firstName: r.firstName, date: dateStr, time: timeStr, partySize: r.partySize, rsvpCode: r.rsvpCode })
-    : await sendCancellationEmail(r.email, { firstName: r.firstName, rsvpCode: r.rsvpCode, date: dateStr })
-
-  if (result.success) {
-    await prisma.messageLog.updateMany({
-      where: { reservationId, status: "PENDING" },
-      data: { status: "SENT", sentAt: new Date(), externalId: result.messageId ?? null },
-    }).catch(() => {})
+    if (emailResult.success) {
+      await prisma.messageLog.updateMany({
+        where: { reservationId, status: "PENDING" },
+        data: { status: "SENT", sentAt: new Date(), externalId: emailResult.messageId ?? null },
+      }).catch(() => {})
+    }
   }
 
-  // Sync the guest to Systeme.io CRM. Tag depends on the transition:
-  //   confirm -> hive-club-member is reserved for manual VIP tagging, so we use
-  //              past-customer here since they now have a confirmed upcoming visit
-  //   cancel  -> inquirer, since the booking did not result in a completed visit
-  // Non-blocking — CRM sync failure should never affect the reservation flow itself.
-  const tag = type === "confirm" ? SYSTEME_CONFIG.tags.pastCustomer : SYSTEME_CONFIG.tags.inquirer
-  upsertSystemeContact(r.email, r.firstName, r.lastName, r.phone ?? undefined, [tag]).catch(err =>
-    console.error("[Systeme.io] sync failed for reservation", reservationId, err)
-  )
+  // ── SMS ──
+  // Fulfills the "confirmation text" half of the RSVP form's consent
+  // language. Fires independently of the email branch above — gated only
+  // on phone presence, which every reservation has.
+  if (r.phone) {
+    if (type === "confirm") {
+      sendReservationConfirmationSms(r.phone, { firstName: r.firstName, date: dateStr, time: timeStr, partySize: r.partySize, rsvpCode: r.rsvpCode })
+        .catch((err: unknown) => console.error("[Reservations] confirmation SMS failed:", err))
+    } else {
+      sendCancellationSms(r.phone, { firstName: r.firstName, rsvpCode: r.rsvpCode, date: dateStr })
+        .catch((err: unknown) => console.error("[Reservations] cancellation SMS failed:", err))
+    }
+  }
+
+  // ── Systeme.io sync ──
+  // Requires an email — Systeme.io contacts are keyed by email address,
+  // there's no phone-based contact model on their side, so this branch
+  // staying gated on r.email is a real external constraint, not a bug.
+  if (r.email) {
+    // Tag depends on the transition:
+    //   confirm -> past-customer (guest now has a confirmed upcoming visit).
+    //              An existing Systeme.io automation removes the "inquirer"
+    //              tag automatically once past-customer is applied — nothing
+    //              further needed on this end for that part.
+    //   cancel  -> inquirer, since the booking did not result in a completed visit
+    const tag = type === "confirm" ? SYSTEME_CONFIG.tags.pastCustomer : SYSTEME_CONFIG.tags.inquirer
+    upsertSystemeContact(r.email, r.firstName, r.lastName, r.phone ?? undefined, [tag]).catch((err: unknown) =>
+      console.error("[Systeme.io] sync failed for reservation", reservationId, err)
+    )
+  }
 }
 
 // ── GET /api/reservations/:id ──────────────────────────────────────────────
@@ -183,6 +213,38 @@ async function handleUpdate(
         activity: { orderBy: { createdAt: "desc" }, take: 10 },
       },
     });
+
+    // ── Keep linked tables' own state in sync with the reservation status ──
+    // BUG HISTORY (2026-07-15): the "seat a guest" action exists in TWO
+    // independent places — Floor View (floor-client.tsx) and the
+    // Reservations list (reservations-client.tsx's SeatGuestModal). Floor
+    // View's client code always made a SECOND api call afterward
+    // (PATCH /api/tables/:id) to mark the table SEATED; the Reservations
+    // page's client code did not — it only ever PATCHed the reservation
+    // itself. Result: seating a guest from the Reservations list correctly
+    // updated the reservation's status and its table links, but the
+    // table's own `state` field stayed whatever it was before (typically
+    // AVAILABLE or RESERVED) — so Floor View kept showing that table as
+    // empty while a guest was actually seated there.
+    //
+    // Fixed here, server-side, inside the same transaction as the status
+    // change, so EVERY current and future caller gets correct table-state
+    // sync automatically — this is no longer something each client has to
+    // separately remember to do.
+    const linkedTableIds = updated.tables.map((rt: { tableId: string }) => rt.tableId)
+    if (linkedTableIds.length > 0) {
+      if (status === "SEATED") {
+        await tx.table.updateMany({ where: { id: { in: linkedTableIds } }, data: { state: "SEATED" } })
+      } else if (status === "CONFIRMED") {
+        // A confirmed reservation with tables assigned reserves those
+        // tables on the floor plan ahead of arrival — but only if they're
+        // not already seated/dirty from a different, still-active party.
+        await tx.table.updateMany({
+          where: { id: { in: linkedTableIds }, state: "AVAILABLE" },
+          data: { state: "RESERVED" },
+        })
+      }
+    }
 
     // Log activity
     if (status && status !== current?.status) {
@@ -325,14 +387,28 @@ async function handleCancel(
 
 // ── Action: Approve change request ────────────────────────────────────────
 
+/**
+ * BUG HISTORY (2026-07-15): this previously read the change details from
+ * `body.changeRequest` — i.e. whatever the calling client happened to have
+ * in its own local state and chose to echo back — rather than the
+ * reservation's actual current changeRequest value in the database. In
+ * practice the one caller (reservations-client.tsx) does pass back what it
+ * read from the server, so this worked, but it's fragile: if that client's
+ * local copy went stale (another staff member updated the reservation
+ * first, or the page hadn't refreshed), approving would silently apply
+ * outdated change data instead of what the guest actually most recently
+ * requested. Fixed to read changeRequest directly from the database inside
+ * the transaction — the only source of truth that can't go stale.
+ */
 async function handleApproveChange(
   id: string,
-  body: { changeRequest?: Record<string, unknown> },
+  _body: unknown,
   session: { id: string; name: string }
 ) {
-  const cr = body.changeRequest ?? {};
-
   const reservation = await prisma.$transaction(async (tx: any) => {
+    const current = await tx.reservation.findUnique({ where: { id }, select: { changeRequest: true } })
+    const cr = (current?.changeRequest as Record<string, unknown>) ?? {}
+
     const updated = await tx.reservation.update({
       where: { id },
       data: {

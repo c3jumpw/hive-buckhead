@@ -42,9 +42,12 @@ export function ScheduleClient({ shifts, callouts, staff, session, weekStart, pr
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ staffId: "", date: weekStart, startTime: "17:00", endTime: "23:00", type: "CLOSE", role: "" })
-  const [coForm, setCoForm] = useState({ staffId: "", date: weekStart, reason: "SICK", coveredById: "", notes: "" })
-
   const isAdmin = session.accessLevel === "OWNER" || session.accessLevel === "MANAGER"
+  // Non-admins can only log a callout for themselves — see the callout
+  // route's authorization check. Defaulting this here (rather than only in
+  // the JSX) means the "Log Callout" button isn't stuck disabled for them
+  // waiting on a staffId value they're never shown a picker to set.
+  const [coForm, setCoForm] = useState({ staffId: isAdmin ? "" : session.id, date: weekStart, reason: "SICK", coveredById: "", notes: "" })
   const weekDates = DAYS.map((_, i) => format(addDays(parseISO(weekStart), i), "yyyy-MM-dd"))
 
   async function submitShift() {
@@ -239,10 +242,26 @@ export function ScheduleClient({ shifts, callouts, staff, session, weekStart, pr
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Who Called Out</Label>
-              <Select value={coForm.staffId} onValueChange={v => setCoForm(f => ({ ...f, staffId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select staff…" /></SelectTrigger>
-                <SelectContent>{staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-              </Select>
+              {/*
+                BUG HISTORY (2026-07-15): this dropdown let ANY user pick
+                ANY staff member, but the API now correctly rejects a
+                non-admin submitting someone else's staffId (see
+                src/app/api/callouts/route.ts) — without this fix, a
+                regular staff member selecting a coworker here would hit a
+                confusing 403 error with no clear explanation. For
+                non-admins, the field is locked to their own name; admins
+                keep the full picker since they legitimately log callouts
+                on behalf of others (e.g. someone calls the restaurant
+                directly instead of using the portal).
+              */}
+              {isAdmin ? (
+                <Select value={coForm.staffId} onValueChange={v => setCoForm(f => ({ ...f, staffId: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select staff…" /></SelectTrigger>
+                  <SelectContent>{staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : (
+                <Input value={session.name} disabled className="opacity-70" />
+              )}
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Date</Label>
