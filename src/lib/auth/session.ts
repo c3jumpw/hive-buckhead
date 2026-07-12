@@ -49,7 +49,7 @@ export async function requireAdmin(): Promise<SessionStaff> {
   const session = await getSession()
   if (!session) redirect("/login")
   const level = session!.accessLevel
-  if (level === "STAFF" || level === "FLOOR") redirect("/staff-portal")
+  if (level === "STAFF") redirect("/staff-portal")  // legacy FLOOR removed — STAFF now covers floor-only users
   return session!
 }
 

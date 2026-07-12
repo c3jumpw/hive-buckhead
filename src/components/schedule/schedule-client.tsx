@@ -44,7 +44,7 @@ export function ScheduleClient({ shifts, callouts, staff, session, weekStart, pr
   const [form, setForm] = useState({ staffId: "", date: weekStart, startTime: "17:00", endTime: "23:00", type: "CLOSE", role: "" })
   const [coForm, setCoForm] = useState({ staffId: "", date: weekStart, reason: "SICK", coveredById: "", notes: "" })
 
-  const isAdmin = session.accessLevel === "ADMIN" || session.accessLevel === "STAFF"
+  const isAdmin = session.accessLevel === "OWNER" || session.accessLevel === "MANAGER"
   const weekDates = DAYS.map((_, i) => format(addDays(parseISO(weekStart), i), "yyyy-MM-dd"))
 
   async function submitShift() {

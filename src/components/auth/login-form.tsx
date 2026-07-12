@@ -73,7 +73,7 @@ export function LoginForm() {
 
       // Redirect based on access level
       const level = json.data?.accessLevel;
-      if (level === "FLOOR") {
+      if (level === "STAFF") {
         router.push("/floor");
       } else {
         router.push("/reservations");

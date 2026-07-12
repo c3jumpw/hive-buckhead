@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, { params }: { params: { day: str
 
 export async function PATCH(request: NextRequest, { params }: { params: { day: string } }) {
   const session = await getSession()
-  if (!session || session.accessLevel !== "ADMIN") {
+  if (!session || (session.accessLevel !== "OWNER" && session.accessLevel !== "MANAGER")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
   const body = await request.json()

@@ -62,10 +62,10 @@ export function DashboardNav({ session }: DashboardNavProps) {
         <NavLink href="/reservations">Reservations</NavLink>
         <NavLink href="/floor">Floor</NavLink>
         <NavLink href="/schedule">Schedule</NavLink>
-        {hasAccess(session.accessLevel, "ADMIN") && (
+        {hasAccess(session.accessLevel, "MANAGER") && (
           <NavLink href="/admin">Admin</NavLink>
         )}
-        {hasAccess(session.accessLevel, "ADMIN") && (
+        {hasAccess(session.accessLevel, "MANAGER") && (
           <NavLink href="/analytics">Analytics</NavLink>
         )}
       </nav>

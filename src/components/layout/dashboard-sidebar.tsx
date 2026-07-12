@@ -39,7 +39,7 @@ export function DashboardSidebar({ session }: Props) {
         </div>
 
         {/* Administration — Level 1 only */}
-        {hasAccess(level, "ADMIN") && (
+        {hasAccess(level, "MANAGER") && (
           <div>
             <p className="sb-section-label">Administration</p>
             <div className="space-y-0.5">
@@ -59,7 +59,7 @@ export function DashboardSidebar({ session }: Props) {
             <p className="sb-section-label">Reports</p>
             <div className="space-y-0.5">
               <SidebarItem href="/analytics" label="Analytics" icon={<BarChart3 className="h-3.5 w-3.5" />} active={pathname === "/analytics"} />
-              {hasAccess(level, "ADMIN") && (
+              {hasAccess(level, "MANAGER") && (
                 <SidebarItem href="/analytics/staff" label="Staff Intelligence" icon={<Shield className="h-3.5 w-3.5" />} active={pathname === "/analytics/staff"} />
               )}
               <SidebarItem href="/reservations?export=csv" label="Export CSV" icon={<Download className="h-3.5 w-3.5" />} active={false} />
@@ -71,7 +71,7 @@ export function DashboardSidebar({ session }: Props) {
       {/* Access badge */}
       <div className="p-3 border-t border-border">
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <span className={cn("h-2 w-2 rounded-full", level === "ADMIN" ? "bg-gold-500" : level === "STAFF" ? "bg-blue-400" : "bg-muted-foreground")} />
+          <span className={cn("h-2 w-2 rounded-full", level === "OWNER" ? "bg-gold-500" : level === "MANAGER" ? "bg-blue-400" : "bg-muted-foreground")} />
           <span className="text-[10px] text-muted-foreground capitalize">{level.toLowerCase()} access</span>
         </div>
       </div>

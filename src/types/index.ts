@@ -2,7 +2,7 @@
 // Single source of truth for all app-wide types.
 // These are derived from Prisma types + extended for UI needs.
 
-export type AccessLevel = "ADMIN" | "STAFF" | "FLOOR";
+export type AccessLevel = "OWNER" | "MANAGER" | "STAFF";
 
 export type ReservationStatus =
   | "REQUESTED"

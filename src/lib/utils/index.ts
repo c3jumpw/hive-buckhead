@@ -212,8 +212,11 @@ export function truncate(str: string, length: number): string {
 // ── Access level helper (safe for client + server) ────────────────────────
 
 const ACCESS_LEVEL_ORDER: Record<string, number> = {
+  STAFF: 1,
+  MANAGER: 2,
+  OWNER: 3,
+  // Legacy aliases — kept so old data/links still resolve to a sane rank
   FLOOR: 1,
-  STAFF: 2,
   ADMIN: 3,
 };
 

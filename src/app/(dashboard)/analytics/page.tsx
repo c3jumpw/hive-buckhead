@@ -26,7 +26,7 @@ export default async function AnalyticsPage() {
       orderBy: { date: "asc" },
     }),
     prisma.staff.findMany({
-      where: { active: true, accessLevel: { in: ["ADMIN", "STAFF"] } },
+      where: { active: true, accessLevel: { in: ["OWNER", "MANAGER", "STAFF"] } },
       select: {
         id: true, name: true, color: true, role: true,
         _count: { select: { reservations: true, shifts: true, callouts: true } },

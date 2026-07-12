@@ -427,7 +427,7 @@ async function handleDenyChange(
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const session = await getSession();
-  if (!session || session.accessLevel !== "ADMIN") {
+  if (!session || (session.accessLevel !== "OWNER" && session.accessLevel !== "MANAGER")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

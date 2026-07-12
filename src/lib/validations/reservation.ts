@@ -142,7 +142,7 @@ export const staffSchema = z.object({
     .or(z.literal(""))
     .nullable(),
   role: z.string().min(1, "Role is required").max(100),
-  accessLevel: z.enum(["ADMIN", "STAFF", "FLOOR"]),
+  accessLevel: z.enum(["OWNER", "MANAGER", "STAFF"]),
   pin: z
     .string()
     .length(4, "PIN must be 4 digits")
