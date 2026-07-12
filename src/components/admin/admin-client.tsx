@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
+import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard } from "@/components/admin/onboarding-manager"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   Users, Table2, CalendarDays, Edit3, Eye, EyeOff, Save, X,
@@ -37,11 +38,12 @@ const TABS = [
   { id: "hours",      label: "Hours",             icon: Clock },
   { id: "messages",   label: "Messages",          icon: MessageSquare },
   { id: "settings",   label: "Settings",          icon: Settings },
+  { id: "team",       label: "Team Tools",        icon: MessageSquare },
 ]
 
-const ACCESS_LEVELS = ["ADMIN", "STAFF", "FLOOR"]
+const ACCESS_LEVELS = ["OWNER", "MANAGER", "STAFF"]
 const ACCESS_COLORS: Record<string, string> = {
-  ADMIN: "text-gold-500", STAFF: "text-blue-400", FLOOR: "text-muted-foreground",
+  OWNER: "text-gold-500", MANAGER: "text-blue-400", STAFF: "text-muted-foreground",
 }
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 
@@ -504,6 +506,22 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ── Team Tools (Onboarding, Announcements, Feedback, Quo) ────── */}
+        {tab === "team" && (
+          <div className="max-w-3xl space-y-6">
+            <div>
+              <h2 className="font-medium">Team Tools</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Onboarding access, staff announcements, feedback inbox, and customer messaging</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <OnboardingManager />
+              <QuoLinkCard />
+              <MessageBlastTool />
+              <FeedbackInbox />
+            </div>
           </div>
         )}
 
