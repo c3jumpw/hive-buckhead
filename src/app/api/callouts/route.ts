@@ -14,10 +14,16 @@
  * anyone (needed when a staff member calls the restaurant directly rather
  * than self-reporting); STAFF-level callers are restricted to staffId
  * matching their own session.
+ *
+ * Also notifies admins by email (2026-07-15 addition) — a callout affects
+ * same-day staffing and shouldn't wait for someone to check the schedule
+ * page to be noticed.
  */
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { getSession } from "@/lib/auth/session"
+import { sendAdminNotification } from "@/lib/integrations/sendgrid"
+import { getAdminEmails } from "@/lib/db/activity-logger"
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -30,6 +36,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "You can only log a callout for yourself" }, { status: 403 })
   }
 
+  const staffMember = await prisma.staff.findUnique({ where: { id: body.staffId }, select: { name: true } })
+
   const callout = await prisma.callout.create({
     data: {
       staffId: body.staffId, date: new Date(body.date),
@@ -37,5 +45,20 @@ export async function POST(request: NextRequest) {
       notes: body.notes || null, loggedBy: session.name,
     },
   })
+
+  // Non-blocking — logging a callout must never fail because the
+  // notification email had a problem. Same-day staffing gaps are time
+  // sensitive, so this fires immediately rather than waiting for anyone
+  // to check the schedule page.
+  getAdminEmails().then(emails => {
+    if (emails.length > 0) {
+      sendAdminNotification(
+        emails,
+        `Callout logged: ${staffMember?.name ?? "Unknown"}`,
+        `${staffMember?.name ?? "A staff member"} called out for ${new Date(body.date).toLocaleDateString()} — reason: ${body.reason}.${body.notes ? `\n\nNotes: ${body.notes}` : ""}\n\nLogged by: ${session.name}`
+      ).catch((err: unknown) => console.error("[Callout] admin notification failed:", err))
+    }
+  }).catch((err: unknown) => console.error("[Callout] failed to fetch admin emails:", err))
+
   return NextResponse.json({ data: callout }, { status: 201 })
 }

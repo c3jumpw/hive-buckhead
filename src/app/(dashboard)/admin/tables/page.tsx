@@ -10,5 +10,5 @@ export default async function AdminTablesPage() {
     prisma.table.findMany({ where: { active: true }, orderBy: [{ section: "asc" }, { displayId: "asc" }] }),
     prisma.staff.findMany({ where: { active: true }, select: { id: true, name: true, role: true, accessLevel: true, color: true, email: true, pin: true }, orderBy: { name: "asc" } }),
   ])
-  return <AdminClient session={session} initialTab="tables" stats={{ staffCount: staff.length, tableCount: tables.length, rsvpCount: 0 }} recentReservations={[]} staff={staff} tables={tables} hours={[]} messageTemplates={[]} />
+  return <AdminClient session={session} initialTab="tables" stats={{ staffCount: staff.length, tableCount: tables.length, barSeatCount: 0, rsvpCount: 0 }} recentReservations={[]} staff={staff} tables={tables} hours={[]} messageTemplates={[]} />
 }

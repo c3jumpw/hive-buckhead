@@ -262,13 +262,25 @@ async function handleUpdate(
   });
 
   // Send notification after transaction (non-blocking)
+  //
+  // BUG HISTORY (2026-07-15): both calls below used .catch(() => {}) —
+  // completely silent, zero logging. If sendNotification threw for any
+  // reason outside the specific SendGrid/Quo functions' own internal
+  // error handling (both of which DO log via console.error), there would
+  // be no trace anywhere that anything went wrong. A confirmed reservation
+  // that produced no email/SMS was genuinely undiagnosable from Vercel
+  // logs alone. Now logs the failure explicitly with the reservation id
+  // and notification type, so a "no email arrived" report can actually be
+  // traced to a specific error message instead of silence.
   if (parsed.data.status === "CONFIRMED" && current?.status !== "CONFIRMED") {
     const full = await prisma.reservation.findUnique({ where: { id }, select: { firstName: true, lastName: true, email: true, phone: true, date: true, arrivalTime: true, partySize: true, rsvpCode: true } })
-    if (full) sendNotification(id, "confirm", { ...full, date: full.date.toISOString() }).catch(() => {})
+    if (full) sendNotification(id, "confirm", { ...full, date: full.date.toISOString() })
+      .catch((err: unknown) => console.error(`[sendNotification] confirm failed for reservation ${id}:`, err))
   }
   if (parsed.data.status === "CANCELLED" && current?.status !== "CANCELLED") {
     const full = await prisma.reservation.findUnique({ where: { id }, select: { firstName: true, lastName: true, email: true, phone: true, date: true, arrivalTime: true, partySize: true, rsvpCode: true } })
-    if (full) sendNotification(id, "cancel", { ...full, date: full.date.toISOString() }).catch(() => {})
+    if (full) sendNotification(id, "cancel", { ...full, date: full.date.toISOString() })
+      .catch((err: unknown) => console.error(`[sendNotification] cancel failed for reservation ${id}:`, err))
   }
 
   return NextResponse.json({ data: reservation });

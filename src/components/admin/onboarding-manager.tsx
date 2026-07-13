@@ -318,3 +318,51 @@ export function PendingApprovalsPanel() {
     </div>
   )
 }
+
+/**
+ * IntegrationDiagnosticsPanel
+ * Shows configuration status for every external integration at a glance.
+ * Built specifically so "did an email/SMS not send because of a code bug,
+ * or because a credential is missing?" is a 5-second visual check instead
+ * of a live-test-and-log-dive every time it comes up.
+ */
+export function IntegrationDiagnosticsPanel() {
+  const [checks, setChecks] = useState<Record<string, { configured: boolean; detail: string }>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/diagnostics")
+      .then(r => r.ok ? r.json() : null)
+      .then(json => { if (json?.data) setChecks(json.data) })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const labels: Record<string, string> = {
+    sendgrid: "SendGrid (Email)", quo: "Quo (SMS)",
+    systemeIo: "Systeme.io (CRM)", googleSheets: "Google Sheets",
+    database: "Database",
+  }
+
+  return (
+    <div className="bg-hive-surface border border-border rounded-xl p-5 space-y-3">
+      <h3 className="font-medium text-sm">Integration Status</h3>
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Checking…</p>
+      ) : (
+        <div className="space-y-2">
+          {Object.entries(checks).map(([key, val]) => (
+            <div key={key} className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">{labels[key] ?? key}</span>
+              <span className={val.configured ? "text-green-400" : "text-red-400"}>
+                {val.configured ? "✓ Configured" : "✗ Missing"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-[10px] text-muted-foreground pt-1 border-t border-border">
+        "Configured" means the credential is present — a send can still fail for other reasons (invalid key, unverified sender, no API credits).
+      </p>
+    </div>
+  )
+}

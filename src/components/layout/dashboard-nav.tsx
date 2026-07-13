@@ -5,7 +5,7 @@ import { useThemeStore } from "@/stores/theme-store";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, RefreshCw, Sun, Moon } from "lucide-react";
+import { LogOut, RefreshCw, Sun, Moon, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -40,21 +40,19 @@ export function DashboardNav({ session }: DashboardNavProps) {
 
   return (
     <header className="flex h-[54px] shrink-0 items-center justify-between border-b border-border bg-hive-surface px-4 gap-3">
-      {/* Brand */}
-      <Link href="/reservations" className="flex items-center gap-2 shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Brand — BUG HISTORY (2026-07-15): previously an external
+          hivebuckhead.com WordPress image URL with an onError fallback
+          to hide it if unreachable, paired with separate HTML text. Real
+          logo files are now bundled locally (see /public/branding) —
+          using wide-logo.png here since it's a pre-composed horizontal
+          lockup (icon + wordmark) rather than reconstructing that layout
+          from a small icon + separate text every time. */}
+      <Link href="/reservations" className="flex items-center shrink-0">
         <img
-          src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png"
+          src="/branding/wide-logo.png"
           alt="Hive Buckhead"
-          width={26}
-          height={26}
-          className="rounded object-contain"
-          onError={(e) => (e.currentTarget.style.display = "none")}
+          className="h-8 w-auto object-contain"
         />
-        <span className="font-serif text-[19px] font-medium tracking-widest text-gold-500">
-          HIVE{" "}
-          <span className="font-light text-muted-foreground">BUCKHEAD</span>
-        </span>
       </Link>
 
       {/* Quick nav (large screens) */}
@@ -125,6 +123,17 @@ export function DashboardNav({ session }: DashboardNavProps) {
               <p className="text-xs text-muted-foreground">{session.role}</p>
             </div>
             <DropdownMenuSeparator />
+            {/* 2026-07-15: links directly to the Staff Portal's Profile tab,
+                where email/phone/PIN can be updated — previously there was
+                no way to reach this from the main admin dashboard at all,
+                only by separately navigating to /staff-portal and clicking
+                the Profile tab manually. */}
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/staff-portal?tab=profile">
+                <UserCog className="mr-2 h-4 w-4" />
+                Edit Profile
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"
               onClick={handleSignOut}

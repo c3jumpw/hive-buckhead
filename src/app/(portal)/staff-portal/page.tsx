@@ -9,9 +9,20 @@ import { StaffPortalClient } from "@/components/staff-portal/staff-portal-client
 
 export const metadata = { title: "Staff Portal — Hive Buckhead" }
 
-export default async function StaffPortalPage() {
+export default async function StaffPortalPage({
+  searchParams,
+}: {
+  searchParams: { tab?: string }
+}) {
   // Accessible to all authenticated staff
   const session = await requireSession()
+
+  // 2026-07-15: supports deep-linking to a specific tab, e.g. the "My
+  // Profile" link in the top nav dropdown goes to /staff-portal?tab=profile
+  const validTabs = ["schedule", "announcements", "feedback", "profile"] as const
+  const initialTab = validTabs.includes(searchParams.tab as typeof validTabs[number])
+    ? (searchParams.tab as typeof validTabs[number])
+    : undefined
 
   // Load announcements (pinned first, then by date)
   const announcements = await prisma.announcement.findMany({
@@ -40,6 +51,7 @@ export default async function StaffPortalPage() {
       announcements={announcements}
       shifts={shifts}
       recurringShifts={recurringShifts}
+      initialTab={initialTab}
     />
   )
 }

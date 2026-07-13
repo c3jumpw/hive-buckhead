@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   },
   description: "Reservation management system for Hive Buckhead",
   robots: { index: false, follow: false }, // private staff app
+  // 2026-07-15: no favicon was configured at all before this — real logo
+  // assets are now bundled locally, so the browser tab icon uses the same
+  // source of truth as every other logo placement in the app.
+  icons: { icon: "/branding/icon.png", apple: "/branding/icon.png" },
 };
 
 export const viewport: Viewport = {

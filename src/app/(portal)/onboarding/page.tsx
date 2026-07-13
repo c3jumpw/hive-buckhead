@@ -72,19 +72,26 @@ export default function OnboardingPortalPage() {
   // text color (near-white), which is effectively invisible on a white
   // input background. text-gray-900 fixes this explicitly rather than
   // relying on inheritance from wherever this page happens to be mounted.
-  const fieldClass = "w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+  //
+  // REVISION (2026-07-15, same day): follow-up request — the input tiles
+  // themselves (bg-white) were sitting inside an ALSO bg-white card with
+  // only a faint border-gray-200 separating them, so fields blended into
+  // the card with very little visual distinction. Changed to a light gray
+  // fill (bg-gray-100) with a more visible border, so each field reads
+  // clearly as its own interactive tile — text stays dark (gray-900) for
+  // legibility, only the tile background got darker/more distinct.
+  const fieldClass = "w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-amber-400"
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-lg mx-auto">
-        {/* Header — logo mark matches the gold hexagon/bee branding used on the staff login screen */}
+        {/* Header — BUG HISTORY (2026-07-15): this was a hand-drawn inline
+            SVG approximating the real hexagon/bee mark, built before real
+            logo assets existed. Replaced with the actual icon.png now that
+            it's been uploaded to the repo and bundled locally. */}
         <div className="text-center mb-8">
-          <svg width="56" height="56" viewBox="0 0 56 56" className="mx-auto mb-3" aria-label="Hive Buckhead logo">
-            <circle cx="28" cy="28" r="26" fill="#0E0C0A" stroke="#C9A96E" strokeWidth="2" />
-            <path d="M28 14 L38 20 L38 34 L28 40 L18 34 L18 20 Z" fill="none" stroke="#C9A96E" strokeWidth="1.5" />
-            <path d="M28 20 L22 24 L22 30 L28 34 L34 30 L34 24 Z" fill="#C9A96E" fillOpacity="0.15" stroke="#C9A96E" strokeWidth="1.2" />
-            <circle cx="28" cy="27" r="3" fill="#C9A96E" />
-          </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/branding/icon.png" alt="Hive Buckhead" width={64} height={64} className="mx-auto mb-3" />
           <h1 className="text-2xl font-serif font-bold text-gray-900">HIVE BUCKHEAD</h1>
           <p className="text-sm text-gray-500 mt-1">Staff Onboarding Portal</p>
           <p className="text-xs text-gray-400 mt-0.5">Hive Restaurant Buckhead, LLC</p>

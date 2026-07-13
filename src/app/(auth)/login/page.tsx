@@ -14,14 +14,22 @@ export default function LoginPage() {
       <div className="w-full max-w-[340px]">
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl overflow-hidden mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 mb-4">
+            {/*
+              BUG HISTORY (2026-07-15): this previously pointed at an
+              external WordPress media URL (hivebuckhead.com/wp-content/...)
+              with no guarantee it stays online, and no real logo asset had
+              been provided yet. Real branding files (icon/vert/wide logo)
+              were uploaded to github.com/c3jumpw/hive-buckhead/media and
+              are now bundled locally in /public/branding — self-hosted,
+              always available, no dependency on an external site staying up.
+            */}
             <Image
-              src="https://hivebuckhead.com/wp-content/uploads/2022/10/apple.png"
+              src="/branding/icon.png"
               alt="Hive Buckhead"
               width={56}
               height={56}
               className="object-contain"
-              unoptimized
             />
           </div>
           <h1 className="font-serif text-[26px] font-medium tracking-[0.12em] text-gold-500">

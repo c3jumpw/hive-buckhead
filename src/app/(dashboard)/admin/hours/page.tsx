@@ -10,5 +10,5 @@ export default async function AdminHoursPage() {
     prisma.operatingHours.findMany({ orderBy: { dayOfWeek: "asc" } }),
     prisma.staff.findMany({ where: { active: true }, select: { id: true, name: true, role: true, accessLevel: true, color: true, email: true, pin: true }, orderBy: { name: "asc" } }),
   ])
-  return <AdminClient session={session} initialTab="hours" stats={{ staffCount: 0, tableCount: 0, rsvpCount: 0 }} recentReservations={[]} staff={staff} tables={[]} hours={hours} messageTemplates={[]} />
+  return <AdminClient session={session} initialTab="hours" stats={{ staffCount: 0, tableCount: 0, barSeatCount: 0, rsvpCount: 0 }} recentReservations={[]} staff={staff} tables={[]} hours={hours} messageTemplates={[]} />
 }

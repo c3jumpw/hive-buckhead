@@ -15,14 +15,29 @@ async function main() {
   console.log("🌱 Seeding Hive Buckhead database...");
 
   // ── Staff ──────────────────────────────────────────────────────────────
+  // 2026-07-15: real names assigned for OWNER and MANAGER per business
+  // request — Kennedy Okere (Owner) and Gennee' Kelley (Manager). All other
+  // staff remain placeholder data as explicitly requested ("keep all other
+  // placeholder staff names and details"). No MANAGER-level entry existed
+  // in the original seed data — this adds one rather than renaming an
+  // existing STAFF-level entry, since promoting a placeholder server to
+  // MANAGER would have silently changed their access level too.
   const staffData = [
     {
-      name: "Admin User",
+      name: "Kennedy Okere",
       email: "admin@hivebuckhead.com",
       role: "Manager on Duty",
       accessLevel: AccessLevel.OWNER,
       pin: "1234",
       color: "#C9A96E",
+    },
+    {
+      name: "Gennee' Kelley",
+      email: "manager@hivebuckhead.com",
+      role: "General Manager",
+      accessLevel: AccessLevel.MANAGER,
+      pin: "9012",
+      color: "#D4894C",
     },
     {
       name: "Ashley Smith",
@@ -71,7 +86,22 @@ async function main() {
     const hashedPin = await bcrypt.hash(s.pin, 10);
     await prisma.staff.upsert({
       where: { email: s.email },
-      update: {},
+      // BUG HISTORY (2026-07-15): this was `update: {}` — completely
+      // empty. Re-running the seed against a database that already has a
+      // staff member with this email (true for every seeded account after
+      // the very first run) would match by email and update NOTHING,
+      // silently no-op'ing. This is why simply re-running `npm run
+      // db:seed` after renaming Admin User -> Kennedy Okere in this file
+      // would NOT have actually changed the name in the live database.
+      //
+      // Fixed to propagate name/role/color on re-seed (the fields someone
+      // would legitimately want corrected by editing this file and
+      // re-running), while deliberately NOT touching pin or accessLevel
+      // here — if a real staff member changed their own PIN via the Staff
+      // Portal profile editor, or an admin changed someone's access level
+      // through the admin UI, re-seeding must not silently overwrite
+      // those live changes back to placeholder values.
+      update: { name: s.name, role: s.role, color: s.color },
       create: {
         name: s.name,
         email: s.email,

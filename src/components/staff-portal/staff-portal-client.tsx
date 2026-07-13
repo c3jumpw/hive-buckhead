@@ -22,10 +22,13 @@ interface Props {
   announcements: any[]
   shifts: any[]
   recurringShifts: any[]
+  // Allows deep-linking directly to a specific tab, e.g. /staff-portal?tab=profile
+  // from the "My Profile" link in the top nav dropdown — added 2026-07-15.
+  initialTab?: "schedule" | "announcements" | "feedback" | "profile"
 }
 
-export function StaffPortalClient({ session, announcements, shifts, recurringShifts }: Props) {
-  const [tab, setTab] = useState<"schedule" | "announcements" | "feedback" | "profile">("schedule")
+export function StaffPortalClient({ session, announcements, shifts, recurringShifts, initialTab }: Props) {
+  const [tab, setTab] = useState<"schedule" | "announcements" | "feedback" | "profile">(initialTab ?? "schedule")
   const [feedbackMsg, setFeedbackMsg] = useState("")
   const [feedbackCategory, setFeedbackCategory] = useState("general")
   const [isAnonymous, setIsAnonymous] = useState(false)
@@ -58,9 +61,13 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
     <div className="min-h-screen bg-hive-bg text-foreground">
       {/* Header */}
       <div className="bg-hive-surface border-b border-border px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="font-serif text-xl text-gold-500">HIVE BUCKHEAD</h1>
-          <p className="text-xs text-muted-foreground">Staff Portal</p>
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/branding/icon.png" alt="" width={32} height={32} className="shrink-0" />
+          <div>
+            <h1 className="font-serif text-xl text-gold-500">HIVE BUCKHEAD</h1>
+            <p className="text-xs text-muted-foreground">Staff Portal</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">

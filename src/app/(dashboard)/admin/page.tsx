@@ -12,9 +12,22 @@ export default async function AdminPage({
   const session = await requireAccessLevel("ADMIN")
   const tab = (searchParams.tab && searchParams.tab !== '') ? searchParams.tab : 'overview'
 
-  const [staffCount, tableCount, rsvpCount, recentReservations, staff, tables, hours, messageTemplates] = await Promise.all([
+  /**
+   * BUG HISTORY (2026-07-15): tableCount previously counted every active
+   * Table row indiscriminately — including all 20 individual bar stool
+   * records (svgShape: "stool"), each stored as its own Table entity with
+   * capacity: 1 so the floor plan editor can position and track them
+   * individually. That's the correct data model for the floor plan (each
+   * stool needs its own status/position), but it meant the "Tables" stat
+   * on the Overview page counted a single 20-seat bar as 20 "tables" —
+   * conceptually wrong. Split into two counts: real tables (everything
+   * that isn't a bar stool) and bar seats (stools specifically), shown as
+   * two separate stat cards rather than one inflated number.
+   */
+  const [staffCount, tableCount, barSeatCount, rsvpCount, recentReservations, staff, tables, hours, messageTemplates] = await Promise.all([
     prisma.staff.count({ where: { active: true } }),
-    prisma.table.count({ where: { active: true } }),
+    prisma.table.count({ where: { active: true, svgShape: { not: "stool" } } }),
+    prisma.table.count({ where: { active: true, svgShape: "stool" } }),
     prisma.reservation.count(),
     prisma.reservation.findMany({
       take: 8, orderBy: { createdAt: "desc" },
@@ -42,7 +55,7 @@ export default async function AdminPage({
   return (
     <AdminClient
       session={session}
-      stats={{ staffCount, tableCount, rsvpCount }}
+      stats={{ staffCount, tableCount, barSeatCount, rsvpCount }}
       recentReservations={JSON.parse(JSON.stringify(recentReservations))}
       staff={staff}
       tables={tables}

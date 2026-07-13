@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
-import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel } from "@/components/admin/onboarding-manager"
+import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel } from "@/components/admin/onboarding-manager"
 import { PositionManager, RecurringScheduleEditor, OffboardingForm } from "@/components/admin/staff-tools"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -23,7 +23,7 @@ type AnyRecord = Record<string, unknown>
 
 interface Props {
   session: SessionStaff
-  stats: { staffCount: number; tableCount: number; rsvpCount: number }
+  stats: { staffCount: number; tableCount: number; barSeatCount: number; rsvpCount: number }
   recentReservations: AnyRecord[]
   staff: AnyRecord[]
   tables: AnyRecord[]
@@ -315,10 +315,11 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
         {/* ── Overview ────────────────────────────────────────────────── */}
         {tab === "overview" && (
           <div className="space-y-6 max-w-4xl">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Active Staff",     value: stats.staffCount, icon: Users,       color: "text-blue-400" },
                 { label: "Tables",           value: stats.tableCount, icon: Table2,      color: "text-green-400" },
+                { label: "Bar Seats",        value: stats.barSeatCount, icon: Table2,    color: "text-amber-400" },
                 { label: "Total Reservations", value: stats.rsvpCount, icon: CalendarDays, color: "text-gold-500" },
               ].map(({ label, value, icon: Icon, color }) => (
                 <div key={label} className="bg-hive-surface border border-border rounded-xl p-5">
@@ -503,18 +504,43 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
             {tablesSubTab === "list" && (
               <div className="max-w-4xl">
                 <div className="mb-4">
-                  <h2 className="font-medium">{tables.length} active tables</h2>
+                  {/* BUG HISTORY (2026-07-15): this counted every active
+                      Table row including individual bar stools (20 of them,
+                      each its own row so the floor editor can position/
+                      track them separately) as if each were a "table" — a
+                      20-seat bar showed as "20 tables". Now splits the
+                      count: real tables vs. bar seats, matching the same
+                      distinction made on the Overview stat cards. */}
+                  <h2 className="font-medium">
+                    {tables.filter(t => t.svgShape !== "stool").length} active tables
+                    <span className="text-muted-foreground font-normal"> · {tables.filter(t => t.svgShape === "stool").length} bar seats</span>
+                  </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">Table layout and capacity overview</p>
                 </div>
                 {(["FINE_DINING","BAR","DEN","PATIO"] as const).map(section => {
                   const sectionTables = tables.filter(t => t.section === section)
                   const labels: Record<string, string> = { FINE_DINING: "Fine Dining", BAR: "Bar", DEN: "Den / Lounge", PATIO: "Patio" }
                   const totalSeats = sectionTables.reduce((a, t) => a + (t.capacity as number), 0)
+                  // BUG HISTORY (2026-07-15): this always said "{count} tables ·
+                  // {seats} seats" — for the Bar section, where every item is
+                  // an individual bar stool (svgShape:"stool"), that rendered
+                  // as the confusing "20 tables · 20 seats" for what is
+                  // actually a single 20-seat bar, not 20 separate tables.
+                  // Now counts real tables and bar seats separately and
+                  // adjusts the label so a stool-only section reads
+                  // correctly as seats, not tables.
+                  const realTableCount = sectionTables.filter(t => t.svgShape !== "stool").length
+                  const stoolCount = sectionTables.filter(t => t.svgShape === "stool").length
+                  const sectionLabel = realTableCount > 0 && stoolCount > 0
+                    ? `${realTableCount} tables · ${stoolCount} bar seats · ${totalSeats} total seats`
+                    : stoolCount > 0
+                    ? `${stoolCount} bar seats`
+                    : `${realTableCount} tables · ${totalSeats} seats`
                   return (
                     <div key={section} className="mb-6">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-sm font-semibold text-gold-500">{labels[section]}</h3>
-                        <span className="text-xs text-muted-foreground">{sectionTables.length} tables · {totalSeats} seats</span>
+                        <span className="text-xs text-muted-foreground">{sectionLabel}</span>
                       </div>
                       <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                         {sectionTables.map(t => (
@@ -654,6 +680,7 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <PendingApprovalsPanel />
+              <IntegrationDiagnosticsPanel />
               <OnboardingManager />
               <QuoLinkCard />
               <MessageBlastTool />

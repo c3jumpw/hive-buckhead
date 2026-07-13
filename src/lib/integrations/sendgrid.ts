@@ -194,7 +194,36 @@ export async function sendOnboardingApproved(
 }
 
 /**
- * Notifies active admins (OWNER/MANAGER) that a new onboarding submission
+ * Generic admin notification — sent to all active OWNER/MANAGER staff.
+ * Used for events an admin should know about but that don't need a
+ * dedicated template: profile changes, feedback submissions, callouts.
+ * Sent individually (not BCC) for the same privacy reason as sendStaffBlast.
+ */
+export async function sendAdminNotification(
+  adminEmails: string[],
+  subject: string,
+  message: string
+): Promise<{ sent: number; failed: number }> {
+  if (!ensureInitialized()) return { sent: 0, failed: adminEmails.length }
+  let sent = 0, failed = 0
+  for (const email of adminEmails) {
+    try {
+      await sgMail.send({
+        to: email, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
+        subject,
+        html: `<div style="font-family:Georgia,serif;max-width:480px;"><p style="white-space:pre-line;">${message}</p></div>`,
+        text: message,
+      })
+      sent++
+    } catch (e: any) {
+      console.error(`[SendGrid] admin notification failed for ${email}:`, e?.response?.body ?? e)
+      failed++
+    }
+  }
+  return { sent, failed }
+}
+
+/** Notifies active admins (OWNER/MANAGER) that a new onboarding submission
  * needs review. Sent individually to each recipient, not BCC'd.
  */
 export async function sendAdminOnboardingAlert(
