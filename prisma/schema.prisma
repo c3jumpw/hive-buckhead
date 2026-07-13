@@ -241,9 +241,24 @@ model OnboardingRecord {
   tshirtSize      String?       @map("tshirt_size")
   startDate       DateTime?     @map("start_date") @db.Date
 
-  // Document uploads — stored as Supabase Storage URLs
+  // Document uploads — REVISION (2026-07-15): comment corrected. These
+  // store a PRIVATE Supabase Storage PATH, not a public URL — the
+  // document lives in a non-public bucket (hive-onboarding-docs) and can
+  // only be viewed via a short-lived signed URL generated on demand for
+  // an authenticated admin (see /api/onboarding/document-url). Never
+  // render idDocumentUrl directly as an <img src> — it is a storage path,
+  // not a fetchable URL on its own.
   idDocumentUrl   String?       @map("id_document_url")
   additionalDocsUrls String[]   @map("additional_docs_urls")
+
+  // Digital signature (2026-07-15 addition) — a typed full legal name
+  // functions as a valid electronic signature under the US ESIGN Act and
+  // UETA (this is the same mechanism used by most consumer e-signature
+  // flows for standard agreements — full canvas/drawn signatures exist
+  // but aren't legally required for validity). Combined with the existing
+  // checkbox acknowledgment and ipAddressOnSign below for the audit trail.
+  signatureText   String?       @map("signature_text")
+  signedAt        DateTime?     @map("signed_at")
 
   // Legal document signing — each doc tracked separately
   employmentAgreementStatus SigningStatus @default(PENDING) @map("employment_agreement_status")

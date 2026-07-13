@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { cn, todayLocal, formatTime } from "@/lib/utils"
 import type { SessionStaff } from "@/types"
 import { format, addDays, parseISO } from "date-fns"
 import { toast } from "@/hooks/use-toast"
@@ -131,7 +131,7 @@ export function ScheduleClient({ shifts, callouts, staff, session, weekStart, pr
           </div>
           {DAYS.map((day, i) => {
             const date = weekDates[i]
-            const today = new Date().toISOString().split("T")[0]
+            const today = todayLocal()
             const hasCallout = calloutDates.has(date)
             return (
               <div key={day} className={cn(
@@ -162,7 +162,7 @@ export function ScheduleClient({ shifts, callouts, staff, session, weekStart, pr
               </div>,
               ...weekDates.map(date => {
                 const dayShift = memberShifts.find((s: Shift) => s.date?.split("T")[0] === date)
-                const today = new Date().toISOString().split("T")[0]
+                const today = todayLocal()
                 return (
                   <div key={`${member.id}-${date}`} className={cn(
                     "border-b border-r border-border p-1.5 min-h-[70px]",
@@ -171,7 +171,13 @@ export function ScheduleClient({ shifts, callouts, staff, session, weekStart, pr
                     {dayShift ? (
                       <div className={cn("rounded-md border px-2 py-1.5 text-[10px] font-medium h-full", SHIFT_COLORS[dayShift.type] ?? SHIFT_COLORS.CLOSE)}>
                         <div className="font-semibold mb-0.5">{dayShift.type}</div>
-                        <div className="opacity-80">{dayShift.startTime}–{dayShift.endTime}</div>
+                        {/* BUG HISTORY (2026-07-15): displayed raw "HH:MM"
+                            24-hour strings directly from the database
+                            (e.g. "17:00–23:00") — military time, not the
+                            12-hour format used everywhere else in the app.
+                            formatTime() matches the same display format
+                            already used in emails and reservation times. */}
+                        <div className="opacity-80">{formatTime(dayShift.startTime)}–{formatTime(dayShift.endTime)}</div>
                         {dayShift.role && <div className="opacity-60 truncate mt-0.5">{dayShift.role}</div>}
                       </div>
                     ) : (

@@ -243,6 +243,26 @@ export function PendingApprovalsPanel() {
     } finally { setLoading(false) }
   }
 
+  /**
+   * Fetches a short-lived (10 min) signed URL for a private onboarding
+   * document and opens it in a new tab. Never uses idDocumentUrl directly
+   * as a src — that field is an internal storage PATH, not a fetchable
+   * URL, since the bucket is private (see upload-document/route.ts).
+   */
+  async function viewDocument(path: string) {
+    try {
+      const res = await fetch(`/api/onboarding/document-url?path=${encodeURIComponent(path)}`)
+      const json = await res.json()
+      if (res.ok && json.url) {
+        window.open(json.url, "_blank", "noopener,noreferrer")
+      } else {
+        toast({ title: json.error || "Could not open document", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Could not open document", variant: "destructive" })
+    }
+  }
+
   async function approve(staffId: string, name: string) {
     setProcessingId(staffId)
     try {
@@ -300,8 +320,17 @@ export function PendingApprovalsPanel() {
                 <div className="text-sm font-medium">{p.name}</div>
                 <div className="text-xs text-muted-foreground">{p.email} · {p.role}{p.position?.name ? ` (${p.position.name})` : ""}</div>
                 <div className="text-[10px] text-muted-foreground mt-0.5">Submitted {new Date(p.createdAt).toLocaleDateString()}</div>
+                {p.onboardingRecord?.signatureText && (
+                  <div className="text-[10px] text-muted-foreground mt-1 italic">Signed: "{p.onboardingRecord.signatureText}"</div>
+                )}
               </div>
               <div className="flex gap-2 shrink-0">
+                {p.onboardingRecord?.idDocumentUrl && (
+                  <button onClick={() => viewDocument(p.onboardingRecord!.idDocumentUrl!)}
+                    className="px-3 py-1.5 rounded-lg border border-blue-500/30 text-blue-400 text-xs hover:bg-blue-500/10">
+                    View ID
+                  </button>
+                )}
                 <button onClick={() => reject(p.id, p.name)} disabled={processingId === p.id}
                   className="px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs hover:bg-red-500/10 disabled:opacity-50">
                   Reject

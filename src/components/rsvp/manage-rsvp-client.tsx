@@ -36,7 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { StatusBadge } from "@/components/reservations/status-badge"
-import { formatDate, formatTime, cn } from "@/lib/utils"
+import { formatDate, formatTime, cn, todayLocal } from "@/lib/utils"
 import type { ReservationStatus } from "@/types"
 
 type Step = "lookup" | "found" | "change_form" | "cancel_form" | "success"
@@ -85,7 +85,7 @@ export function ManageRsvpClient({ initialCode }: { initialCode: string }) {
   const [submitting, setSubmitting] = useState(false)
   const [successType, setSuccessType] = useState<"change" | "cancel">("change")
 
-  const today = new Date().toISOString().split("T")[0]
+  const today = todayLocal()
 
   // ── Step 1: Look up reservation ──────────────────────────────────────
 

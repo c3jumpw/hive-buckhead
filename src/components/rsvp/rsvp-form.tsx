@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { cn, todayLocal } from "@/lib/utils"
 
 type Step = 1 | 2 | 3 | 4 | 5
 
@@ -90,7 +90,7 @@ export function RsvpForm() {
   const [lastName,  setLastName]    = useState("")
   const [phone,     setPhone]       = useState("")
   const [email,     setEmail]       = useState("")
-  const [date,      setDate]        = useState(new Date().toISOString().split("T")[0])
+  const [date,      setDate]        = useState(todayLocal())
   const [time,      setTime]        = useState("")
   const [timeSlots,  setTimeSlots]   = useState(DEFAULT_TIME_SLOTS)
 
@@ -118,7 +118,7 @@ export function RsvpForm() {
   const [dietary,   setDietary]     = useState("")
   const [notes,     setNotes]       = useState("")
 
-  const today = new Date().toISOString().split("T")[0]
+  const today = todayLocal()
 
   /**
    * BUG HISTORY (2026-07-15): the booking window was hardcoded to 60 days

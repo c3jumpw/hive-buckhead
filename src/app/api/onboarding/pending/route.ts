@@ -17,7 +17,7 @@ export async function GET() {
       createdAt: true,
       position: { select: { name: true } },
       onboardingRecord: {
-        select: { legalName: true, startDate: true, tshirtSize: true, completedAt: true },
+        select: { legalName: true, startDate: true, tshirtSize: true, completedAt: true, idDocumentUrl: true, signatureText: true, signedAt: true },
       },
     },
     orderBy: { createdAt: "asc" },

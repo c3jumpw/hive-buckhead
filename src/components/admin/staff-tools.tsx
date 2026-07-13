@@ -17,6 +17,7 @@
 import { useState, useEffect } from "react"
 import { X, Plus, Save, AlertTriangle, ChevronRight, ChevronLeft } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { todayLocal } from "@/lib/utils"
 
 // ── Positions Manager ─────────────────────────────────────────────────────────
 
@@ -218,7 +219,7 @@ export function OffboardingForm({ staffId, staffName, onClose, onComplete }: {
   const [terminationType, setTerminationType] = useState("voluntary")
   const [reason, setReason] = useState("")
   const [notes, setNotes] = useState("")
-  const [terminationDate, setTerminationDate] = useState(new Date().toISOString().split("T")[0])
+  const [terminationDate, setTerminationDate] = useState(todayLocal())
   const [checklist, setChecklist] = useState({ accessRevoked: false, equipmentReturned: false, finalPayProcessed: false, exitInterviewDone: false })
   const [submitting, setSubmitting] = useState(false)
 

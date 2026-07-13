@@ -248,3 +248,34 @@ export function renderTemplate(template: string, vars: Record<string, string>): 
     Object.prototype.hasOwnProperty.call(vars, key) ? vars[key] : match
   )
 }
+
+// ── Local (not UTC) date string ─────────────────────────────────────────────
+
+/**
+ * Returns today's date as "YYYY-MM-DD" in the BROWSER'S LOCAL timezone.
+ *
+ * BUG HISTORY (2026-07-15): the codebase had 11 separate occurrences of
+ * `new Date().toISOString().split("T")[0]` across 8 files, all computing
+ * "today" this way. .toISOString() ALWAYS converts to UTC regardless of
+ * the caller's local timezone. Atlanta is UTC-4 in July (EDT) — between
+ * roughly 8 PM and midnight Eastern, UTC has already rolled over to
+ * tomorrow's calendar date. This meant the "Today" filter on the
+ * Reservations page (and every other "today" computation in the app)
+ * silently excluded evening reservations — exactly the hours a restaurant
+ * is busiest — pushing them into "Past" instead, hours before the actual
+ * local midnight.
+ *
+ * Fixed by reading local date components (getFullYear/getMonth/getDate)
+ * instead of forcing a UTC conversion. All 11 call sites now use this
+ * single shared function instead of each reimplementing the same
+ * (buggy) inline logic.
+ *
+ * @param d - optional Date to convert; defaults to right now
+ * @returns "YYYY-MM-DD" in local time
+ */
+export function todayLocal(d: Date = new Date()): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}

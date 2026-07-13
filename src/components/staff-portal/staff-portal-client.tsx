@@ -9,8 +9,9 @@
  */
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Calendar, Megaphone, MessageSquare, User, ExternalLink } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatTime } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import type { SessionStaff } from "@/lib/auth/session"
 
@@ -28,10 +29,27 @@ interface Props {
 }
 
 export function StaffPortalClient({ session, announcements, shifts, recurringShifts, initialTab }: Props) {
+  const router = useRouter()
   const [tab, setTab] = useState<"schedule" | "announcements" | "feedback" | "profile">(initialTab ?? "schedule")
   const [feedbackMsg, setFeedbackMsg] = useState("")
   const [feedbackCategory, setFeedbackCategory] = useState("general")
   const [isAnonymous, setIsAnonymous] = useState(false)
+
+  /**
+   * BUG HISTORY (2026-07-15): the sign-out control here was a plain
+   * <a href="/api/auth/logout"> link. Clicking a link performs a browser
+   * GET navigation, but the logout route only exports a POST handler —
+   * so every click hit a 405 Method Not Allowed error page, AND the
+   * session cookie was never actually cleared (the GET request never
+   * reached the code that deletes it), requiring a second logout attempt
+   * afterward. Fixed to match the same POST-based pattern already used
+   * correctly in dashboard-nav.tsx.
+   */
+  async function handleSignOut() {
+    await fetch("/api/auth/logout", { method: "POST" })
+    router.push("/login")
+    router.refresh()
+  }
   const [submittingFeedback, setSubmittingFeedback] = useState(false)
 
   const unreadCount = announcements.filter(a => !a.reads?.length).length
@@ -80,9 +98,9 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
               Admin <ExternalLink size={10} />
             </a>
           )}
-          <a href="/api/auth/logout" className="text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg">
+          <button onClick={handleSignOut} className="text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg">
             Sign Out
-          </a>
+          </button>
         </div>
       </div>
 
@@ -117,7 +135,7 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
                 <div key={shift.id} className="bg-hive-surface border border-border rounded-xl p-4 flex justify-between items-center">
                   <div>
                     <p className="font-medium text-sm">{new Date(shift.date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</p>
-                    <p className="text-xs text-muted-foreground">{shift.startTime} – {shift.endTime} · {shift.type}</p>
+                    <p className="text-xs text-muted-foreground">{formatTime(shift.startTime)} – {formatTime(shift.endTime)} · {shift.type}</p>
                     {shift.role && <p className="text-xs text-gold-400 mt-1">{shift.role}</p>}
                   </div>
                   <span className="text-xs bg-hive-surface2 border border-border px-2 py-1 rounded-full">{shift.notes || "Confirmed"}</span>
@@ -133,7 +151,7 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
                   <div key={rs.id} className="bg-hive-surface border border-border rounded-lg p-3 flex justify-between">
                     <span className="text-sm font-medium">{DAY_NAMES[rs.dayOfWeek]}</span>
                     {rs.isWorkDay
-                      ? <span className="text-xs text-green-400">{rs.startTime} – {rs.endTime}</span>
+                      ? <span className="text-xs text-green-400">{formatTime(rs.startTime)} – {formatTime(rs.endTime)}</span>
                       : <span className="text-xs text-muted-foreground">Day Off</span>}
                   </div>
                 ))}
@@ -179,6 +197,7 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
                   <option value="schedule">Schedule</option>
                   <option value="safety">Safety Concern</option>
                   <option value="suggestion">Suggestion</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
               <div>

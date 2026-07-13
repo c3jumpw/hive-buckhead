@@ -16,6 +16,9 @@ export default function OnboardingPortalPage() {
   const [accessCode, setAccessCode] = useState("")
   const [verifying, setVerifying] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [idDocumentPath, setIdDocumentPath] = useState<string | null>(null)
+  const [idDocumentName, setIdDocumentName] = useState("")
 
   // Form state — collected across steps
   const [form, setForm] = useState({
@@ -24,8 +27,37 @@ export default function OnboardingPortalPage() {
     emergencyContact: "", emergencyPhone: "",
     startDate: "", tshirtSize: "",
     employmentSigned: false, codeOfConductSigned: false,
+    signatureText: "",
     pin: "", confirmPin: "",
   })
+
+  /**
+   * Uploads the selected ID document immediately on file selection (not
+   * deferred to final submit) — gives the applicant instant feedback if
+   * the upload fails (wrong file type, too large, storage misconfigured)
+   * while they're still on this step, rather than discovering a problem
+   * only at the very end after completing every other step.
+   */
+  async function handleDocUpload(file: File) {
+    setUploadingDoc(true)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      fd.append("docType", "id")
+      const res = await fetch("/api/onboarding/upload-document", { method: "POST", body: fd })
+      const json = await res.json()
+      if (res.ok && json.path) {
+        setIdDocumentPath(json.path)
+        setIdDocumentName(file.name)
+      } else {
+        toast({ title: json.error || "Upload failed", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Upload failed — check your connection", variant: "destructive" })
+    } finally {
+      setUploadingDoc(false)
+    }
+  }
 
   function upd(k: string, v: string | boolean) {
     setForm(prev => ({ ...prev, [k]: v }))
@@ -57,7 +89,7 @@ export default function OnboardingPortalPage() {
     try {
       const res = await fetch("/api/onboarding/submit", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, idDocumentPath }),
       })
       if (res.ok) setStep("complete")
       else {
@@ -116,7 +148,7 @@ export default function OnboardingPortalPage() {
           {/* ── STEP: Verify access code ── */}
           {step === "verify" && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Enter Access Code</h2>
+              <h2 className="font-semibold text-lg text-gray-900">Enter Access Code</h2>
               <p className="text-sm text-gray-500">Your manager will provide today\'s access code to begin onboarding.</p>
               <input type="text" value={accessCode} onChange={e => setAccessCode(e.target.value.toUpperCase())} placeholder="e.g. XK7M2PQ9"
                 maxLength={8} className={fieldClass + " text-center text-xl tracking-widest font-mono uppercase"} />
@@ -130,7 +162,7 @@ export default function OnboardingPortalPage() {
           {/* ── STEP: Personal Information ── */}
           {step === "personal" && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Personal Information</h2>
+              <h2 className="font-semibold text-lg text-gray-900">Personal Information</h2>
               <p className="text-sm text-gray-500">Please fill in your details accurately. This information is kept confidential.</p>
               {[
                 { key: "name", label: "Full Name *", type: "text", placeholder: "First Last" },
@@ -158,7 +190,7 @@ export default function OnboardingPortalPage() {
           {/* ── STEP: Documents (role + start date) ── */}
           {step === "documents" && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Role & Start Date</h2>
+              <h2 className="font-semibold text-lg text-gray-900">Role & Start Date</h2>
               {[
                 { key: "role", label: "Position / Role *", type: "text", placeholder: "e.g. Server, Bartender, Busser" },
                 { key: "startDate", label: "Start Date", type: "date", placeholder: "" },
@@ -168,12 +200,30 @@ export default function OnboardingPortalPage() {
                   <input type={f.type} value={(form as any)[f.key]} onChange={e => upd(f.key, e.target.value)} placeholder={f.placeholder} className={fieldClass + " mt-1"} />
                 </div>
               ))}
-              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                <p className="text-xs text-amber-700">📎 ID document upload will be requested by your manager directly for security purposes.</p>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Photo ID (Driver's License or Passport) *</label>
+                <div className="mt-1 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  {idDocumentPath ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-green-700">
+                      <span>✓ {idDocumentName}</span>
+                      <button onClick={() => { setIdDocumentPath(null); setIdDocumentName("") }} className="text-xs text-gray-500 underline">Replace</button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) handleDocUpload(f) }} disabled={uploadingDoc} />
+                      <span className="text-sm text-amber-600 font-medium">{uploadingDoc ? "Uploading…" : "📎 Click to upload a photo or PDF"}</span>
+                      <p className="text-xs text-gray-400 mt-1">JPG, PNG, or PDF — max 8MB</p>
+                    </label>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  Stored securely and only viewable by managers reviewing your application — never made public.
+                </p>
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setStep("personal")} className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm">← Back</button>
-                <button onClick={() => setStep("legal")} disabled={!form.role}
+                <button onClick={() => setStep("personal")} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">← Back</button>
+                <button onClick={() => setStep("legal")} disabled={!form.role || !idDocumentPath}
                   className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-lg text-sm disabled:opacity-50">Next: Legal Docs →</button>
               </div>
             </div>
@@ -182,7 +232,7 @@ export default function OnboardingPortalPage() {
           {/* ── STEP: Legal Documents ── */}
           {step === "legal" && (
             <div className="space-y-6">
-              <h2 className="font-semibold text-lg">Review & Sign Documents</h2>
+              <h2 className="font-semibold text-lg text-gray-900">Review & Sign Documents</h2>
               <p className="text-sm text-gray-500">Please read each document carefully before signing.</p>
 
               {[
@@ -206,9 +256,21 @@ export default function OnboardingPortalPage() {
                 </div>
               ))}
 
+              {/* Digital signature — 2026-07-15 addition. A typed full
+                  legal name is a valid electronic signature under the US
+                  ESIGN Act / UETA, same mechanism most consumer e-sign
+                  flows use for standard employment paperwork. */}
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                <label className="text-xs font-medium text-gray-600">Digital Signature — type your full legal name to sign *</label>
+                <input type="text" value={form.signatureText} onChange={e => upd("signatureText", e.target.value)}
+                  placeholder={form.legalName || form.name || "Your full legal name"}
+                  className={fieldClass + " mt-1 font-serif text-lg italic"} />
+                <p className="text-[11px] text-gray-400 mt-1.5">By typing your name above, you are electronically signing both documents. This has the same legal effect as a handwritten signature.</p>
+              </div>
+
               <div className="flex gap-3">
-                <button onClick={() => setStep("documents")} className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm">← Back</button>
-                <button onClick={() => setStep("pin")} disabled={!form.employmentSigned || !form.codeOfConductSigned}
+                <button onClick={() => setStep("documents")} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">← Back</button>
+                <button onClick={() => setStep("pin")} disabled={!form.employmentSigned || !form.codeOfConductSigned || !form.signatureText.trim()}
                   className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-lg text-sm disabled:opacity-50">Next: Set PIN →</button>
               </div>
             </div>
@@ -217,7 +279,7 @@ export default function OnboardingPortalPage() {
           {/* ── STEP: Set PIN ── */}
           {step === "pin" && (
             <div className="space-y-4">
-              <h2 className="font-semibold text-lg">Set Your Staff PIN</h2>
+              <h2 className="font-semibold text-lg text-gray-900">Set Your Staff PIN</h2>
               <p className="text-sm text-gray-500">Choose a 4-digit PIN you\'ll use to log into the staff system. Keep it private.</p>
               {[
                 { key: "pin", label: "4-Digit PIN *", placeholder: "e.g. 4821" },
@@ -230,7 +292,7 @@ export default function OnboardingPortalPage() {
                 </div>
               ))}
               <div className="flex gap-3">
-                <button onClick={() => setStep("legal")} className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm">← Back</button>
+                <button onClick={() => setStep("legal")} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">← Back</button>
                 <button onClick={submitOnboarding} disabled={submitting || !form.pin || form.pin !== form.confirmPin}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-lg text-sm disabled:opacity-50">
                   {submitting ? "Submitting…" : "Complete Onboarding ✓"}

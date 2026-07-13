@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { StatusBadge } from "@/components/reservations/status-badge"
-import { formatDate, formatTime, cn } from "@/lib/utils"
+import { formatDate, formatTime, cn, todayLocal } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import type { SessionStaff } from "@/types"
 
@@ -264,7 +264,7 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
     setSeedLoading(true)
     try {
       const staff = initStaff[0] as AnyRecord
-      const today = new Date().toISOString().split("T")[0]
+      const today = todayLocal()
       const sampleData = [
         { firstName: "James", lastName: "Morrison", phone: "4045551001", date: today, arrivalTime: "18:00", partySize: 2, occasion: "Anniversary", notes: "Window seat preferred", source: "staff" },
         { firstName: "Sarah", lastName: "Williams", phone: "4045551002", date: today, arrivalTime: "19:00", partySize: 4, notes: "One guest has shellfish allergy", source: "staff" },

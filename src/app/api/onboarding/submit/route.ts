@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { name, email, phone, role, pin, positionId, legalName, dateOfBirth, address,
           emergencyContact, emergencyPhone, startDate, tshirtSize,
-          employmentSigned, codeOfConductSigned } = body
+          employmentSigned, codeOfConductSigned, signatureText, idDocumentPath } = body
 
   // Both legal documents must be acknowledged before a record can be created.
   // The client already gates this in the UI, but we re-verify server-side
@@ -53,48 +53,121 @@ export async function POST(request: NextRequest) {
   if (!employmentSigned || !codeOfConductSigned) {
     return NextResponse.json({ error: "Both legal documents must be signed to complete onboarding" }, { status: 400 })
   }
+  if (!signatureText || !String(signatureText).trim()) {
+    return NextResponse.json({ error: "A digital signature is required to complete onboarding" }, { status: 400 })
+  }
   if (!name || !email || !pin || pin.length < 4) {
     return NextResponse.json({ error: "Name, email, and 4-digit PIN required" }, { status: 400 })
   }
 
-  // Generate the next sequential team ID (HB-001, HB-002, ...)
-  const prefix = TEAM_ID_CONFIG.prefix
-  const existingIds = await prisma.staff.findMany({
-    where: { teamId: { startsWith: prefix } }, select: { teamId: true }, orderBy: { teamId: "desc" },
-  })
-  const lastNum = existingIds.reduce((max: number, s: { teamId: string | null }) => {
-    const num = parseInt(s.teamId?.replace(prefix + "-", "") ?? "0")
-    return num > max ? num : max
-  }, 0)
-  const teamId = prefix + "-" + String(lastNum + 1).padStart(TEAM_ID_CONFIG.digits, "0")
+  /**
+   * REHIRE HANDLING (2026-07-15 addition): previously, a former employee
+   * re-onboarding with the same email they used before would hit a raw
+   * Prisma P2002 unique-constraint error on Staff.email — surfaced to the
+   * applicant as "An account with this email already exists," a dead end
+   * with no path forward. That's correct for someone who already has a
+   * live account, but wrong for a former staff member whose record was
+   * deliberately deactivated via offboarding (employmentStatus:
+   * TERMINATED) or a previously rejected application (approvalStatus:
+   * REJECTED) — both are legitimate "start fresh" cases, not conflicts.
+   *
+   * If a matching record is in one of those states, this UPDATES it in
+   * place (new PIN, new pending-approval state, fresh onboarding record)
+   * instead of trying to CREATE a duplicate. A record that's still
+   * active or pending is a genuine conflict and still gets rejected.
+   */
+  const existing = await prisma.staff.findUnique({ where: { email } })
+  const isRehireCase = existing && (existing.employmentStatus === "TERMINATED" || existing.approvalStatus === "REJECTED")
+
+  if (existing && !isRehireCase) {
+    return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
+  }
+
   const hashedPin = await bcrypt.hash(pin, 10)
 
   try {
-    const staff = await prisma.staff.create({
-      data: {
-        teamId, name, email, phone: phone || null,
-        role: role || "Staff", positionId: positionId || null,
-        accessLevel: "STAFF", pin: hashedPin,
-        onboardingCompleted: true, onboardingCompletedAt: new Date(),
-        // Gate: invisible everywhere until an admin approves.
-        // active:false is what actually excludes this record from every
-        // existing `where: { active: true }` query across the app — no
-        // other query changes were needed once this was set correctly.
-        active: false,
-        approvalStatus: "PENDING",
-      },
-    })
+    let staff
+    let teamId: string
 
-    await prisma.onboardingRecord.create({
-      data: {
-        staffId: staff.id, legalName: legalName || name, dateOfBirth: dateOfBirth || null,
-        address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null,
-        tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null,
-        employmentAgreementStatus: "SIGNED", employmentAgreementSignedAt: new Date(),
-        codeOfConductStatus: "SIGNED", codeOfConductSignedAt: new Date(),
-        completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null,
-      },
-    })
+    if (isRehireCase && existing) {
+      // Reuse their original team ID — it's already a permanent historical
+      // identifier, no reason to burn a new sequential number on a rehire.
+      teamId = existing.teamId ?? ""
+      staff = await prisma.staff.update({
+        where: { id: existing.id },
+        data: {
+          name, phone: phone || null, role: role || "Staff", positionId: positionId || null,
+          pin: hashedPin, onboardingCompleted: true, onboardingCompletedAt: new Date(),
+          active: false, approvalStatus: "PENDING",
+          // Clear prior termination/rejection markers — this is a fresh start
+          employmentStatus: "ACTIVE", terminatedAt: null, terminationNotes: null, terminatedBy: null,
+        },
+      })
+      // Replace their prior onboarding record rather than stacking a second
+      // one — OnboardingRecord.staffId is unique, so upsert is required.
+      await prisma.onboardingRecord.upsert({
+        where: { staffId: staff.id },
+        update: {
+          legalName: legalName || name, dateOfBirth: dateOfBirth || null,
+          address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null,
+          tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null,
+          idDocumentUrl: idDocumentPath || null,
+          signatureText: String(signatureText).trim(), signedAt: new Date(),
+          employmentAgreementStatus: "SIGNED", employmentAgreementSignedAt: new Date(),
+          codeOfConductStatus: "SIGNED", codeOfConductSignedAt: new Date(),
+          completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null,
+        },
+        create: {
+          staffId: staff.id, legalName: legalName || name, dateOfBirth: dateOfBirth || null,
+          address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null,
+          tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null,
+          idDocumentUrl: idDocumentPath || null,
+          signatureText: String(signatureText).trim(), signedAt: new Date(),
+          employmentAgreementStatus: "SIGNED", employmentAgreementSignedAt: new Date(),
+          codeOfConductStatus: "SIGNED", codeOfConductSignedAt: new Date(),
+          completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null,
+        },
+      })
+    } else {
+      // Generate the next sequential team ID (HB-001, HB-002, ...)
+      const prefix = TEAM_ID_CONFIG.prefix
+      const existingIds = await prisma.staff.findMany({
+        where: { teamId: { startsWith: prefix } }, select: { teamId: true }, orderBy: { teamId: "desc" },
+      })
+      const lastNum = existingIds.reduce((max: number, s: { teamId: string | null }) => {
+        const num = parseInt(s.teamId?.replace(prefix + "-", "") ?? "0")
+        return num > max ? num : max
+      }, 0)
+      teamId = prefix + "-" + String(lastNum + 1).padStart(TEAM_ID_CONFIG.digits, "0")
+
+      staff = await prisma.staff.create({
+        data: {
+          teamId, name, email, phone: phone || null,
+          role: role || "Staff", positionId: positionId || null,
+          accessLevel: "STAFF", pin: hashedPin,
+          onboardingCompleted: true, onboardingCompletedAt: new Date(),
+          // Gate: invisible everywhere until an admin approves.
+          // active:false is what actually excludes this record from every
+          // existing `where: { active: true }` query across the app — no
+          // other query changes were needed once this was set correctly.
+          active: false,
+          approvalStatus: "PENDING",
+        },
+      })
+
+      await prisma.onboardingRecord.create({
+        data: {
+          staffId: staff.id, legalName: legalName || name, dateOfBirth: dateOfBirth || null,
+          address: address || null, emergencyContact: emergencyContact || null, emergencyPhone: emergencyPhone || null,
+          tshirtSize: tshirtSize || null, startDate: startDate ? new Date(startDate) : null,
+          idDocumentUrl: idDocumentPath || null,
+          signatureText: String(signatureText).trim(), signedAt: new Date(),
+          employmentAgreementStatus: "SIGNED", employmentAgreementSignedAt: new Date(),
+          codeOfConductStatus: "SIGNED", codeOfConductSignedAt: new Date(),
+          completedAt: new Date(), ipAddressOnSign: request.headers.get("x-forwarded-for") ?? null,
+        },
+      })
+    }
 
     // Audit trail of the submission itself — separate from the roster sheet.
     // Non-blocking: a Sheets failure must never block the onboarding flow.

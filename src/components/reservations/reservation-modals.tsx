@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Loader2 } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog"
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { formatDate, formatTime, cn } from "@/lib/utils"
+import { formatDate, formatTime, cn, todayLocal } from "@/lib/utils"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Reservation = any
@@ -53,7 +54,7 @@ export function NewRsvpModal({ open, onClose, onSubmit, initial, staff, tables }
       lastName:    initial?.lastName ?? "",
       phone:       initial?.phone ?? "",
       email:       initial?.email ?? "",
-      date:        initial?.date ? initial.date.split("T")[0] : new Date().toISOString().split("T")[0],
+      date:        initial?.date ? initial.date.split("T")[0] : todayLocal(),
       arrivalTime: initial?.arrivalTime ?? "19:00",
       partySize:   initial?.partySize ?? 2,
       notes:       initial?.notes ?? "",
@@ -68,7 +69,7 @@ export function NewRsvpModal({ open, onClose, onSubmit, initial, staff, tables }
         lastName:    initial?.lastName ?? "",
         phone:       initial?.phone ?? "",
         email:       initial?.email ?? "",
-        date:        initial?.date ? initial.date.split("T")[0] : new Date().toISOString().split("T")[0],
+        date:        initial?.date ? initial.date.split("T")[0] : todayLocal(),
         arrivalTime: initial?.arrivalTime ?? "19:00",
         partySize:   initial?.partySize ?? 2,
         notes:       initial?.notes ?? "",
@@ -77,12 +78,29 @@ export function NewRsvpModal({ open, onClose, onSubmit, initial, staff, tables }
     }
   }, [open, initial?.id])
 
+  /**
+   * BUG HISTORY (2026-07-15): this had a `try { } finally { }` with NO
+   * `catch` block at all. If onSubmit (which calls apiPatch, which throws
+   * on any non-2xx response) failed for any reason — a validation error,
+   * a server error, anything — the exception became an unhandled promise
+   * rejection. The finally block cleared the loading spinner, but
+   * reset() and onClose() were both inside the try and never ran, so the
+   * modal stayed open with zero indication of what went wrong. This is
+   * why editing and saving a reservation appeared to do "nothing" —
+   * whatever the underlying cause, the failure was completely invisible.
+   * Now catches the error and shows exactly what the server said via
+   * toast, and the modal correctly stays open (so the user's entered data
+   * isn't lost) rather than silently doing nothing.
+   */
   async function handleForm(data: RsvpForm) {
     setSubmitting(true)
     try {
       await onSubmit({ ...data, serverId: serverId || undefined })
       reset()
       onClose()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save reservation"
+      toast({ title: "Save failed", description: message, variant: "destructive" })
     } finally {
       setSubmitting(false)
     }

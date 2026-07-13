@@ -14,7 +14,7 @@ import { StatusBadge } from "./status-badge"
 import { ReservationDetailPanel } from "./reservation-detail-panel"
 import { NewRsvpModal, CloseTableModal, CancelModal } from "./reservation-modals"
 import { SeatGuestModal } from "./reservation-modals"
-import { formatDate, formatTime, formatCurrency, cn } from "@/lib/utils"
+import { formatDate, formatTime, formatCurrency, cn, todayLocal } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import type { SessionStaff, ReservationStatus } from "@/types"
 
@@ -29,7 +29,7 @@ interface Props {
   session: SessionStaff
 }
 
-const TODAY = new Date().toISOString().split("T")[0]
+const TODAY = todayLocal()
 
 const KANBAN_COLS: { status: ReservationStatus; label: string; color: string }[] = [
   { status: "REQUESTED",              label: "Requested",   color: "text-amber-400" },

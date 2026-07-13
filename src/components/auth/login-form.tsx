@@ -101,7 +101,19 @@ export function LoginForm() {
           <SelectTrigger className="h-11 text-sm">
             <SelectValue placeholder={loading ? "Loading…" : "Select your name"} />
           </SelectTrigger>
-          <SelectContent>
+          {/*
+            BUG HISTORY (2026-07-15): Radix's Select auto-flips to open
+            above the trigger when it judges there's more room that
+            direction — on this login card (vertically centered in a short
+            viewport), that flip was pushing the staff name dropdown
+            partially off the top of the screen, making later names
+            unreachable. side="bottom" + avoidCollisions={false} pins it
+            to always open downward here specifically, without changing
+            the shared Select component's default collision-avoidance
+            behavior used elsewhere in the app (which is fine in taller,
+            scrollable contexts).
+          */}
+          <SelectContent side="bottom" avoidCollisions={false}>
             {staff.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 <div className="flex flex-col">
