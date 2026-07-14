@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
-import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel } from "@/components/admin/onboarding-manager"
+import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel, RecentSendsPanel } from "@/components/admin/onboarding-manager"
 import { PositionManager, RecurringScheduleEditor, OffboardingForm } from "@/components/admin/staff-tools"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -681,6 +681,7 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <PendingApprovalsPanel />
               <IntegrationDiagnosticsPanel />
+              <RecentSendsPanel />
               <OnboardingManager />
               <QuoLinkCard />
               <MessageBlastTool />

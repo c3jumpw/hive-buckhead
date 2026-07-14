@@ -10,6 +10,7 @@ import { createReservationSchema } from "@/lib/validations/reservation";
 import { generateRsvpCode } from "@/lib/utils";
 import { sendReservationReceived, sendReservationConfirmation } from "@/lib/integrations/sendgrid";
 import { sendReservationReceivedSms, sendReservationConfirmationSms } from "@/lib/integrations/quo";
+import { logEmailAttempt } from "@/lib/db/activity-logger";
 import { upsertSystemeContact } from "@/lib/integrations/systeme";
 import { SYSTEME_CONFIG } from "@/lib/config";
 import { formatDate, formatTime } from "@/lib/utils";
@@ -195,26 +196,32 @@ export async function POST(request: NextRequest) {
     // "inquirer" once a human later confirms and it becomes past-customer.
     if (isPublicSubmission && reservation.email) {
       if (autoConfirm) {
-        sendReservationConfirmation(reservation.email, {
-          firstName: reservation.firstName,
-          date: formatDate(reservation.date),
-          time: formatTime(reservation.arrivalTime),
-          partySize: reservation.partySize,
-          rsvpCode: reservation.rsvpCode,
-        }).catch((err: unknown) => console.error("[Reservations] auto-confirm email failed:", err));
+        logEmailAttempt(
+          sendReservationConfirmation(reservation.email, {
+            firstName: reservation.firstName,
+            date: formatDate(reservation.date),
+            time: formatTime(reservation.arrivalTime),
+            partySize: reservation.partySize,
+            rsvpCode: reservation.rsvpCode,
+          }),
+          { channel: "EMAIL", recipient: reservation.email, subject: "Reservation Confirmed (auto)", reservationId: reservation.id }
+        ).catch(() => {});
 
         upsertSystemeContact(
           reservation.email, reservation.firstName, reservation.lastName,
           reservation.phone ?? undefined, [SYSTEME_CONFIG.tags.pastCustomer]
         ).catch((err: unknown) => console.error("[Reservations] Systeme.io past-customer tag failed:", err));
       } else {
-        sendReservationReceived(reservation.email, {
-          firstName: reservation.firstName,
-          date: formatDate(reservation.date),
-          time: formatTime(reservation.arrivalTime),
-          partySize: reservation.partySize,
-          rsvpCode: reservation.rsvpCode,
-        }).catch((err: unknown) => console.error("[Reservations] received-email failed:", err));
+        logEmailAttempt(
+          sendReservationReceived(reservation.email, {
+            firstName: reservation.firstName,
+            date: formatDate(reservation.date),
+            time: formatTime(reservation.arrivalTime),
+            partySize: reservation.partySize,
+            rsvpCode: reservation.rsvpCode,
+          }),
+          { channel: "EMAIL", recipient: reservation.email, subject: "Reservation Request Received", reservationId: reservation.id }
+        ).catch(() => {});
 
         upsertSystemeContact(
           reservation.email, reservation.firstName, reservation.lastName,
@@ -229,20 +236,26 @@ export async function POST(request: NextRequest) {
     // phone is a required field on every reservation, email is optional.
     if (isPublicSubmission && reservation.phone) {
       if (autoConfirm) {
-        sendReservationConfirmationSms(reservation.phone, {
-          firstName: reservation.firstName,
-          date: formatDate(reservation.date),
-          time: formatTime(reservation.arrivalTime),
-          partySize: reservation.partySize,
-          rsvpCode: reservation.rsvpCode,
-        }).catch((err: unknown) => console.error("[Reservations] auto-confirm SMS failed:", err));
+        logEmailAttempt(
+          sendReservationConfirmationSms(reservation.phone, {
+            firstName: reservation.firstName,
+            date: formatDate(reservation.date),
+            time: formatTime(reservation.arrivalTime),
+            partySize: reservation.partySize,
+            rsvpCode: reservation.rsvpCode,
+          }),
+          { channel: "SMS", recipient: reservation.phone, subject: "Reservation Confirmed SMS (auto)", reservationId: reservation.id }
+        ).catch(() => {});
       } else {
-        sendReservationReceivedSms(reservation.phone, {
-          firstName: reservation.firstName,
-          date: formatDate(reservation.date),
-          time: formatTime(reservation.arrivalTime),
-          rsvpCode: reservation.rsvpCode,
-        }).catch((err: unknown) => console.error("[Reservations] received-SMS failed:", err));
+        logEmailAttempt(
+          sendReservationReceivedSms(reservation.phone, {
+            firstName: reservation.firstName,
+            date: formatDate(reservation.date),
+            time: formatTime(reservation.arrivalTime),
+            rsvpCode: reservation.rsvpCode,
+          }),
+          { channel: "SMS", recipient: reservation.phone, subject: "Reservation Received SMS", reservationId: reservation.id }
+        ).catch(() => {});
       }
     }
 

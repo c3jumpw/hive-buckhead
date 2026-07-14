@@ -71,10 +71,14 @@ export function LoginForm() {
         return;
       }
 
-      // Redirect based on access level
+      // Redirect based on access level.
+      // BUG HISTORY (2026-07-15): STAFF-level users were sent to /floor —
+      // a leftover from an earlier access scheme (before FLOOR was merged
+      // into STAFF and the dedicated Staff Portal was built). Regular
+      // staff should land in the portal, not the operational Floor View.
       const level = json.data?.accessLevel;
       if (level === "STAFF") {
-        router.push("/floor");
+        router.push("/staff-portal");
       } else {
         router.push("/reservations");
       }

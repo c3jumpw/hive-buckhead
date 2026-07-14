@@ -395,3 +395,61 @@ export function IntegrationDiagnosticsPanel() {
     </div>
   )
 }
+
+/**
+ * RecentSendsPanel
+ * Shows the last 30 email/SMS send attempts with their actual outcome.
+ * Built 2026-07-15 alongside the logEmailAttempt wrapper — this is what
+ * makes "did the confirmation email actually send, and if not why" a
+ * visible, self-service answer instead of something only Claude could
+ * diagnose by reading server code and guessing.
+ */
+export function RecentSendsPanel() {
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/message-logs")
+      if (res.ok) { const { data } = await res.json(); setLogs(data) }
+    } finally { setLoading(false) }
+  }
+
+  const statusColor: Record<string, string> = {
+    SENT: "text-green-400", FAILED: "text-red-400", PARTIAL: "text-amber-400", PENDING: "text-muted-foreground",
+  }
+
+  return (
+    <div className="bg-hive-surface border border-border rounded-xl p-5 space-y-3 md:col-span-2">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-sm">Recent Sends</h3>
+        <button onClick={load} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+      </div>
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : logs.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No sends recorded yet.</p>
+      ) : (
+        <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          {logs.map(l => (
+            <div key={l.id} className="flex items-center justify-between bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-xs">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className={`font-semibold ${statusColor[l.status] ?? "text-muted-foreground"}`}>{l.status}</span>
+                  <span className="text-muted-foreground">{l.channel}</span>
+                  <span className="truncate">{l.subject}</span>
+                </div>
+                <div className="text-muted-foreground truncate">{l.recipient}</div>
+                {l.status === "FAILED" && <div className="text-red-300/80 truncate mt-0.5">{l.body}</div>}
+              </div>
+              <span className="text-[10px] text-muted-foreground shrink-0 ml-2">{new Date(l.sentAt).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

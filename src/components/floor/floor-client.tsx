@@ -104,6 +104,12 @@ function TableShape({ table: t, selected, onClick }: { table: FloorTable; select
 }
 
 export function FloorClient({ tables: initialTables, session, upcomingReservations = [] }: Props) {
+  // 2026-07-15: session was received but never used — every logged-in
+  // user, including plain STAFF, could seat guests, log walk-ins, and
+  // change table status here regardless of role. isReadOnly gates those
+  // mutating actions for STAFF-level users, who can still see live table
+  // status (useful during a shift) but not change it.
+  const isReadOnly = session.accessLevel === "STAFF"
   const dark = true // floor view always uses dark theme
   const router = useRouter()
   const [tables, setTables] = useState(initialTables)
@@ -126,6 +132,9 @@ export function FloorClient({ tables: initialTables, session, upcomingReservatio
 
   const onTableClick = useCallback((id: string, e: React.MouseEvent) => {
     if (e.shiftKey || e.metaKey || e.ctrlKey) { setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
+    // Read-only (STAFF) users can still select a table to see its detail
+    // highlighted, but clicking never opens the seat/walk-in/status modal.
+    else if (isReadOnly) { setSelectedIds([id]) }
     else { setSelectedIds([id]); setActionModal("table_action") }
   }, [])
 
@@ -196,10 +205,14 @@ export function FloorClient({ tables: initialTables, session, upcomingReservatio
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-2 border-l border-border/40 pl-3 ml-1">
             <span className="text-xs text-muted-foreground">{selectedTables.map(t => t.displayId).join(", ")}</span>
-            <button onClick={() => setActionModal("seat_rsvp")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-green-400 border-green-400/30 hover:bg-green-400/10 transition-colors"><UserCheck size={12} />Seat Rsvp</button>
-            <button onClick={() => setActionModal("walk_in")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-blue-400 border-blue-400/30 hover:bg-blue-400/10 transition-colors"><Plus size={12} />Walk-In</button>
-            {primaryTable?.state === "SEATED" && <button onClick={() => updateState(selectedIds, "DIRTY")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-amber-400 border-amber-400/30 hover:bg-amber-400/10 transition-colors"><Flag size={12} />Bussing</button>}
-            {primaryTable?.state === "DIRTY" && <button onClick={() => updateState(selectedIds, "AVAILABLE")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-green-400 border-green-400/30 hover:bg-green-400/10 transition-colors"><Flag size={12} />Clean</button>}
+            {!isReadOnly && (
+              <>
+                <button onClick={() => setActionModal("seat_rsvp")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-green-400 border-green-400/30 hover:bg-green-400/10 transition-colors"><UserCheck size={12} />Seat Rsvp</button>
+                <button onClick={() => setActionModal("walk_in")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-blue-400 border-blue-400/30 hover:bg-blue-400/10 transition-colors"><Plus size={12} />Walk-In</button>
+                {primaryTable?.state === "SEATED" && <button onClick={() => updateState(selectedIds, "DIRTY")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-amber-400 border-amber-400/30 hover:bg-amber-400/10 transition-colors"><Flag size={12} />Bussing</button>}
+                {primaryTable?.state === "DIRTY" && <button onClick={() => updateState(selectedIds, "AVAILABLE")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-medium text-green-400 border-green-400/30 hover:bg-green-400/10 transition-colors"><Flag size={12} />Clean</button>}
+              </>
+            )}
             <button onClick={() => setSelectedIds([])} className="text-muted-foreground hover:text-foreground p-0.5 rounded"><X size={12} /></button>
           </div>
         )}

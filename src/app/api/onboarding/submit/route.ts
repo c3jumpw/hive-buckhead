@@ -33,6 +33,7 @@ import { prisma } from "@/lib/db/prisma"
 import { TEAM_ID_CONFIG } from "@/lib/config"
 import { logOnboardingToSheet } from "@/lib/integrations/google-sheets"
 import { sendOnboardingReceived, sendAdminOnboardingAlert } from "@/lib/integrations/sendgrid"
+import { logEmailAttempt } from "@/lib/db/activity-logger"
 import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
@@ -174,16 +175,36 @@ export async function POST(request: NextRequest) {
     logOnboardingToSheet({ teamId, name, email, position: role || "Staff", completedAt: new Date().toISOString() }).catch(console.error)
 
     // New hire: "we got it, pending review" — no portal link, account isn't active.
-    sendOnboardingReceived(email, { name }).catch(console.error)
+    // BUG HISTORY (2026-07-15): previously fire-and-forget with .catch(console.error)
+    // on a function that never throws — real failures (unverified sender,
+    // invalid recipient) were invisible outside server logs. Now tracked
+    // in MessageLog for real visibility from the admin dashboard.
+    logEmailAttempt(
+      sendOnboardingReceived(email, { name }),
+      { channel: "EMAIL", recipient: email, subject: "Onboarding Received" }
+    ).catch(() => {})
 
     // Admins: notify everyone with review authority. Query fresh rather than
     // relying on any cached list, since this needs to reflect current staff.
     prisma.staff.findMany({
       where: { active: true, accessLevel: { in: ["OWNER", "MANAGER"] } },
       select: { email: true },
-    }).then((admins: { email: string }[]) => {
+    }).then(async (admins: { email: string }[]) => {
       const emails = admins.map((a: { email: string }) => a.email)
-      if (emails.length > 0) sendAdminOnboardingAlert(emails, { name, role: role || "Staff" }).catch(console.error)
+      if (emails.length === 0) return
+      const result = await sendAdminOnboardingAlert(emails, { name, role: role || "Staff" })
+      // sendAdminOnboardingAlert sends to multiple recipients and returns
+      // an aggregate { sent, failed } count rather than the single-result
+      // shape logEmailAttempt expects — logged directly here instead.
+      await prisma.messageLog.create({
+        data: {
+          channel: "EMAIL", recipient: emails.join(", "),
+          subject: `New onboarding submission awaiting approval: ${name}`,
+          body: `Sent to ${result.sent} of ${emails.length} admins${result.failed > 0 ? `, ${result.failed} failed` : ""}`,
+          status: result.failed === 0 ? "SENT" : (result.sent > 0 ? "PARTIAL" : "FAILED"),
+          sentAt: new Date(),
+        },
+      }).catch(() => {})
     }).catch(console.error)
 
     return NextResponse.json({ data: { staffId: staff.id, teamId }, success: true }, { status: 201 })

@@ -15,9 +15,14 @@ interface DetailPanelProps {
   onClose: () => void
   onAction: (action: string, reservation: Reservation) => void
   staffList: { id: string; name: string; color: string }[]
+  // 2026-07-15 addition: STAFF-level users can view reservation details
+  // but not confirm/seat/edit/cancel/close/message — those actions are
+  // reserved for OWNER/MANAGER. Derived from session.accessLevel by the
+  // caller (reservations-client.tsx) and passed through here.
+  readOnly?: boolean
 }
 
-export function ReservationDetailPanel({ reservation: r, onClose, onAction }: DetailPanelProps) {
+export function ReservationDetailPanel({ reservation: r, onClose, onAction, readOnly = false }: DetailPanelProps) {
   const [msgTab, setMsgTab] = useState<"email" | "sms">("email")
 
   // BUG HISTORY (2026-07-15): this component previously rendered three
@@ -114,6 +119,11 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction }: De
         {/* Actions */}
         <div className="p-4 border-b border-border">
           <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-3">Actions</div>
+          {readOnly ? (
+            <p className="text-xs text-muted-foreground bg-hive-surface2 rounded-lg px-3 py-2.5 text-center">
+              View only — ask a manager to confirm, seat, edit, or cancel this reservation.
+            </p>
+          ) : (
           <div className="space-y-2">
             {status === "REQUESTED" && (
               <>
@@ -177,9 +187,11 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction }: De
               </p>
             )}
           </div>
+          )}
         </div>
 
-        {/* Quick message */}
+        {/* Quick message — hidden entirely for read-only (STAFF) users */}
+        {!readOnly && (
         <div className="p-4 border-b border-border">
           <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-3">Message Guest</div>
           <div className="flex gap-1 bg-hive-surface2 rounded-md p-1 mb-3">
@@ -225,6 +237,7 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction }: De
             )}
           </div>
         </div>
+        )}
 
         {/* Activity */}
         {r.activity && r.activity.length > 0 && (

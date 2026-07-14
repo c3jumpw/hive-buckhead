@@ -22,6 +22,7 @@ import { prisma } from "@/lib/db/prisma"
 import { requireAdmin } from "@/lib/auth/session"
 import { logStaffToSheet } from "@/lib/integrations/google-sheets"
 import { sendOnboardingApproved } from "@/lib/integrations/sendgrid"
+import { logEmailAttempt } from "@/lib/db/activity-logger"
 import { APP_CONFIG } from "@/lib/config"
 
 export async function POST(request: NextRequest) {
@@ -53,9 +54,14 @@ export async function POST(request: NextRequest) {
     createdAt: updated.createdAt.toISOString(),
   }).catch(console.error)
 
-  sendOnboardingApproved(updated.email, {
-    name: updated.name, teamId: updated.teamId ?? "N/A", portalUrl: APP_CONFIG.staffPortalUrl,
-  }).catch(console.error)
+  // BUG HISTORY (2026-07-15): .catch(console.error) on a function that
+  // never throws — real failures were invisible outside server logs.
+  logEmailAttempt(
+    sendOnboardingApproved(updated.email, {
+      name: updated.name, teamId: updated.teamId ?? "N/A", portalUrl: APP_CONFIG.staffPortalUrl,
+    }),
+    { channel: "EMAIL", recipient: updated.email, subject: "Onboarding Approved" }
+  ).catch(() => {})
 
   return NextResponse.json({ data: updated })
 }

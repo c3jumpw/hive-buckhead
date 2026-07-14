@@ -41,7 +41,14 @@ const KANBAN_COLS: { status: ReservationStatus; label: string; color: string }[]
   { status: "CANCELLATION_REQUESTED", label: "Cancel Req.", color: "text-amber-400" },
 ]
 
-export function ReservationsClient({ initialReservations, staff, tables, session: _session }: Props) {
+export function ReservationsClient({ initialReservations, staff, tables, session }: Props) {
+  // 2026-07-15: session was previously received as `_session` — accepted
+  // but completely unused, meaning EVERY logged-in user (including plain
+  // STAFF) had full confirm/seat/edit/cancel/close/message access on this
+  // page regardless of role. isReadOnly gates the detail panel's action
+  // buttons for STAFF-level users — they can still view and search
+  // reservations, just not mutate them.
+  const isReadOnly = session.accessLevel === "STAFF"
   const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations)
   const [view, setView] = useState<ViewMode>("list")
@@ -295,7 +302,9 @@ export function ReservationsClient({ initialReservations, staff, tables, session
           </Select>
           <span className="text-xs text-muted-foreground ml-auto">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</span>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.refresh()}><RefreshCw className="h-3.5 w-3.5" /></Button>
-          <Button size="sm" className="h-8 text-xs" onClick={() => { setEditRsv(null); setNewOpen(true) }}><Plus className="h-3.5 w-3.5 mr-1" /> New</Button>
+          {!isReadOnly && (
+            <Button size="sm" className="h-8 text-xs" onClick={() => { setEditRsv(null); setNewOpen(true) }}><Plus className="h-3.5 w-3.5 mr-1" /> New</Button>
+          )}
         </div>
 
         {/* Content + panel */}
@@ -306,7 +315,7 @@ export function ReservationsClient({ initialReservations, staff, tables, session
             {view === "calendar" && <CalendarView reservations={filtered} onSelect={setSelectedId} />}
           </div>
           {selected && (
-            <ReservationDetailPanel reservation={selected} onClose={() => setSelectedId(null)} onAction={handleAction} staffList={staff} />
+            <ReservationDetailPanel reservation={selected} onClose={() => setSelectedId(null)} onAction={handleAction} staffList={staff} readOnly={isReadOnly} />
           )}
         </div>
       </div>
