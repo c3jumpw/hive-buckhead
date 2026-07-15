@@ -28,6 +28,7 @@
  */
 
 import { QUO_CONFIG } from "@/lib/config"
+import { getEffectiveQuoKey } from "@/lib/integrations/settings-override"
 
 type SmsResult = { success: boolean; id?: string; error?: string }
 
@@ -40,9 +41,9 @@ type SmsResult = { success: boolean; id?: string; error?: string }
  * @param body - Message text content
  */
 async function sendSms(to: string, body: string): Promise<SmsResult> {
-  const apiKey = QUO_CONFIG.apiKey
+  const apiKey = await getEffectiveQuoKey()
   if (!apiKey) {
-    console.error("[Quo] QUO_API_KEY not set — SMS sending disabled")
+    console.error("[Quo] No API key configured (checked AppSettings override and QUO_API_KEY) — SMS sending disabled")
     return { success: false, error: "SMS not configured" }
   }
   if (!QUO_CONFIG.fromNumber) {

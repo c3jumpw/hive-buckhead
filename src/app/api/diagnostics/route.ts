@@ -17,26 +17,36 @@
  * variables rather than a code bug — this panel exists so that
  * distinction is visible in 5 seconds instead of requiring a live test
  * and log-diving every time.
+ *
+ * REVISION (2026-07-16): sendgrid/quo/systemeIo now also check the
+ * AppSettings override (see Admin → Settings → Integration Settings) —
+ * without this, a key entered only there (with no matching Vercel env var)
+ * would show as "Missing" here even though sends would actually work.
  * =============================================================================
  */
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth/session"
+import { getEffectiveSendgridKey, getEffectiveQuoKey, getEffectiveSystemeKey } from "@/lib/integrations/settings-override"
 
 export async function GET() {
   await requireAdmin()
 
+  const [sendgridKey, quoKey, systemeKey] = await Promise.all([
+    getEffectiveSendgridKey(), getEffectiveQuoKey(), getEffectiveSystemeKey(),
+  ])
+
   const checks = {
     sendgrid: {
-      configured: Boolean(process.env.SENDGRID_API_KEY),
-      detail: process.env.SENDGRID_API_KEY ? "SENDGRID_API_KEY is set" : "SENDGRID_API_KEY is missing — emails cannot send",
+      configured: Boolean(sendgridKey),
+      detail: sendgridKey ? "SendGrid key is set (Vercel env var or admin override)" : "No SendGrid key set — emails cannot send",
     },
     quo: {
-      configured: Boolean(process.env.QUO_API_KEY),
-      detail: process.env.QUO_API_KEY ? "QUO_API_KEY is set" : "QUO_API_KEY is missing — texts cannot send",
+      configured: Boolean(quoKey),
+      detail: quoKey ? "Quo key is set (Vercel env var or admin override)" : "No Quo key set — texts cannot send",
     },
     systemeIo: {
-      configured: Boolean(process.env.SYSTEME_IO_API_KEY),
-      detail: process.env.SYSTEME_IO_API_KEY ? "SYSTEME_IO_API_KEY is set" : "SYSTEME_IO_API_KEY is missing — CRM sync disabled",
+      configured: Boolean(systemeKey),
+      detail: systemeKey ? "Systeme.io key is set (Vercel env var or admin override)" : "No Systeme.io key set — CRM sync disabled",
     },
     googleSheets: {
       configured: Boolean(process.env.GOOGLE_PRIVATE_KEY),

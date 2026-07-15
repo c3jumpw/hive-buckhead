@@ -18,14 +18,25 @@
  * a separate twilio.ts module. User clarified texts go through Quo, not
  * Twilio. Replaced with a call to sendCustomSms() from
  * src/lib/integrations/quo.ts — no inline SMS logic here anymore.
+ *
+ * REVISION (2026-07-16): the email branch still inlined a raw sgMail call
+ * with its own try/catch that discarded whatever SendGrid actually said
+ * and returned a flat "Failed to send message" — and neither branch ever
+ * wrote a MessageLog row on failure, only on success, so a failed send was
+ * invisible everywhere except Vercel's function logs. Both channels now go
+ * through logEmailAttempt (the same wrapper the automatic confirm/cancel/
+ * onboarding emails use), which always writes a MessageLog row — success
+ * or failure — with the real provider error in `body`, visible in the
+ * Recent Sends panel. The real error is also returned to the client, so
+ * the toast shows what actually went wrong instead of a generic message.
  * =============================================================================
  */
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { getSession } from "@/lib/auth/session"
-import sgMail from "@sendgrid/mail"
-import { SENDGRID_CONFIG } from "@/lib/config"
+import { sendCustomEmail } from "@/lib/integrations/sendgrid"
 import { sendCustomSms } from "@/lib/integrations/quo"
+import { logEmailAttempt } from "@/lib/db/activity-logger"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession()
@@ -33,6 +44,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   const { channel, body } = await request.json()
   if (!channel || !body) return NextResponse.json({ error: "channel and body required" }, { status: 400 })
+  if (channel !== "email" && channel !== "sms") {
+    return NextResponse.json({ error: "channel must be 'email' or 'sms'" }, { status: 400 })
+  }
 
   const reservation = await prisma.reservation.findUnique({
     where: { id: params.id },
@@ -40,40 +54,32 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   })
   if (!reservation) return NextResponse.json({ error: "Reservation not found" }, { status: 404 })
 
-  try {
-    if (channel === "email") {
-      if (!reservation.email) return NextResponse.json({ error: "This guest has no email on file" }, { status: 400 })
-      if (!SENDGRID_CONFIG.apiKey) return NextResponse.json({ error: "SendGrid not configured" }, { status: 503 })
-      sgMail.setApiKey(SENDGRID_CONFIG.apiKey)
-      await sgMail.send({
-        to: reservation.email,
-        from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
-        subject: `A message from Hive Buckhead — RSVP ${reservation.rsvpCode}`,
-        text: body,
-        html: `<div style="font-family:Georgia,serif;white-space:pre-line;">${body}</div>`,
-      })
-    } else if (channel === "sms") {
-      if (!reservation.phone) return NextResponse.json({ error: "This guest has no phone on file" }, { status: 400 })
-      const result = await sendCustomSms(reservation.phone, body)
-      if (!result.success) {
-        return NextResponse.json({ error: result.error ?? "Quo send failed" }, { status: 502 })
-      }
-    } else {
-      return NextResponse.json({ error: "channel must be 'email' or 'sms'" }, { status: 400 })
-    }
-
-    await prisma.messageLog.create({
-      data: {
-        channel: channel === "email" ? "EMAIL" : "SMS",
-        recipient: channel === "email" ? (reservation.email ?? "") : (reservation.phone ?? ""),
-        subject: "Manual message", body, status: "SENT", sentAt: new Date(),
-        reservationId: params.id, staffId: session.id,
-      },
-    }).catch(() => {})
-
-    return NextResponse.json({ success: true })
-  } catch (e: unknown) {
-    console.error("[Reservation message]", e)
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 })
+  if (channel === "email" && !reservation.email) {
+    return NextResponse.json({ error: "This guest has no email on file" }, { status: 400 })
   }
+  if (channel === "sms" && !reservation.phone) {
+    return NextResponse.json({ error: "This guest has no phone on file" }, { status: 400 })
+  }
+
+  const subject = `A message from Hive Buckhead — RSVP ${reservation.rsvpCode}`
+  const recipient = channel === "email" ? reservation.email! : reservation.phone!
+
+  // Run the actual send once, reuse the result both for the MessageLog
+  // entry (via logEmailAttempt) and for the HTTP response — so the log and
+  // what the client sees can never disagree with each other.
+  const result = channel === "email"
+    ? await sendCustomEmail(recipient, { subject, body })
+    : await sendCustomSms(recipient, body)
+
+  await logEmailAttempt(Promise.resolve(result), {
+    channel: channel === "email" ? "EMAIL" : "SMS",
+    recipient, subject, body,
+    reservationId: params.id,
+    staffId: session.id,
+  })
+
+  if (!result.success) {
+    return NextResponse.json({ error: result.error || "Failed to send message" }, { status: 502 })
+  }
+  return NextResponse.json({ success: true })
 }

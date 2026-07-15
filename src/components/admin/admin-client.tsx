@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
-import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel, RecentSendsPanel } from "@/components/admin/onboarding-manager"
+import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel, RecentSendsPanel, SystemeLinkCard, IntegrationSettingsPanel } from "@/components/admin/onboarding-manager"
 import { PositionManager, RecurringScheduleEditor, OffboardingForm } from "@/components/admin/staff-tools"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   Users, Table2, CalendarDays, Edit3, Eye, EyeOff, Save, X, Plus,
   Settings, Clock, MessageSquare, Database, BarChart3, CheckCircle,
+  AlertTriangle, Trash2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,14 +33,18 @@ interface Props {
   initialTab: string
 }
 
+// REVISION (2026-07-16): labels renamed per admin menu reorg — "Staff" ->
+// "Staff List", "Team Tools" -> "Team Management." Tab ids deliberately
+// left unchanged (still "staff" / "team") so any existing /admin?tab=...
+// links or bookmarks keep working; only the display label changed.
 const TABS = [
   { id: "overview",   label: "Overview",          icon: BarChart3 },
-  { id: "staff",      label: "Staff",             icon: Users },
+  { id: "staff",      label: "Staff List",        icon: Users },
   { id: "tables",     label: "Tables",            icon: Table2 },
   { id: "hours",      label: "Hours",             icon: Clock },
   { id: "messages",   label: "Messages",          icon: MessageSquare },
   { id: "settings",   label: "Settings",          icon: Settings },
-  { id: "team",       label: "Team Tools",        icon: MessageSquare },
+  { id: "team",       label: "Team Management",   icon: Users },
 ]
 
 const ACCESS_LEVELS = ["OWNER", "MANAGER", "STAFF"]
@@ -48,7 +53,7 @@ const ACCESS_COLORS: Record<string, string> = {
 }
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
 
-export function AdminClient({ session: _s, stats, recentReservations, staff: initStaff, tables, hours: initHours, messageTemplates: initTemplates, initialTab }: Props) {
+export function AdminClient({ session, stats, recentReservations, staff: initStaff, tables, hours: initHours, messageTemplates: initTemplates, initialTab }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [tablesSubTab, setTablesSubTab] = useState("list")
@@ -85,6 +90,32 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null)
   const [templateForm, setTemplateForm] = useState({ name: "", channel: "EMAIL", subject: "", body: "" })
   const [seedLoading, setSeedLoading] = useState(false)
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
+  const [resetConfirmText, setResetConfirmText] = useState("")
+  const [resetting, setResetting] = useState(false)
+
+  async function resetReservations() {
+    if (resetConfirmText !== "RESET") return
+    setResetting(true)
+    try {
+      const res = await fetch("/api/admin/reset-reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "RESET" }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast({ title: json.error || "Reset failed", variant: "destructive" })
+        return
+      }
+      toast({ title: `Cleared ${json.deletedCount} reservation${json.deletedCount === 1 ? "" : "s"}`, description: "The reservations list is now empty." })
+      setResetConfirmOpen(false); setResetConfirmText("")
+    } catch (e) {
+      toast({ title: "Reset failed", description: String(e), variant: "destructive" })
+    } finally {
+      setResetting(false)
+    }
+  }
 
   /**
    * BUG HISTORY (2026-07-15): the "Reservation Settings" card in the
@@ -607,9 +638,18 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
           </div>
         )}
 
-        {/* ── Message Templates ────────────────────────────────────────── */}
+        {/* ── Messages (Customer Messaging + Marketing + Templates) ──────
+             REVISION (2026-07-16): Quo moved in from the old Team Tools
+             tab, Systeme.io added alongside it — Messages is now
+             "everything related to communicating with guests," while Team
+             Management (below) stays "everything internal to staff." ── */}
         {tab === "messages" && (
-          <div className="max-w-2xl space-y-4">
+          <div className="max-w-2xl space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <QuoLinkCard />
+              <SystemeLinkCard />
+            </div>
+
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="font-medium">Message Templates</h2>
@@ -671,31 +711,35 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
           </div>
         )}
 
-        {/* ── Team Tools (Onboarding, Announcements, Feedback, Quo) ────── */}
+        {/* ── Team Management (Onboarding, Announcements, Feedback) ──────
+             REVISION (2026-07-16): renamed from "Team Tools." Integration
+             Status + Recent Sends moved to Settings, Quo moved to Messages
+             — this tab is now scoped to internal staff/team concerns only. ── */}
         {tab === "team" && (
           <div className="max-w-3xl space-y-6">
             <div>
-              <h2 className="font-medium">Team Tools</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Onboarding access, staff announcements, feedback inbox, and customer messaging</p>
+              <h2 className="font-medium">Team Management</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Onboarding access, staff announcements, and the feedback inbox</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <PendingApprovalsPanel />
-              <IntegrationDiagnosticsPanel />
-              <RecentSendsPanel />
               <OnboardingManager />
-              <QuoLinkCard />
               <MessageBlastTool />
               <FeedbackInbox />
             </div>
           </div>
         )}
 
-        {/* ── Settings ────────────────────────────────────────────────── */}
+        {/* ── Settings ─────────────────────────────────────────────────
+             REVISION (2026-07-16): widened from max-w-xl to max-w-3xl to
+             fit the Integration Settings/Status/Recent Sends grid moved in
+             from the old Team Tools tab, plus the new Reset Reservations
+             danger zone. ── */}
         {tab === "settings" && (
-          <div className="max-w-xl space-y-6">
+          <div className="max-w-3xl space-y-6">
             <div>
               <h2 className="font-medium">System Settings</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Configuration and data management</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Configuration, integrations, and data management</p>
             </div>
 
             {/* Sample data */}
@@ -766,6 +810,55 @@ export function AdminClient({ session: _s, stats, recentReservations, staff: ini
               )}
               <p className="text-xs text-muted-foreground">Changes save automatically.</p>
             </div>
+
+            {/* Integrations — moved in from Team Tools */}
+            <div>
+              <h3 className="font-medium text-sm mb-3">Integrations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <IntegrationSettingsPanel />
+                <IntegrationDiagnosticsPanel />
+                <RecentSendsPanel />
+              </div>
+            </div>
+
+            {/* Danger zone — Reset Reservations */}
+            {session.accessLevel === "OWNER" && (
+              <div className="bg-red-950/20 border border-red-500/30 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm mb-1">Reset Reservation Data</h3>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Permanently deletes every reservation — for a one-time clean start right before launch. Staff, tables, and schedules are not affected. This cannot be undone.
+                    </p>
+                    {!resetConfirmOpen ? (
+                      <Button size="sm" variant="outline" className="h-8 text-xs border-red-500/40 text-red-300 hover:bg-red-500/10"
+                        onClick={() => setResetConfirmOpen(true)}>
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />Reset All Reservations
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs text-red-300">
+                          Type <span className="font-mono font-semibold">RESET</span> to confirm permanent deletion.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Input value={resetConfirmText} onChange={e => setResetConfirmText(e.target.value)}
+                            placeholder="RESET" className="h-8 text-xs w-32 font-mono" />
+                          <Button size="sm" className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white"
+                            disabled={resetConfirmText !== "RESET" || resetting} onClick={resetReservations}>
+                            {resetting ? "Deleting…" : "Permanently Delete"}
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-xs"
+                            onClick={() => { setResetConfirmOpen(false); setResetConfirmText("") }} disabled={resetting}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

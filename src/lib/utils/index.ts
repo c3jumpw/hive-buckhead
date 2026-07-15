@@ -58,6 +58,23 @@ export function formatTimeCompact(time: string): string {
   return `${hour}:${m.toString().padStart(2, "0")}${period}`;
 }
 
+// 2026-07-16 addition — for real DateTime fields like Reservation.seatedAt /
+// completedAt, which (unlike arrivalTime) are actual timestamps, not a
+// "HH:MM" string. formatTime() above would silently produce garbage if
+// handed one of these instead of an arrivalTime-style string.
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return format(d, "M/d, h:mm a");
+}
+
+// Same use case as formatDateTime, but time-only — for table/kanban cells
+// that sit next to a column that already shows the reservation's date, so
+// repeating the date on every Seated/Exit cell would just be noise.
+export function formatTimeOnly(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return format(d, "h:mm a");
+}
+
 export function formatRelativeTime(date: Date): string {
   return formatDistanceToNow(date, { addSuffix: true });
 }

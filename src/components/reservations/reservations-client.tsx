@@ -14,7 +14,7 @@ import { StatusBadge } from "./status-badge"
 import { ReservationDetailPanel } from "./reservation-detail-panel"
 import { NewRsvpModal, CloseTableModal, CancelModal } from "./reservation-modals"
 import { SeatGuestModal } from "./reservation-modals"
-import { formatDate, formatTime, formatCurrency, cn, todayLocal } from "@/lib/utils"
+import { formatDate, formatTime, formatTimeOnly, formatCurrency, cn, todayLocal } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import type { SessionStaff, ReservationStatus } from "@/types"
 
@@ -351,7 +351,7 @@ function ListViewTable({ reservations, selectedId, onSelect }: { reservations: R
     <table className="w-full border-collapse">
       <thead className="sticky top-0 z-10">
         <tr className="bg-hive-surface border-b border-border">
-          {["Guest","Date & Time","Party","Status","Server","Tables","RSVP #","Order"].map(h => (
+          {["Guest","Date & Time","Party","Status","Seated","Exit","Server","Tables","RSVP #","Order"].map(h => (
             <th key={h} className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{h}</th>
           ))}
         </tr>
@@ -366,6 +366,8 @@ function ListViewTable({ reservations, selectedId, onSelect }: { reservations: R
               <td className="px-3 py-2.5"><div className="text-sm">{formatDate(date)}</div><div className="text-[11px] text-muted-foreground">{formatTime(r.arrivalTime)}</div></td>
               <td className="px-3 py-2.5 text-center font-serif text-lg">{r.partySize}</td>
               <td className="px-3 py-2.5"><StatusBadge status={r.status} /></td>
+              <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.seatedAt ? formatTimeOnly(r.seatedAt) : "—"}</td>
+              <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.completedAt ? formatTimeOnly(r.completedAt) : "—"}</td>
               <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.server?.name ?? "—"}</td>
               <td className="px-3 py-2.5 text-xs text-muted-foreground">{tableIds.join(", ") || "—"}</td>
               <td className="px-3 py-2.5 text-[11px] font-medium text-gold-500 tracking-wider">{r.rsvpCode}</td>
@@ -396,6 +398,12 @@ function KanbanView({ reservations, selectedId, onSelect }: { reservations: Rese
                   <div className="font-medium text-sm mb-1">{r.firstName} {r.lastName}</div>
                   <div className="text-[11px] text-muted-foreground">{formatDate(r.date?.split("T")[0] ?? r.date)} · {formatTime(r.arrivalTime)}</div>
                   {r.server?.name && <div className="text-[11px] text-muted-foreground mt-0.5">{r.server.name}</div>}
+                  {(r.seatedAt || r.completedAt) && (
+                    <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-2">
+                      {r.seatedAt && <span>Seated {formatTimeOnly(r.seatedAt)}</span>}
+                      {r.completedAt && <span>Exit {formatTimeOnly(r.completedAt)}</span>}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
                     <span className="text-[11px] text-muted-foreground">👥 {r.partySize}</span>
                     <span className="text-[10px] text-gold-500 font-medium">{r.rsvpCode}</span>

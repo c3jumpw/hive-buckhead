@@ -40,7 +40,15 @@ export async function getAdminEmails(): Promise<string[]> {
  */
 export async function logEmailAttempt(
   sendFn: Promise<{ success: boolean; messageId?: string; error?: string }>,
-  meta: { channel: "EMAIL" | "SMS"; recipient: string; subject: string; reservationId?: string }
+  meta: {
+    channel: "EMAIL" | "SMS"; recipient: string; subject: string; reservationId?: string
+    // Optional — added for manual staff-composed sends (Message Guest panel),
+    // which need to know WHO sent it and want the actual message text kept
+    // on success, not just "Sent successfully." System-triggered sends
+    // (confirmations, onboarding emails) don't pass these and keep the
+    // original behavior exactly as before.
+    staffId?: string; body?: string
+  }
 ): Promise<void> {
   const { prisma } = await import("@/lib/db/prisma")
   try {
@@ -48,11 +56,12 @@ export async function logEmailAttempt(
     await prisma.messageLog.create({
       data: {
         channel: meta.channel, recipient: meta.recipient, subject: meta.subject,
-        body: result.success ? "Sent successfully" : (result.error ?? "Unknown error"),
+        body: result.success ? (meta.body ?? "Sent successfully") : (result.error ?? "Unknown error"),
         status: result.success ? "SENT" : "FAILED",
         sentAt: new Date(),
         externalId: result.messageId ?? null,
         reservationId: meta.reservationId ?? null,
+        staffId: meta.staffId ?? null,
       },
     })
     if (!result.success) {
@@ -68,6 +77,7 @@ export async function logEmailAttempt(
         channel: meta.channel, recipient: meta.recipient, subject: meta.subject,
         body: String(err), status: "FAILED", sentAt: new Date(),
         reservationId: meta.reservationId ?? null,
+        staffId: meta.staffId ?? null,
       },
     }).catch(() => {})
   }

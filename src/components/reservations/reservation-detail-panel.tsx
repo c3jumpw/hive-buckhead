@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { X, Phone, Mail, Users, Clock, Table2, CheckCircle, UserCheck, XCircle, Edit3, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "./status-badge"
-import { formatDate, formatTime, formatCurrency, renderTemplate, cn } from "@/lib/utils"
+import { formatDate, formatTime, formatDateTime, formatCurrency, renderTemplate, cn } from "@/lib/utils"
 import type { ReservationStatus } from "@/types"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +24,12 @@ interface DetailPanelProps {
 
 export function ReservationDetailPanel({ reservation: r, onClose, onAction, readOnly = false }: DetailPanelProps) {
   const [msgTab, setMsgTab] = useState<"email" | "sms">("email")
+  // 2026-07-16 addition: clicking a template used to send immediately with
+  // no way to back out. This holds the template that was clicked but not
+  // yet confirmed — rendering a "send this?" step instead of firing
+  // onAction("message", ...) right away. Cleared whenever the selected
+  // reservation changes so a stale confirm can't linger across guests.
+  const [pendingMessage, setPendingMessage] = useState<{ name: string; channel: "email" | "sms"; body: string } | null>(null)
 
   // BUG HISTORY (2026-07-15): this component previously rendered three
   // templates hardcoded directly in this file, completely disconnected
@@ -39,6 +45,8 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction, read
       .then(json => { if (json?.data) setTemplates(json.data) })
       .catch(() => {})
   }, [])
+
+  useEffect(() => { setPendingMessage(null) }, [r?.id])
 
   if (!r) return null
 
@@ -90,6 +98,21 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction, read
             <span className="text-xs text-muted-foreground">Status</span>
             <StatusBadge status={status} />
           </div>
+          {/* 2026-07-16 addition: seatedAt already existed on the model but
+              was never shown anywhere. completedAt (set when a table is
+              closed out — see "Close Table & Log Order" below) doubles as
+              the exit time, since closing the check out is the moment a
+              party leaves — no separate field needed for that. */}
+          {r.seatedAt && (
+            <DetailRow icon={<UserCheck className="h-3.5 w-3.5" />} label="Seated">
+              {formatDateTime(r.seatedAt)}
+            </DetailRow>
+          )}
+          {r.completedAt && (
+            <DetailRow icon={<ChevronRight className="h-3.5 w-3.5" />} label="Exit">
+              {formatDateTime(r.completedAt)}
+            </DetailRow>
+          )}
           {r.orderTotal && (
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Order Total</span>
@@ -211,6 +234,36 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction, read
           <div className="space-y-1.5">
             {templates.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">No templates configured — add some in Admin → Messages.</p>
+            ) : pendingMessage ? (
+              // Confirm step — 2026-07-16 addition. Nothing sends until
+              // "Send" below is clicked; "Back" returns to the template
+              // list with no request made.
+              <div className="border border-gold-500/30 bg-gold-500/5 rounded-md p-3 space-y-2.5">
+                <p className="text-xs">
+                  Send <span className="font-medium">{pendingMessage.name}</span> to{" "}
+                  <span className="font-medium">{r.firstName} {r.lastName}</span> via {pendingMessage.channel === "email" ? "email" : "SMS"}?
+                </p>
+                <pre className="text-[11px] text-muted-foreground whitespace-pre-wrap font-sans bg-hive-surface2 rounded-md p-2.5 max-h-28 overflow-y-auto">
+                  {pendingMessage.body}
+                </pre>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      onAction("message", { ...r, _msgBody: pendingMessage.body, _msgChannel: pendingMessage.channel })
+                      setPendingMessage(null)
+                    }}
+                    className="flex-1 py-1.5 rounded-md text-xs font-medium bg-gold-500 hover:bg-gold-600 text-black transition-colors"
+                  >
+                    Send
+                  </button>
+                  <button
+                    onClick={() => setPendingMessage(null)}
+                    className="flex-1 py-1.5 rounded-md text-xs font-medium border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
             ) : (
               templates
                 .filter(t => t.channel === (msgTab === "email" ? "EMAIL" : "SMS"))
@@ -227,7 +280,7 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction, read
                   return (
                     <button
                       key={t.id}
-                      onClick={() => onAction("message", { ...r, _msgBody: renderedBody, _msgChannel: msgTab })}
+                      onClick={() => setPendingMessage({ name: t.name, channel: msgTab, body: renderedBody })}
                       className="w-full text-left px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-hive-surface2 hover:text-foreground border border-border transition-colors"
                     >
                       {t.name}

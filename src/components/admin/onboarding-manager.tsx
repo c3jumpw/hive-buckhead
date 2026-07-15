@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from "react"
-import { RefreshCw, Copy, Send, MessageSquare, ExternalLink } from "lucide-react"
+import { RefreshCw, Copy, Send, MessageSquare, ExternalLink, KeyRound, Pencil, X, Save, Trash2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
 export function OnboardingManager() {
@@ -222,6 +222,32 @@ export function QuoLinkCard() {
 }
 
 /**
+ * SystemeLinkCard
+ * Added 2026-07-16 alongside the Messages tab reorg. Opens Systeme.io
+ * directly — collected guest contacts (synced on RSVP via
+ * upsertSystemeContact), marketing blasts, and segment/tag browsing all
+ * live in Systeme.io itself; this is a launcher, not a re-implementation
+ * of their CRM inside Hive Buckhead.
+ */
+export function SystemeLinkCard() {
+  return (
+    <div className="bg-hive-surface border border-border rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-2">
+        <ExternalLink size={16} className="text-gold-400" />
+        <h3 className="font-medium text-sm">Marketing (Systeme.io)</h3>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        Open Systeme.io to view collected guest contacts, send marketing blasts, and browse segments/tags.
+      </p>
+      <a href="https://systeme.io/dashboard" target="_blank" rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full bg-hive-surface2 border border-border hover:border-gold-500/40 rounded-lg py-2 text-sm font-medium transition-colors">
+        Open Systeme.io <ExternalLink size={12} />
+      </a>
+    </div>
+  )
+}
+
+/**
  * PendingApprovalsPanel
  * Shows every staff member who completed onboarding but hasn't been
  * approved/rejected yet. Approve makes them fully active (login, staff
@@ -340,6 +366,150 @@ export function PendingApprovalsPanel() {
                   {processingId === p.id ? "…" : "Approve"}
                 </button>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type IntegrationKey = "sendgrid" | "quo" | "systeme"
+type IntegrationStatus = { configured: boolean; source: "override" | "env" | "none"; masked: string | null }
+
+const INTEGRATION_LABELS: Record<IntegrationKey, string> = {
+  sendgrid: "SendGrid (Email)", quo: "Quo (SMS)", systeme: "Systeme.io (CRM)",
+}
+const SOURCE_LABELS: Record<IntegrationStatus["source"], string> = {
+  override: "Custom — set here", env: "From Vercel env var", none: "Not configured",
+}
+
+/**
+ * IntegrationSettingsPanel
+ * Added 2026-07-16. Lets an OWNER/MANAGER view and edit the SendGrid/Quo/
+ * Systeme.io API keys without a redeploy — previously these were only
+ * settable via Vercel's env vars. Existing values are never sent to the
+ * client in full, only masked (last 4 chars) — editing means typing a new
+ * value, not revealing the old one. Saving requires the admin's own current
+ * PIN, per the passcode-reconfirmation requirement for configuration
+ * changes. Google Sheets / Database aren't included here — those are a
+ * multi-line service-account key and a connection string, not a single
+ * token, and stay managed directly in Vercel.
+ */
+export function IntegrationSettingsPanel() {
+  const [status, setStatus] = useState<Record<IntegrationKey, IntegrationStatus> | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [editingKey, setEditingKey] = useState<IntegrationKey | null>(null)
+  const [newValue, setNewValue] = useState("")
+  const [pin, setPin] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/settings/integrations")
+      if (res.ok) { const { data } = await res.json(); setStatus(data) }
+    } finally { setLoading(false) }
+  }
+
+  function startEdit(key: IntegrationKey) {
+    setEditingKey(key); setNewValue(""); setPin("")
+  }
+  function cancelEdit() {
+    setEditingKey(null); setNewValue(""); setPin("")
+  }
+
+  async function save(key: IntegrationKey, valueOverride?: string) {
+    const apiKey = valueOverride ?? newValue
+    if (!pin) { toast({ title: "Enter your PIN to confirm", variant: "destructive" }); return }
+    setSaving(true)
+    try {
+      const res = await fetch("/api/settings/integrations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ integration: key, apiKey, currentPin: pin }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast({ title: json.error || "Save failed", variant: "destructive" })
+        return
+      }
+      setStatus(s => s ? { ...s, [key]: json.data } : s)
+      toast({ title: apiKey ? "API key updated" : "Reverted to Vercel env var" })
+      cancelEdit()
+    } catch (e) {
+      toast({ title: "Save failed", description: String(e), variant: "destructive" })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="bg-hive-surface border border-border rounded-xl p-5 space-y-3 md:col-span-2">
+      <div className="flex items-center gap-2">
+        <KeyRound className="h-4 w-4 text-gold-400" />
+        <h3 className="font-medium text-sm">Integration Settings</h3>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Prefilled from Vercel by default. Edit a key here to override it without a redeploy — saving requires your PIN.
+      </p>
+      {loading || !status ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : (
+        <div className="space-y-2">
+          {(Object.keys(INTEGRATION_LABELS) as IntegrationKey[]).map(key => (
+            <div key={key} className="bg-hive-surface2 border border-border rounded-lg p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium">{INTEGRATION_LABELS[key]}</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                    <span className="font-mono">{status[key].masked ?? "—"}</span>
+                    <span>·</span>
+                    <span>{SOURCE_LABELS[status[key].source]}</span>
+                  </div>
+                </div>
+                {editingKey !== key && (
+                  <button onClick={() => startEdit(key)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-hive-surface transition-colors shrink-0">
+                    <Pencil className="h-3 w-3" />Edit
+                  </button>
+                )}
+              </div>
+              {editingKey === key && (
+                <div className="mt-3 pt-3 border-t border-border space-y-2">
+                  <input
+                    type="text" autoComplete="off" placeholder="New API key"
+                    value={newValue} onChange={e => setNewValue(e.target.value)}
+                    className="w-full bg-hive-surface border border-border rounded-md px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-gold-400"
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password" inputMode="numeric" maxLength={4} placeholder="Your PIN"
+                      value={pin} onChange={e => setPin(e.target.value)}
+                      className="w-24 bg-hive-surface border border-border rounded-md px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-gold-400"
+                    />
+                    <button onClick={() => save(key)} disabled={saving || !newValue}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-600 text-black text-xs font-medium disabled:opacity-50">
+                      <Save className="h-3 w-3" />Save
+                    </button>
+                    <button onClick={cancelEdit} disabled={saving}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-hive-surface disabled:opacity-50">
+                      <X className="h-3 w-3" />Cancel
+                    </button>
+                  </div>
+                  {status[key].source === "override" && (
+                    <button
+                      disabled={saving}
+                      onClick={() => save(key, "")}
+                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-red-300 transition-colors"
+                    >
+                      <Trash2 className="h-3 w-3" />Revert to Vercel env var instead
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

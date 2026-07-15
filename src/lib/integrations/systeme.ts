@@ -9,6 +9,7 @@
  */
 
 import { SYSTEME_CONFIG } from "@/lib/config"
+import { getEffectiveSystemeKey } from "@/lib/integrations/settings-override"
 
 type SystemeResult = { success: boolean; contactId?: string; error?: string }
 
@@ -29,12 +30,17 @@ export async function upsertSystemeContact(
   tags: string[] = [SYSTEME_CONFIG.tags.pastCustomer]
 ): Promise<SystemeResult> {
   try {
+    const apiKey = await getEffectiveSystemeKey()
+    if (!apiKey) {
+      console.error("[Systeme.io] No API key configured (checked AppSettings override and SYSTEME_IO_API_KEY)")
+      return { success: false, error: "Systeme.io not configured" }
+    }
     // Systeme.io API: POST /contacts upserts by email
     const response = await fetch(`${SYSTEME_CONFIG.apiUrl}/contacts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Auth-Token": SYSTEME_CONFIG.apiKey,
+        "X-Auth-Token": apiKey,
       },
       body: JSON.stringify({
         email,

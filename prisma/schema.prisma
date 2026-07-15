@@ -644,6 +644,17 @@ model AppSettings {
   restaurantEmail   String  @default("reservations@thehivebuckhead.com") @map("restaurant_email")
   rsvpFormUrl       String  @default("/rsvp") @map("rsvp_form_url")
 
+  // Integration credential overrides — set from Admin → Settings → Integration
+  // Settings. Null means "no override, use the env var from Vercel." A
+  // non-null value here always wins. This exists so an admin can rotate a
+  // key (or add one that was missing) without needing a redeploy — see
+  // src/lib/integrations/settings-override.ts for the resolution order.
+  // Nothing here is ever sent back to the client in full — the settings API
+  // only ever returns a masked last-4 preview, never the real value.
+  sendgridApiKeyOverride String? @map("sendgrid_api_key_override")
+  quoApiKeyOverride      String? @map("quo_api_key_override")
+  systemeApiKeyOverride  String? @map("systeme_api_key_override")
+
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")

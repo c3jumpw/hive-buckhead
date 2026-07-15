@@ -25,17 +25,26 @@
 
 import sgMail from "@sendgrid/mail"
 import { SENDGRID_CONFIG } from "@/lib/config"
+import { getEffectiveSendgridKey } from "@/lib/integrations/settings-override"
 
 // Deferred init — a missing key must never crash the build, only fail sends.
-let initialized = false
-function ensureInitialized(): boolean {
-  if (initialized) return true
-  if (!SENDGRID_CONFIG.apiKey) {
-    console.error("[SendGrid] SENDGRID_API_KEY is not set — email sending disabled")
+//
+// REVISION (2026-07-15): now async and re-checks the effective key (DB
+// override from Admin → Settings → Integration Settings, falling back to
+// SENDGRID_API_KEY) every call instead of caching a boolean forever — a key
+// entered or corrected in the admin UI needs to take effect without a
+// redeploy, which a one-time "initialized" flag would have prevented.
+let cachedKey: string | null = null
+async function ensureInitialized(): Promise<boolean> {
+  const key = await getEffectiveSendgridKey()
+  if (!key) {
+    console.error("[SendGrid] No API key configured (checked AppSettings override and SENDGRID_API_KEY) — email sending disabled")
     return false
   }
-  sgMail.setApiKey(SENDGRID_CONFIG.apiKey)
-  initialized = true
+  if (key !== cachedKey) {
+    sgMail.setApiKey(key)
+    cachedKey = key
+  }
   return true
 }
 
@@ -56,7 +65,7 @@ export async function sendReservationReceived(
   to: string,
   data: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string }
 ): Promise<EmailResult> {
-  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -76,7 +85,7 @@ export async function sendReservationConfirmation(
   to: string,
   data: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string; section?: string }
 ): Promise<EmailResult> {
-  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -96,7 +105,7 @@ export async function sendCancellationEmail(
   to: string,
   data: { firstName: string; rsvpCode: string; date: string }
 ): Promise<EmailResult> {
-  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -108,6 +117,38 @@ export async function sendCancellationEmail(
   } catch (e: any) {
     console.error("[SendGrid] cancellation failed:", e?.response?.body ?? e)
     return { success: false, error: String(e) }
+  }
+}
+
+/**
+ * Free-form, staff-composed email to a guest — used by the "Message Guest"
+ * panel on a reservation's detail view (any template, or free text).
+ * Mirrors sendCustomSms() in quo.ts: same EmailResult shape, same pattern
+ * of returning `{ success: false, error }` instead of throwing, so callers
+ * can log the *real* failure reason via logEmailAttempt() rather than a
+ * generic 500.
+ */
+export async function sendCustomEmail(
+  to: string,
+  data: { subject: string; body: string }
+): Promise<EmailResult> {
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
+  try {
+    const [res] = await sgMail.send({
+      to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
+      subject: data.subject,
+      text: data.body,
+      html: `<div style="font-family:Georgia,serif;white-space:pre-line;">${data.body}</div>`,
+    })
+    return { success: true, messageId: res.headers["x-message-id"] as string }
+  } catch (e: any) {
+    // SendGrid's error body is where the actually-useful detail lives —
+    // "sender identity not verified," "invalid API key," etc. Surface it
+    // instead of just logging it, so the caller can show the real reason
+    // in the UI (Recent Sends panel) instead of a flat "failed."
+    const detail = e?.response?.body?.errors?.map((x: any) => x.message).join("; ") || e?.message || String(e)
+    console.error("[SendGrid] custom message failed:", e?.response?.body ?? e)
+    return { success: false, error: detail }
   }
 }
 
@@ -126,7 +167,7 @@ export async function sendOnboardingReceived(
   to: string,
   data: { name: string }
 ): Promise<EmailResult> {
-  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -163,7 +204,7 @@ export async function sendOnboardingApproved(
   to: string,
   data: { name: string; teamId: string; portalUrl: string }
 ): Promise<EmailResult> {
-  if (!ensureInitialized()) return { success: false, error: "SendGrid not configured" }
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
@@ -204,7 +245,7 @@ export async function sendAdminNotification(
   subject: string,
   message: string
 ): Promise<{ sent: number; failed: number }> {
-  if (!ensureInitialized()) return { sent: 0, failed: adminEmails.length }
+  if (!(await ensureInitialized())) return { sent: 0, failed: adminEmails.length }
   let sent = 0, failed = 0
   for (const email of adminEmails) {
     try {
@@ -230,7 +271,7 @@ export async function sendAdminOnboardingAlert(
   adminEmails: string[],
   data: { name: string; role: string }
 ): Promise<{ sent: number; failed: number }> {
-  if (!ensureInitialized()) return { sent: 0, failed: adminEmails.length }
+  if (!(await ensureInitialized())) return { sent: 0, failed: adminEmails.length }
   let sent = 0, failed = 0
   for (const email of adminEmails) {
     try {
@@ -256,7 +297,7 @@ export async function sendAdminOnboardingAlert(
 export async function sendStaffBlast(
   toEmails: string[], subject: string, message: string, fromName: string
 ): Promise<{ sent: number; failed: number }> {
-  if (!ensureInitialized()) return { sent: 0, failed: toEmails.length }
+  if (!(await ensureInitialized())) return { sent: 0, failed: toEmails.length }
   let sent = 0, failed = 0
   for (const email of toEmails) {
     try {
