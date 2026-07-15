@@ -46,8 +46,12 @@ export function DashboardNav({ session }: DashboardNavProps) {
           logo files are now bundled locally (see /public/branding) —
           using wide-logo.png here since it's a pre-composed horizontal
           lockup (icon + wordmark) rather than reconstructing that layout
-          from a small icon + separate text every time. */}
-      <Link href="/reservations" className="flex items-center shrink-0">
+          from a small icon + separate text every time.
+          REVISION (2026-07-16): now links to /staff-portal (Home) instead
+          of /reservations, matching Home's new role as the universal
+          landing page — clicking the logo should go "home," not to one
+          specific operations page. */}
+      <Link href="/staff-portal" className="flex items-center shrink-0">
         <img
           src="/branding/wide-logo.png"
           alt="Hive Buckhead"
@@ -55,8 +59,10 @@ export function DashboardNav({ session }: DashboardNavProps) {
         />
       </Link>
 
-      {/* Quick nav (large screens) */}
+      {/* Quick nav (large screens) — Home added 2026-07-16, mirrors the
+          same link added to the top of DashboardSidebar. */}
       <nav className="hidden md:flex items-center gap-1">
+        <NavLink href="/staff-portal">Home</NavLink>
         <NavLink href="/reservations">Reservations</NavLink>
         <NavLink href="/floor">Floor</NavLink>
         <NavLink href="/schedule">Schedule</NavLink>

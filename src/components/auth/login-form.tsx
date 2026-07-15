@@ -76,12 +76,15 @@ export function LoginForm() {
       // a leftover from an earlier access scheme (before FLOOR was merged
       // into STAFF and the dedicated Staff Portal was built). Regular
       // staff should land in the portal, not the operational Floor View.
-      const level = json.data?.accessLevel;
-      if (level === "STAFF") {
-        router.push("/staff-portal");
-      } else {
-        router.push("/reservations");
-      }
+      //
+      // REVISION (2026-07-16): every access level now lands on /staff-portal
+      // (branded "Home" in the UI) instead of OWNER/MANAGER skipping straight
+      // to /reservations. This is the actual "one homepage for everyone"
+      // change — announcements and quick links are the first thing anyone
+      // sees, admins included, rather than only staff. Reservations, Floor,
+      // Schedule, Admin, and Analytics are all one click away from Home's
+      // quick links (or the sidebar, once inside the operations pages).
+      router.push("/staff-portal");
       router.refresh();
     } catch {
       setError("Login failed. Please try again.");

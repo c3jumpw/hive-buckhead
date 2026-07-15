@@ -76,6 +76,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     recipient, subject, body,
     reservationId: params.id,
     staffId: session.id,
+    staffName: session.name,
   })
 
   if (!result.success) {

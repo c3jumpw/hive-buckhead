@@ -5,8 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   LayoutList, MapPin, CalendarDays, BarChart3,
   Users, TableProperties, Clock, Settings,
-  Download, ChevronRight, Shield, LayoutDashboard,
-  MessageSquare,
+  ChevronRight, Shield, LayoutDashboard,
+  MessageSquare, Home,
 } from "lucide-react";
 import { cn, hasAccess } from "@/lib/utils";
 import type { SessionStaff } from "@/types";
@@ -24,6 +24,15 @@ export function DashboardSidebar({ session }: Props) {
   return (
     <aside className="hidden md:flex w-[200px] shrink-0 flex-col border-r border-border bg-hive-surface overflow-y-auto">
       <nav className="flex-1 p-3 space-y-5">
+        {/* Home — added 2026-07-16 alongside making Home the universal
+            post-login landing page. This is the way back to it from any
+            operations page. */}
+        <div>
+          <div className="space-y-0.5">
+            <SidebarItem href="/staff-portal" label="Home" icon={<Home className="h-3.5 w-3.5" />} active={pathname === "/staff-portal"} />
+          </div>
+        </div>
+
         {/* Operations */}
         <div>
           <p className="sb-section-label">Operations</p>
@@ -53,16 +62,20 @@ export function DashboardSidebar({ session }: Props) {
           </div>
         )}
 
-        {/* Reports */}
+        {/* Reports & Data — REVISION (2026-07-16): renamed from "Reports";
+            Export CSV removed from here — it was a menu link that just
+            navigated to Reservations with a query param. Staff
+            Intelligence and Analytics both have their own real export
+            buttons directly on the page now, which is where an export
+            action belongs rather than a detour through the nav. */}
         {hasAccess(level, "STAFF") && (
           <div>
-            <p className="sb-section-label">Reports</p>
+            <p className="sb-section-label">Reports & Data</p>
             <div className="space-y-0.5">
               <SidebarItem href="/analytics" label="Analytics" icon={<BarChart3 className="h-3.5 w-3.5" />} active={pathname === "/analytics"} />
               {hasAccess(level, "MANAGER") && (
                 <SidebarItem href="/analytics/staff" label="Staff Intelligence" icon={<Shield className="h-3.5 w-3.5" />} active={pathname === "/analytics/staff"} />
               )}
-              <SidebarItem href="/reservations?export=csv" label="Export CSV" icon={<Download className="h-3.5 w-3.5" />} active={false} />
             </div>
           </div>
         )}

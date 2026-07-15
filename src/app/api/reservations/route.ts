@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         activity: {
           create: {
             type: "created",
-            description: session ? `Reservation created by ${session.name}` : `Reservation submitted via public RSVP form`,
+            description: session ? `Reservation created` : `Reservation submitted via public RSVP form`,
             staffId: session?.id ?? null,
           },
         },

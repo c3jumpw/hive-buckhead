@@ -22,7 +22,7 @@ import { prisma } from "@/lib/db/prisma"
 import { requireAdmin } from "@/lib/auth/session"
 import { logStaffToSheet } from "@/lib/integrations/google-sheets"
 import { sendOnboardingApproved } from "@/lib/integrations/sendgrid"
-import { logEmailAttempt } from "@/lib/db/activity-logger"
+import { logEmailAttempt, logAdminAction } from "@/lib/db/activity-logger"
 import { APP_CONFIG } from "@/lib/config"
 
 export async function POST(request: NextRequest) {
@@ -62,6 +62,14 @@ export async function POST(request: NextRequest) {
     }),
     { channel: "EMAIL", recipient: updated.email, subject: "Onboarding Approved" }
   ).catch(() => {})
+
+  // Master admin edit log — 2026-07-16 addition.
+  logAdminAction({
+    staffId: session.id,
+    type: "onboarding_approved",
+    description: `${session.name} approved ${updated.name}'s onboarding (${updated.teamId ?? "no team ID"})`,
+    metadata: { targetStaffId: staffId },
+  })
 
   return NextResponse.json({ data: updated })
 }

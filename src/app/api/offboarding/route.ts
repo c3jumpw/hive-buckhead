@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { requireAdmin } from "@/lib/auth/session"
 import { logOffboardingToSheet } from "@/lib/integrations/google-sheets"
+import { logAdminAction } from "@/lib/db/activity-logger"
 
 export async function POST(request: NextRequest) {
   const session = await requireAdmin()
@@ -36,6 +37,14 @@ export async function POST(request: NextRequest) {
 
   // Log to Google Sheets (non-blocking)
   logOffboardingToSheet({ teamId: staff.teamId ?? undefined, name: staff.name, email: staff.email, role: staff.role, terminationDate, reason: reason || terminationType, processedBy: session.name }).catch(console.error)
+
+  // Master admin edit log — 2026-07-16 addition.
+  logAdminAction({
+    staffId: session.id,
+    type: "staff_offboarded",
+    description: `${session.name} offboarded ${staff.name} (${terminationType})`,
+    metadata: { targetStaffId: staffId, terminationType, reason: reason || null },
+  })
 
   return NextResponse.json({ success: true })
 }

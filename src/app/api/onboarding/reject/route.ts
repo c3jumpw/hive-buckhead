@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { requireAdmin } from "@/lib/auth/session"
+import { logAdminAction } from "@/lib/db/activity-logger"
 
 export async function POST(request: NextRequest) {
   const session = await requireAdmin()
@@ -26,6 +27,14 @@ export async function POST(request: NextRequest) {
       approvalStatus: "REJECTED", approvedAt: new Date(), approvedBy: session.name,
       notes: reason ? `Onboarding rejected: ${reason}` : "Onboarding rejected",
     },
+  })
+
+  // Master admin edit log — 2026-07-16 addition.
+  logAdminAction({
+    staffId: session.id,
+    type: "onboarding_rejected",
+    description: `${session.name} rejected ${updated.name}'s onboarding${reason ? `: ${reason}` : ""}`,
+    metadata: { targetStaffId: staffId, reason: reason || null },
   })
 
   return NextResponse.json({ data: updated })

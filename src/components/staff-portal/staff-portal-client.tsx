@@ -2,38 +2,64 @@
 
 /**
  * src/components/staff-portal/staff-portal-client.tsx
- * Client component for the staff portal — schedule, announcements, feedback.
- * Renders different tabs based on access level:
- *   STAFF   — My Schedule, Announcements, Feedback
- *   MANAGER/OWNER — same as STAFF + link to full admin dashboard
+ * Client component for Home — the universal post-login landing page for
+ * every access level (see login-form.tsx). Same five tabs for everyone:
+ *   Home       — quick links (filtered by access level) + announcements
+ *   My Schedule — this person's own shifts
+ *   Resources  — guide hub, filtered by access level (see guides.ts)
+ *   Feedback   — message to management
+ *   My Profile — contact info / PIN
+ *
+ * REVISION (2026-07-16): previously STAFF-only, with a separate
+ * Announcements tab and a MANAGER/OWNER-only "Admin" link in the header.
+ * Now every access level lands here after login; what differs by role is
+ * which Quick Links render on Home, not the page/tab structure itself.
  */
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Calendar, Megaphone, MessageSquare, User, ExternalLink } from "lucide-react"
-import { cn, formatTime } from "@/lib/utils"
+import {
+  Calendar, MessageSquare, User, LayoutList, MapPin,
+  CalendarDays, LayoutDashboard, BarChart3, BookOpen, ChevronDown, ChevronRight, Home as HomeIcon,
+} from "lucide-react"
+import { cn, formatTime, hasAccess } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
+import { GUIDES } from "@/lib/resources/guides"
 import type { SessionStaff } from "@/lib/auth/session"
 
 // Day names for recurring schedule display
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+// Home tab quick links — filtered by hasAccess(session.accessLevel, minAccess)
+// at render time. Same operations pages reachable from the sidebar once
+// inside /reservations etc.; this is the jump-off point to get there.
+const QUICK_LINKS = [
+  { href: "/reservations", label: "Reservations", icon: LayoutList, minAccess: "STAFF" as const },
+  { href: "/floor", label: "Floor View", icon: MapPin, minAccess: "STAFF" as const },
+  { href: "/schedule", label: "Staff Schedule", icon: CalendarDays, minAccess: "STAFF" as const },
+  { href: "/admin", label: "Admin Dashboard", icon: LayoutDashboard, minAccess: "MANAGER" as const },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, minAccess: "MANAGER" as const },
+]
 
 interface Props {
   session: SessionStaff
   announcements: any[]
   shifts: any[]
   recurringShifts: any[]
-  // Allows deep-linking directly to a specific tab, e.g. /staff-portal?tab=profile
-  // from the "My Profile" link in the top nav dropdown — added 2026-07-15.
-  initialTab?: "schedule" | "announcements" | "feedback" | "profile"
+  // 2026-07-16: "announcements" tab folded into "home" (announcements are
+  // now front-and-center on Home instead of needing their own click), and
+  // "resources" added for the new Resource Hub. Old ?tab=announcements
+  // links still resolve — see page.tsx — just land on Home now.
+  initialTab?: "home" | "schedule" | "resources" | "feedback" | "profile"
 }
 
 export function StaffPortalClient({ session, announcements, shifts, recurringShifts, initialTab }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<"schedule" | "announcements" | "feedback" | "profile">(initialTab ?? "schedule")
+  const [tab, setTab] = useState<"home" | "schedule" | "resources" | "feedback" | "profile">(initialTab ?? "home")
   const [feedbackMsg, setFeedbackMsg] = useState("")
   const [feedbackCategory, setFeedbackCategory] = useState("general")
   const [isAnonymous, setIsAnonymous] = useState(false)
+  const [expandedGuideId, setExpandedGuideId] = useState<string | null>(null)
 
   /**
    * BUG HISTORY (2026-07-15): the sign-out control here was a plain
@@ -84,7 +110,13 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
           <img src="/branding/icon.png" alt="" width={32} height={32} className="shrink-0" />
           <div>
             <h1 className="font-serif text-xl text-gold-500">HIVE BUCKHEAD</h1>
-            <p className="text-xs text-muted-foreground">Staff Portal</p>
+            {/* REVISION (2026-07-16): was "Staff Portal" — this page is now
+                the landing page for every access level, not just regular
+                staff (see login-form.tsx), so a label implying staff-only
+                no longer fits. Renamed to Home; URL is unchanged so
+                existing links (announcement/onboarding emails, bookmarks)
+                keep working. */}
+            <p className="text-xs text-muted-foreground">Home</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -92,12 +124,6 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
             <p className="text-sm font-medium">{session.name}</p>
             <p className="text-xs text-muted-foreground">{session.role}</p>
           </div>
-          {/* Link to full admin dashboard for managers/owners */}
-          {(session.accessLevel === "MANAGER" || session.accessLevel === "OWNER") && (
-            <a href="/dashboard" className="flex items-center gap-1 text-xs text-gold-400 hover:text-gold-300 border border-gold-500/30 px-3 py-1.5 rounded-lg">
-              Admin <ExternalLink size={10} />
-            </a>
-          )}
           <button onClick={handleSignOut} className="text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg">
             Sign Out
           </button>
@@ -106,15 +132,16 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
 
       {/* Tab navigation */}
       <div className="border-b border-border bg-hive-surface">
-        <div className="flex max-w-2xl mx-auto">
+        <div className="flex max-w-3xl mx-auto overflow-x-auto">
           {[
+            { id: "home", label: `Home${unreadCount > 0 ? ` (${unreadCount})` : ""}`, icon: HomeIcon },
             { id: "schedule", label: "My Schedule", icon: Calendar },
-            { id: "announcements", label: `Announcements${unreadCount > 0 ? ` (${unreadCount})` : ""}`, icon: Megaphone },
+            { id: "resources", label: "Resources", icon: BookOpen },
             { id: "feedback", label: "Send Feedback", icon: MessageSquare },
             { id: "profile", label: "My Profile", icon: User },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id as any)}
-              className={cn("flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+              className={cn("flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                 tab === t.id ? "border-gold-500 text-gold-400" : "border-transparent text-muted-foreground hover:text-foreground")}>
               <t.icon size={14} />{t.label}
             </button>
@@ -122,7 +149,58 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="max-w-3xl mx-auto p-6">
+
+        {/* ── HOME TAB ──────────────────────────────────────────────────
+             REVISION (2026-07-16): new default tab. Quick Links +
+             Announcements merged here so both are visible the moment
+             anyone logs in, instead of announcements needing their own
+             click. Quick Links are filtered by access level — Admin
+             Dashboard and Analytics only render for MANAGER/OWNER, same
+             hasAccess() check used everywhere else in the app. ── */}
+        {tab === "home" && (
+          <div className="space-y-8">
+            <div>
+              <h2 className="font-medium mb-3">Quick Links</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {QUICK_LINKS.filter(l => hasAccess(session.accessLevel, l.minAccess)).map(l => (
+                  <a key={l.href} href={l.href}
+                    className="flex flex-col items-center gap-2 bg-hive-surface border border-border hover:border-gold-500/40 rounded-xl p-4 text-center transition-colors">
+                    <l.icon size={20} className="text-gold-400" />
+                    <span className="text-xs font-medium">{l.label}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-medium">Team Announcements</h2>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] bg-gold-500/20 text-gold-400 px-2 py-0.5 rounded-full font-medium">{unreadCount} new</span>
+                )}
+              </div>
+              <div className="space-y-3">
+                {announcements.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No announcements yet.</p>
+                ) : (
+                  announcements.map((a: any) => (
+                    <div key={a.id} className={cn("bg-hive-surface border rounded-xl p-4",
+                      !a.reads?.length ? "border-gold-500/40 bg-gold-500/5" : "border-border")}>
+                      {a.pinned && <span className="text-[10px] text-gold-400 font-semibold uppercase tracking-wider">📌 Pinned</span>}
+                      <div className="flex justify-between items-start mt-1">
+                        <h3 className="font-medium text-sm">{a.title}</h3>
+                        {!a.reads?.length && <span className="text-[10px] bg-gold-500/20 text-gold-400 px-2 py-0.5 rounded-full">New</span>}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">{a.body}</p>
+                      <p className="text-xs text-muted-foreground mt-3">{a.authorName} · {new Date(a.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── SCHEDULE TAB ── */}
         {tab === "schedule" && (
@@ -160,26 +238,39 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
           </div>
         )}
 
-        {/* ── ANNOUNCEMENTS TAB ── */}
-        {tab === "announcements" && (
+        {/* ── RESOURCES TAB ────────────────────────────────────────────
+             Added 2026-07-16. Guide content lives in src/lib/resources/
+             guides.ts, not here — this component only handles filtering
+             by access level and the expand/collapse display. ── */}
+        {tab === "resources" && (
           <div className="space-y-3">
-            <h2 className="font-medium">Team Announcements</h2>
-            {announcements.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No announcements yet.</p>
-            ) : (
-              announcements.map((a: any) => (
-                <div key={a.id} className={cn("bg-hive-surface border rounded-xl p-4",
-                  !a.reads?.length ? "border-gold-500/40 bg-gold-500/5" : "border-border")}>
-                  {a.pinned && <span className="text-[10px] text-gold-400 font-semibold uppercase tracking-wider">📌 Pinned</span>}
-                  <div className="flex justify-between items-start mt-1">
-                    <h3 className="font-medium text-sm">{a.title}</h3>
-                    {!a.reads?.length && <span className="text-[10px] bg-gold-500/20 text-gold-400 px-2 py-0.5 rounded-full">New</span>}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">{a.body}</p>
-                  <p className="text-xs text-muted-foreground mt-3">{a.authorName} · {new Date(a.createdAt).toLocaleDateString()}</p>
+            <div>
+              <h2 className="font-medium">Resources</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Guides on how to use the system.</p>
+            </div>
+            {GUIDES.filter(g => hasAccess(session.accessLevel, g.minAccessLevel)).map(g => {
+              const isOpen = expandedGuideId === g.id
+              return (
+                <div key={g.id} className="bg-hive-surface border border-border rounded-xl overflow-hidden">
+                  <button onClick={() => setExpandedGuideId(isOpen ? null : g.id)}
+                    className="w-full flex items-center justify-between gap-3 p-4 text-left">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-wider text-gold-400 font-semibold">{g.category}</span>
+                      </div>
+                      <h3 className="font-medium text-sm mt-0.5">{g.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{g.summary}</p>
+                    </div>
+                    {isOpen ? <ChevronDown size={16} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={16} className="shrink-0 text-muted-foreground" />}
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-1 border-t border-border">
+                      <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{g.body}</p>
+                    </div>
+                  )}
                 </div>
-              ))
-            )}
+              )
+            })}
           </div>
         )}
 

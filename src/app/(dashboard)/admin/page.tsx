@@ -34,8 +34,13 @@ export default async function AdminPage({
       include: { server: { select: { name: true } } },
     }),
     prisma.staff.findMany({
-      where: { active: true },
-      select: { id: true, name: true, role: true, accessLevel: true, color: true, email: true },
+      // 2026-07-16: OR'd in approvalStatus:INVITED so a staff member who's
+      // been invited but hasn't completed onboarding yet still shows in
+      // the list (with a distinct badge — see admin-client.tsx) instead
+      // of being invisible until they act, same complaint the "waiting on
+      // them" request was about.
+      where: { OR: [{ active: true }, { approvalStatus: "INVITED" }] },
+      select: { id: true, name: true, role: true, accessLevel: true, color: true, email: true, approvalStatus: true, active: true },
       orderBy: [{ accessLevel: "asc" }, { name: "asc" }],
     }),
     prisma.table.findMany({

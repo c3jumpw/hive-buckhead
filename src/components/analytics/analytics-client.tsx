@@ -170,6 +170,31 @@ export function AnalyticsClient({ stats, allReservations, staffPerf }: Props) {
   const maxDayCount = Math.max(...dayDist.map(d => d.count), 1)
   const maxLeadCount = Math.max(...leadTimeDist.map(l => l.count), 1)
 
+  // 2026-07-16 addition — Analytics previously had no export at all (Staff
+  // Intelligence already had its own "Export Report" button; this mirrors
+  // that same pattern here). Respects whatever date range is currently
+  // applied, same as the charts on screen.
+  function exportReport() {
+    const rows: (string | number)[][] = [
+      ["Metric", "Value"],
+      ["Date Range", filterActive ? `${appliedStart || "…"} to ${appliedEnd || "…"}` : "All time"],
+      ["Total RSVPs", stats.totalRsvp],
+      ["Completed", stats.completedRsvp],
+      ["Cancelled", stats.cancelledRsvp],
+      ["Completion Rate", `${completionRate}%`],
+      ["Cancellation Rate", `${cancellationRate}%`],
+      ["Total Revenue", totalRevenue.toFixed(2)],
+      [],
+      ["Month", "Reservations", "Covers", "Revenue"],
+      ...monthlyRevenue.map(m => [m.month, m.count, m.covers, m.revenue.toFixed(2)]),
+    ]
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n")
+    const a = document.createElement("a")
+    a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv)
+    a.download = `hive-analytics-${new Date().toISOString().split("T")[0]}.csv`
+    a.click()
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="px-6 py-4 border-b border-border bg-hive-surface shrink-0">
@@ -180,6 +205,9 @@ export function AnalyticsClient({ stats, allReservations, staffPerf }: Props) {
               Revenue, booking patterns · {filterActive ? `${appliedStart || "…"} → ${appliedEnd || "…"}` : "All time"}
             </p>
           </div>
+          <button onClick={exportReport} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gold-500 border border-gold-500/30 rounded-lg hover:bg-gold-500/10 transition-colors shrink-0">
+            ↓ Export CSV
+          </button>
         </div>
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <span className="text-xs text-muted-foreground">Date range:</span>

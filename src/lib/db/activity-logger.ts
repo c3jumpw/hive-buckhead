@@ -19,6 +19,34 @@ export async function getAdminEmails(): Promise<string[]> {
 }
 
 /**
+ * Records a system-level admin action — staff created/edited/offboarded,
+ * onboarding approved/rejected, settings changed, etc. reservationId is
+ * always null here (see logEmailAttempt above for the reservation-scoped
+ * equivalent). This is the single write path behind the master admin edit
+ * log (Settings → Admin Activity Log) added 2026-07-16 — every call site
+ * below funnels through here so the log has one consistent shape instead
+ * of each route hand-rolling its own prisma.activityLog.create().
+ */
+export async function logAdminAction(params: {
+  staffId: string
+  type: string
+  description: string
+  metadata?: Record<string, unknown>
+}): Promise<void> {
+  const { prisma } = await import("@/lib/db/prisma")
+  await prisma.activityLog.create({
+    data: {
+      reservationId: null,
+      staffId: params.staffId,
+      type: params.type,
+      description: params.description,
+      metadata: params.metadata ?? undefined,
+    },
+  }).catch((e: unknown) => console.error(`[logAdminAction] failed to log "${params.type}":`, e))
+}
+
+
+/**
  * Wraps a fire-and-forget email/SMS send with a MessageLog entry recording
  * the actual outcome.
  *
@@ -48,11 +76,17 @@ export async function logEmailAttempt(
     // (confirmations, onboarding emails) don't pass these and keep the
     // original behavior exactly as before.
     staffId?: string; body?: string
+    // 2026-07-16 addition — needed to write a readable ActivityLog entry
+    // (see below). Only meaningful alongside staffId; system-triggered
+    // sends have neither.
+    staffName?: string
   }
 ): Promise<void> {
   const { prisma } = await import("@/lib/db/prisma")
+  let outcome: { success: boolean; messageId?: string; error?: string } | null = null
   try {
     const result = await sendFn
+    outcome = result
     await prisma.messageLog.create({
       data: {
         channel: meta.channel, recipient: meta.recipient, subject: meta.subject,
@@ -72,6 +106,7 @@ export async function logEmailAttempt(
     // upstream does (e.g. a network-level failure before SendGrid's own
     // try/catch could run), still record it rather than losing the trace.
     console.error(`[logEmailAttempt] unexpected error sending to ${meta.recipient}:`, err)
+    outcome = { success: false, error: String(err) }
     await prisma.messageLog.create({
       data: {
         channel: meta.channel, recipient: meta.recipient, subject: meta.subject,
@@ -80,5 +115,24 @@ export async function logEmailAttempt(
         staffId: meta.staffId ?? null,
       },
     }).catch(() => {})
+  }
+
+  // 2026-07-16 addition — mirror the outcome onto the reservation's own
+  // Activity timeline (reservation-detail-panel.tsx reads ActivityLog, not
+  // MessageLog, so without this a sent/failed message was invisible there
+  // even though it showed up in the admin-wide Recent Sends panel).
+  if (meta.reservationId && outcome) {
+    const channelLabel = meta.channel === "EMAIL" ? "Email" : "Text"
+    const who = meta.staffName ? ` by ${meta.staffName}` : ""
+    await prisma.activityLog.create({
+      data: {
+        reservationId: meta.reservationId,
+        staffId: meta.staffId ?? null,
+        type: outcome.success ? "message_sent" : "message_failed",
+        description: outcome.success
+          ? `${channelLabel} sent to guest${who}`
+          : `${channelLabel} failed to send${who}: ${outcome.error ?? "Unknown error"}`,
+      },
+    }).catch((e: unknown) => console.error("[logEmailAttempt] activity log write failed:", e))
   }
 }

@@ -623,3 +623,59 @@ export function RecentSendsPanel() {
     </div>
   )
 }
+
+/**
+ * AdminActivityLogPanel
+ * Added 2026-07-16 — the "master log of edits and who performed them"
+ * request. Lists system-level admin actions (staff invited/edited/
+ * offboarded, onboarding approved/rejected, integration settings changed,
+ * reservations reset) fed by logAdminAction() in activity-logger.ts.
+ * Deliberately separate from RecentSendsPanel above — that's message
+ * delivery outcomes, this is who-changed-what. Export CSV hits the same
+ * GET route with format=csv so the on-screen list and the download can
+ * never show different data.
+ */
+export function AdminActivityLogPanel() {
+  const [entries, setEntries] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/admin/activity-log")
+      if (res.ok) { const { data } = await res.json(); setEntries(data) }
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div className="bg-hive-surface border border-border rounded-xl p-5 space-y-3 md:col-span-2">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-sm">Admin Activity Log</h3>
+        <div className="flex items-center gap-3">
+          <a href="/api/admin/activity-log?format=csv" className="text-xs text-gold-400 hover:text-gold-300">↓ Export CSV</a>
+          <button onClick={load} className="text-xs text-muted-foreground hover:text-foreground">Refresh</button>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">Staff changes, onboarding decisions, settings edits — most recent 50. Full history in the export.</p>
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : entries.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No admin actions logged yet.</p>
+      ) : (
+        <div className="space-y-1.5 max-h-80 overflow-y-auto">
+          {entries.map(e => (
+            <div key={e.id} className="flex items-center justify-between bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-xs">
+              <div className="min-w-0 flex-1">
+                <span className="truncate block">{e.description}</span>
+                <span className="text-muted-foreground text-[10px]">{e.performedBy}</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground shrink-0 ml-2">{new Date(e.createdAt).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

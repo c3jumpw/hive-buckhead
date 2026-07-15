@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { FloorPlanEditor } from "@/components/admin/floor-plan-editor"
-import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel, RecentSendsPanel, SystemeLinkCard, IntegrationSettingsPanel } from "@/components/admin/onboarding-manager"
+import { OnboardingManager, MessageBlastTool, FeedbackInbox, QuoLinkCard, PendingApprovalsPanel, IntegrationDiagnosticsPanel, RecentSendsPanel, SystemeLinkCard, IntegrationSettingsPanel, AdminActivityLogPanel } from "@/components/admin/onboarding-manager"
 import { PositionManager, RecurringScheduleEditor, OffboardingForm } from "@/components/admin/staff-tools"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -83,7 +83,12 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
   }, [])
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null)
   const [addingNewStaff, setAddingNewStaff] = useState(false)
-  const [newStaffForm, setNewStaffForm] = useState({ name: '', email: '', role: '', accessLevel: 'STAFF', pin: '', color: '#5B96C8' })
+  // REVISION (2026-07-16): pin/color dropped — this now sends an invite
+  // rather than creating an active account outright, so there's no PIN to
+  // collect yet (the invitee chooses their own during onboarding) and
+  // color is a cosmetic detail better set once they're real, not blocking
+  // the invite on it.
+  const [newStaffForm, setNewStaffForm] = useState({ name: '', email: '', role: '', accessLevel: 'STAFF' })
   const [editForm, setEditForm] = useState<Record<string, string>>({})
   const [showPin, setShowPin] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -170,22 +175,39 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
   }
 
   async function saveNewStaff() {
-    if (!newStaffForm.name || !newStaffForm.email || !newStaffForm.role || !newStaffForm.pin) {
-      toast({ title: "All fields required", variant: "destructive" }); return
+    if (!newStaffForm.name || !newStaffForm.email || !newStaffForm.role) {
+      toast({ title: "Name, email, and role are required", variant: "destructive" }); return
     }
     setSaving(true)
     try {
-      const res = await fetch("/api/staff", {
+      const res = await fetch("/api/staff/invite", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newStaffForm),
       })
-      if (!res.ok) throw new Error("Failed")
-      const { data } = await res.json()
-      setStaff(prev => [...prev, data])
+      const json = await res.json()
+      if (!res.ok) {
+        toast({ title: json.error || "Failed to send invite", variant: "destructive" }); return
+      }
+      setStaff(prev => [...prev, json.data])
       setAddingNewStaff(false)
-      setNewStaffForm({ name: '', email: '', role: '', accessLevel: 'STAFF', pin: '', color: '#5B96C8' })
-      toast({ title: `${data.name} added to staff` })
-    } catch { toast({ title: "Failed to add staff member", variant: "destructive" }) }
+      setNewStaffForm({ name: '', email: '', role: '', accessLevel: 'STAFF' })
+      toast({ title: `Invite sent to ${json.data.name}`, description: "They'll appear in the approval list once they complete onboarding." })
+    } catch { toast({ title: "Failed to send invite", variant: "destructive" }) }
     finally { setSaving(false) }
+  }
+
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null)
+  async function resendInvite(m: AnyRecord) {
+    setResendingInviteId(m.id as string)
+    try {
+      const res = await fetch("/api/staff/invite", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: m.name, email: m.email, role: m.role, accessLevel: m.accessLevel }),
+      })
+      const json = await res.json()
+      if (!res.ok) { toast({ title: json.error || "Failed to resend", variant: "destructive" }); return }
+      toast({ title: `Invite resent to ${m.name as string}` })
+    } catch { toast({ title: "Failed to resend invite", variant: "destructive" }) }
+    finally { setResendingInviteId(null) }
   }
 
   async function saveStaff(id: string) {
@@ -398,45 +420,42 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
                 <h2 className="font-medium">{staff.length} active staff members</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">Click Edit to update name, role, PIN, or access level</p>
               </div>
-              <p className="text-xs text-amber-400">⚠ Change all PINs before go-live</p>
+              <div className="flex items-center gap-3">
+                <a href="/api/admin/export/staff" className="text-xs text-gold-400 hover:text-gold-300">↓ Export CSV</a>
+                <p className="text-xs text-amber-400">⚠ Change all PINs before go-live</p>
+              </div>
             </div>
             <Button size="sm" variant="outline" className="w-full h-9 mb-1" onClick={() => setShowPositionManager(true)}>
               Manage Positions
             </Button>
-            {/* Add new staff member */}
+            {/* Invite new staff member — REVISION (2026-07-16): was "Add New
+                Staff Member," creating a fully active account with an
+                admin-set PIN on the spot. Now sends an onboarding invite
+                instead — no PIN/color collected here since the invitee
+                sets their own PIN and a color can be picked later via Edit. */}
             {!addingNewStaff ? (
               <Button size="sm" variant="outline" className="w-full h-10 border-dashed" onClick={() => setAddingNewStaff(true)}>
-                <Users className="h-3.5 w-3.5 mr-2" />Add New Staff Member
+                <Users className="h-3.5 w-3.5 mr-2" />Invite New Staff
               </Button>
             ) : (
               <div className="bg-hive-surface border border-gold-500/30 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-medium text-gold-500">New Staff Member</p>
+                <p className="text-sm font-medium text-gold-500">Invite New Staff Member</p>
+                <p className="text-xs text-muted-foreground -mt-2">Sends an onboarding link by email. They'll show up in the approval list once they complete it.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Name *"><Input value={newStaffForm.name} onChange={e => setNewStaffForm(f => ({ ...f, name: e.target.value }))} placeholder="Full name" /></Field>
                   <Field label="Role *"><Input value={newStaffForm.role} onChange={e => setNewStaffForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Server" /></Field>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Email *"><Input value={newStaffForm.email} onChange={e => setNewStaffForm(f => ({ ...f, email: e.target.value }))} type="email" placeholder="email@hive.com" /></Field>
-                  <Field label="PIN *">
-                    <Input value={newStaffForm.pin} onChange={e => setNewStaffForm(f => ({ ...f, pin: e.target.value.replace(/\D/g,'').slice(0,4) }))} placeholder="4 digits" maxLength={4} />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
                   <Field label="Access Level">
                     <Select value={newStaffForm.accessLevel} onValueChange={v => setNewStaffForm(f => ({ ...f, accessLevel: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{ACCESS_LEVELS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Color">
-                    <div className="flex gap-2">
-                      <input type="color" value={newStaffForm.color} onChange={e => setNewStaffForm(f => ({ ...f, color: e.target.value }))} className="h-9 w-14 rounded border border-input bg-transparent cursor-pointer" />
-                      <Input value={newStaffForm.color} onChange={e => setNewStaffForm(f => ({ ...f, color: e.target.value }))} className="font-mono text-xs" />
-                    </div>
-                  </Field>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={saveNewStaff} disabled={saving}><Save className="h-3.5 w-3.5 mr-1.5" />{saving ? "Adding…" : "Add Staff Member"}</Button>
+                  <Button size="sm" onClick={saveNewStaff} disabled={saving}><Save className="h-3.5 w-3.5 mr-1.5" />{saving ? "Sending…" : "Send Invite"}</Button>
                   <Button size="sm" variant="ghost" onClick={() => setAddingNewStaff(false)}><X className="h-3.5 w-3.5 mr-1.5" />Cancel</Button>
                 </div>
               </div>
@@ -481,6 +500,24 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setEditingStaffId(null)}><X className="h-3.5 w-3.5 mr-1.5" />Cancel</Button>
                     </div>
+                  </div>
+                ) : member.approvalStatus === "INVITED" ? (
+                  // 2026-07-16 addition — this person doesn't exist as a real
+                  // employee yet (no PIN, no schedule to set, nothing to
+                  // offboard), so the row is intentionally simpler: just
+                  // enough to see the invite went out and resend it if needed.
+                  <div className="flex items-center px-4 py-3 gap-3">
+                    <span className="w-3 h-3 rounded-full shrink-0 bg-hive-surface2 border border-dashed border-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{member.name as string}</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">Invited — awaiting onboarding</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{member.role as string} · {member.email as string}</div>
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={resendingInviteId === member.id} onClick={() => resendInvite(member)}>
+                      {resendingInviteId === member.id ? "Sending…" : "Resend Invite"}
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex items-center px-4 py-3 gap-3">
@@ -717,9 +754,12 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
              — this tab is now scoped to internal staff/team concerns only. ── */}
         {tab === "team" && (
           <div className="max-w-3xl space-y-6">
-            <div>
-              <h2 className="font-medium">Team Management</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Onboarding access, staff announcements, and the feedback inbox</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-medium">Team Management</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Onboarding access, staff announcements, and the feedback inbox</p>
+              </div>
+              <a href="/api/admin/export/hr-data" className="text-xs text-gold-400 hover:text-gold-300 shrink-0">↓ Export Onboarding/Offboarding/Callouts</a>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <PendingApprovalsPanel />
@@ -818,6 +858,14 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
                 <IntegrationSettingsPanel />
                 <IntegrationDiagnosticsPanel />
                 <RecentSendsPanel />
+              </div>
+            </div>
+
+            {/* Admin Activity Log — added 2026-07-16, the master edit log */}
+            <div>
+              <h3 className="font-medium text-sm mb-3">Admin Activity</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <AdminActivityLogPanel />
               </div>
             </div>
 

@@ -139,6 +139,12 @@ model Position {
 // admin staff tab, dashboard) automatically excludes them with zero further
 // changes, until an admin explicitly approves.
 enum OnboardingApprovalStatus {
+  INVITED   // 2026-07-16 addition — admin invited this person but they
+            // haven't completed the onboarding form yet. active:false,
+            // onboardingCompleted:false. Distinct from PENDING (which
+            // means the form WAS completed and is awaiting review) so
+            // "invited, waiting on them" and "submitted, waiting on us"
+            // don't collapse into the same state in the UI.
   PENDING   // awaiting admin review — set by onboarding/submit
   APPROVED  // admin approved — staff.active flips to true
   REJECTED  // admin rejected — stays inactive permanently, record kept for audit
@@ -632,6 +638,28 @@ model SpecialHours {
   note      String?
 
   @@map("special_hours")
+}
+
+// Resource Hub guides (2026-07-16 addition) — usage documentation for the
+// dashboard itself. minAccessLevel restricts visibility: a guide marked
+// MANAGER won't be returned to a STAFF-level session at all (filtered
+// server-side in /api/guides, not just hidden client-side) — same pattern
+// as hasAccess() already used to gate the Admin/Analytics nav links.
+model Guide {
+  id             String      @id @default(cuid())
+  title          String
+  body           String
+  category       String      @default("General") @map("category")
+  minAccessLevel AccessLevel @default(STAFF) @map("min_access_level")
+  pinned         Boolean     @default(false)
+  sortOrder      Int         @default(0) @map("sort_order")
+  authorId       String?     @map("author_id")
+  authorName     String      @map("author_name")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("guides")
 }
 
 model AppSettings {

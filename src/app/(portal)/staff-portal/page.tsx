@@ -1,13 +1,17 @@
 /**
  * src/app/(portal)/staff-portal/page.tsx
- * Staff portal landing page — accessible by all access levels (STAFF, MANAGER, OWNER).
- * Shows schedule, announcements, and feedback tools appropriate to the user.
+ * Home — the landing page for every access level after login (see
+ * login-form.tsx). Shows quick links, announcements, schedule, resources,
+ * and feedback tools appropriate to the user. URL kept as /staff-portal
+ * (2026-07-16 rebrand only changed the on-page label and default tab —
+ * see staff-portal-client.tsx — so existing links in announcement/
+ * onboarding emails and bookmarks keep working unchanged).
  */
 import { requireSession } from "@/lib/auth/session"
 import { prisma } from "@/lib/db/prisma"
 import { StaffPortalClient } from "@/components/staff-portal/staff-portal-client"
 
-export const metadata = { title: "Staff Portal — Hive Buckhead" }
+export const metadata = { title: "Home — Hive Buckhead" }
 
 export default async function StaffPortalPage({
   searchParams,
@@ -19,9 +23,16 @@ export default async function StaffPortalPage({
 
   // 2026-07-15: supports deep-linking to a specific tab, e.g. the "My
   // Profile" link in the top nav dropdown goes to /staff-portal?tab=profile
-  const validTabs = ["schedule", "announcements", "feedback", "profile"] as const
-  const initialTab = validTabs.includes(searchParams.tab as typeof validTabs[number])
-    ? (searchParams.tab as typeof validTabs[number])
+  //
+  // REVISION (2026-07-16): "announcements" folded into "home" (see
+  // staff-portal-client.tsx) and "resources" added for the new Resource
+  // Hub. Old ?tab=announcements links — e.g. ones already sent in past
+  // announcement emails — still resolve, just land on Home now instead of
+  // a dedicated announcements view.
+  const validTabs = ["home", "schedule", "resources", "feedback", "profile"] as const
+  const rawTab = searchParams.tab === "announcements" ? "home" : searchParams.tab
+  const initialTab = validTabs.includes(rawTab as typeof validTabs[number])
+    ? (rawTab as typeof validTabs[number])
     : undefined
 
   // Load announcements (pinned first, then by date)

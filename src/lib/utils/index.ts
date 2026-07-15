@@ -11,6 +11,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// ── CSV export ──────────────────────────────────────────────────────────────
+// Shared by the Analytics and Staff Intelligence export buttons (2026-07-16).
+// Reservations' own export (reservations-client.tsx) predates this and
+// builds its CSV inline the same way — left as-is rather than refactored,
+// to avoid touching a working feature for a pure DRY cleanup.
+export function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]) {
+  const csv = [headers, ...rows]
+    .map(row => row.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  a.download = filename;
+  a.click();
+}
+
 // ── RSVP code generation ───────────────────────────────────────────────────
 // 8-character alphanumeric, no ambiguous chars (0/O, 1/I/L)
 

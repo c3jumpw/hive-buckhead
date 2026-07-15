@@ -300,7 +300,7 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction, read
               {[...r.activity].reverse().slice(0, 6).map((a: { id: string; type: string; description: string; createdAt: string }) => (
                 <div key={a.id} className="flex gap-2.5 text-xs">
                   <span className="text-base leading-none mt-0.5">
-                    {a.type === "created" ? "🆕" : a.type === "status_change" ? "🔄" : a.type === "order_closed" ? "✅" : a.type === "cancelled" ? "❌" : "📝"}
+                    {a.type === "created" ? "🆕" : a.type === "status_change" ? "🔄" : a.type === "order_closed" ? "✅" : a.type === "cancelled" ? "❌" : a.type === "message_sent" ? "✉️" : a.type === "message_failed" ? "⚠️" : "📝"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-muted-foreground leading-relaxed">{a.description}</p>

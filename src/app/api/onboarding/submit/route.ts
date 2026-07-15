@@ -76,32 +76,61 @@ export async function POST(request: NextRequest) {
    * place (new PIN, new pending-approval state, fresh onboarding record)
    * instead of trying to CREATE a duplicate. A record that's still
    * active or pending is a genuine conflict and still gets rejected.
+   *
+   * INVITE HANDLING (2026-07-16 addition): same update-in-place path now
+   * also covers approvalStatus:INVITED — a record an admin created via
+   * Staff List → Invite New Staff (see /api/staff/invite), which exists
+   * specifically so this form has something to fill in. Without this
+   * branch, every invited hire would hit the same false "already exists"
+   * rejection the rehire case was built to fix.
    */
   const existing = await prisma.staff.findUnique({ where: { email } })
   const isRehireCase = existing && (existing.employmentStatus === "TERMINATED" || existing.approvalStatus === "REJECTED")
+  const isInvitedCase = existing && existing.approvalStatus === "INVITED"
+  const isUpdateInPlace = isRehireCase || isInvitedCase
 
-  if (existing && !isRehireCase) {
+  if (existing && !isUpdateInPlace) {
     return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
   }
 
   const hashedPin = await bcrypt.hash(pin, 10)
 
+  // Team ID: reused for a rehire (it's their permanent historical
+  // identifier), freshly generated for everyone else — including the
+  // invited case, since an admin invite never assigns one; there's
+  // nothing to reuse there, unlike a rehire.
+  async function nextSequentialTeamId(): Promise<string> {
+    const prefix = TEAM_ID_CONFIG.prefix
+    const existingIds = await prisma.staff.findMany({
+      where: { teamId: { startsWith: prefix } }, select: { teamId: true }, orderBy: { teamId: "desc" },
+    })
+    const lastNum = existingIds.reduce((max: number, s: { teamId: string | null }) => {
+      const num = parseInt(s.teamId?.replace(prefix + "-", "") ?? "0")
+      return num > max ? num : max
+    }, 0)
+    return prefix + "-" + String(lastNum + 1).padStart(TEAM_ID_CONFIG.digits, "0")
+  }
+
   try {
     let staff
     let teamId: string
 
-    if (isRehireCase && existing) {
-      // Reuse their original team ID — it's already a permanent historical
-      // identifier, no reason to burn a new sequential number on a rehire.
-      teamId = existing.teamId ?? ""
+    if (isUpdateInPlace && existing) {
+      teamId = (isRehireCase && existing.teamId) ? existing.teamId : await nextSequentialTeamId()
       staff = await prisma.staff.update({
         where: { id: existing.id },
         data: {
-          name, phone: phone || null, role: role || "Staff", positionId: positionId || null,
+          teamId, name, phone: phone || null, positionId: positionId || null,
           pin: hashedPin, onboardingCompleted: true, onboardingCompletedAt: new Date(),
           active: false, approvalStatus: "PENDING",
           // Clear prior termination/rejection markers — this is a fresh start
           employmentStatus: "ACTIVE", terminatedAt: null, terminationNotes: null, terminatedBy: null,
+          // Invited case: role/accessLevel were already set deliberately by
+          // the admin at invite time (see /api/staff/invite) — don't let a
+          // blank or different value from the public form overwrite them.
+          // Rehire case: role IS meant to update, in case they're coming
+          // back to a different position than before.
+          ...(isRehireCase ? { role: role || "Staff" } : {}),
         },
       })
       // Replace their prior onboarding record rather than stacking a second
@@ -130,16 +159,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } else {
-      // Generate the next sequential team ID (HB-001, HB-002, ...)
-      const prefix = TEAM_ID_CONFIG.prefix
-      const existingIds = await prisma.staff.findMany({
-        where: { teamId: { startsWith: prefix } }, select: { teamId: true }, orderBy: { teamId: "desc" },
-      })
-      const lastNum = existingIds.reduce((max: number, s: { teamId: string | null }) => {
-        const num = parseInt(s.teamId?.replace(prefix + "-", "") ?? "0")
-        return num > max ? num : max
-      }, 0)
-      teamId = prefix + "-" + String(lastNum + 1).padStart(TEAM_ID_CONFIG.digits, "0")
+      teamId = await nextSequentialTeamId()
 
       staff = await prisma.staff.create({
         data: {

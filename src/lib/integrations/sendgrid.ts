@@ -235,6 +235,53 @@ export async function sendOnboardingApproved(
 }
 
 /**
+ * sendStaffInvite — 2026-07-16 addition, part of the invite-based staff
+ * creation flow (Staff List → Invite New Staff). Sent immediately when an
+ * admin invites someone; links to the same public onboarding portal
+ * self-service applicants use, with their email pre-filled via query
+ * param so they don't have to retype it.
+ *
+ * Includes the CURRENT onboarding access code (the portal is gated by a
+ * shared rotating code — see /api/onboarding/config) directly in the
+ * email. Without this, the invite link alone wouldn't get someone past
+ * the verify step; they'd need the code communicated separately, which
+ * defeats the point of a self-contained invite.
+ */
+export async function sendStaffInvite(
+  to: string,
+  data: { name: string; role: string; invitedBy: string; onboardingUrl: string; accessCode: string }
+): Promise<EmailResult> {
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
+  try {
+    const [res] = await sgMail.send({
+      to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
+      subject: `You're invited to join the team at Hive Buckhead`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;background:#faf9f7;padding:32px;border-radius:8px;">
+        <h1 style="color:#C9A96E;font-size:24px;">Welcome to Hive Buckhead</h1>
+        <p>Hi ${data.name},</p>
+        <p>${data.invitedBy} has invited you to join the team as a ${data.role}. To get started, complete a short onboarding form — it takes about 10 minutes and covers your contact info, emergency contact, and the standard employment paperwork.</p>
+        <div style="background:#fff;border:1px solid #e0d5c0;border-radius:6px;padding:16px;margin:20px 0;text-align:center;">
+          <p style="margin:0 0 6px;font-size:13px;color:#888;">Portal Access Code</p>
+          <p style="margin:0;font-size:20px;font-weight:bold;color:#C9A96E;font-family:monospace;letter-spacing:2px;">${data.accessCode}</p>
+        </div>
+        <div style="text-align:center;margin:24px 0;">
+          <a href="${data.onboardingUrl}" style="background:#C9A96E;color:#0E0C0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;">Complete Onboarding</a>
+        </div>
+        <p style="font-size:12px;color:#888;">${data.onboardingUrl}</p>
+        <p style="font-size:13px;">Once you submit the form, our team will review it and get you set up with login access. See you soon!</p>
+        <p style="color:#888;font-size:12px;">— Hive Restaurant Buckhead, LLC</p>
+      </div>`,
+      text: `Hi ${data.name}, ${data.invitedBy} has invited you to join Hive Buckhead as a ${data.role}. Portal access code: ${data.accessCode}. Complete your onboarding at ${data.onboardingUrl}`,
+    })
+    return { success: true, messageId: res.headers["x-message-id"] as string }
+  } catch (e: any) {
+    const detail = e?.response?.body?.errors?.map((x: any) => x.message).join("; ") || e?.message || String(e)
+    console.error("[SendGrid] staff invite failed:", e?.response?.body ?? e)
+    return { success: false, error: detail }
+  }
+}
+
+/**
  * Generic admin notification — sent to all active OWNER/MANAGER staff.
  * Used for events an admin should know about but that don't need a
  * dedicated template: profile changes, feedback submissions, callouts.
