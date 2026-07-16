@@ -188,12 +188,16 @@ export async function POST(request: NextRequest) {
     // Branches on autoConfirm (see BUG HISTORY above initialStatus): if
     // the admin has auto-confirm enabled, this reservation was created
     // with status CONFIRMED directly, so the guest gets the real
-    // confirmation email/SMS and a past-customer CRM tag immediately —
-    // not the "received, pending review" messaging, which would be
-    // inaccurate since there's no pending review step in that mode.
-    // Otherwise, behavior is unchanged from before: "received" messaging
-    // + inquirer tag, with the existing Systeme.io automation removing
-    // "inquirer" once a human later confirms and it becomes past-customer.
+    // confirmation email/SMS immediately — not the "received, pending
+    // review" messaging, which would be inaccurate since there's no
+    // pending review step in that mode.
+    //
+    // REVISION (2026-07-16): past-customer tagging removed from both
+    // confirm paths (here and the manual-confirm branch in
+    // reservations/[id]/route.ts) per correction — a confirmed booking
+    // isn't a completed visit. past-customer now only applies in
+    // sendCompletionFollowUp, and only when seatedAt is set (see that
+    // function's comment for the full no-show handling this enables).
     if (isPublicSubmission && reservation.email) {
       if (autoConfirm) {
         logEmailAttempt(
@@ -206,11 +210,6 @@ export async function POST(request: NextRequest) {
           }),
           { channel: "EMAIL", recipient: reservation.email, subject: "Reservation Confirmed (auto)", reservationId: reservation.id }
         ).catch(() => {});
-
-        upsertSystemeContact(
-          reservation.email, reservation.firstName, reservation.lastName,
-          reservation.phone ?? undefined, [SYSTEME_CONFIG.tags.pastCustomer]
-        ).catch((err: unknown) => console.error("[Reservations] Systeme.io past-customer tag failed:", err));
       } else {
         logEmailAttempt(
           sendReservationReceived(reservation.email, {

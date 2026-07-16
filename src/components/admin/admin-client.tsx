@@ -95,6 +95,7 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null)
   const [templateForm, setTemplateForm] = useState({ name: "", channel: "EMAIL", subject: "", body: "" })
   const [seedLoading, setSeedLoading] = useState(false)
+  const [contentSeedLoading, setContentSeedLoading] = useState(false)
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const [resetConfirmText, setResetConfirmText] = useState("")
   const [resetting, setResetting] = useState(false)
@@ -312,6 +313,17 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
   }
 
   // ── Load sample data ────────────────────────────────────────────────────
+
+  async function seedNewContent() {
+    setContentSeedLoading(true)
+    try {
+      const res = await fetch("/api/admin/seed-content", { method: "POST" })
+      const json = await res.json()
+      if (!res.ok) { toast({ title: json.error || "Failed to load content", variant: "destructive" }); return }
+      toast({ title: `Loaded ${json.templatesCreated} template${json.templatesCreated === 1 ? "" : "s"} and ${json.guidesCreated} guide${json.guidesCreated === 1 ? "" : "s"}`, description: json.templatesCreated === 0 && json.guidesCreated === 0 ? "Already loaded — nothing new to add." : undefined })
+    } catch { toast({ title: "Failed to load content", variant: "destructive" }) }
+    finally { setContentSeedLoading(false) }
+  }
 
   async function loadSampleData() {
     setSeedLoading(true)
@@ -793,6 +805,22 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
                   </p>
                   <Button size="sm" onClick={loadSampleData} disabled={seedLoading}>
                     {seedLoading ? "Loading…" : "Load Sample Reservations"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* New content seed — 2026-07-16 addition */}
+            <div className="bg-hive-surface border border-border rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <Database className="h-5 w-5 text-gold-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-sm mb-1">Load New Templates & Guides</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    One-time seed: 4 new message templates (Table Ready, Running Late, Review Request, Special Occasion) and the initial 9 Resource Hub guides. Safe to run multiple times — skips anything that already exists.
+                  </p>
+                  <Button size="sm" onClick={seedNewContent} disabled={contentSeedLoading}>
+                    {contentSeedLoading ? "Loading…" : "Load Templates & Guides"}
                   </Button>
                 </div>
               </div>

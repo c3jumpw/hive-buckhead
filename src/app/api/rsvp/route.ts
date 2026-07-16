@@ -4,6 +4,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
+import { sendChangeRequestReceived, sendAdminNotification } from "@/lib/integrations/sendgrid"
+import { logEmailAttempt, getAdminEmails } from "@/lib/db/activity-logger"
 
 // Fields returned to the guest-facing manage/cancel page. Kept as a shared
 // constant so both lookup paths (by code, and by phone+lastName) return an
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
 
   const reservation = await prisma.reservation.findUnique({
     where: { rsvpCode: rsvpCode.toUpperCase() },
-    select: { id: true, status: true, firstName: true, lastName: true },
+    select: { id: true, status: true, firstName: true, lastName: true, email: true },
   })
 
   if (!reservation) {
@@ -129,6 +131,27 @@ export async function POST(request: NextRequest) {
 
     return rsv
   })
+
+  // 2026-07-16 addition — previously neither the guest nor any admin got
+  // notified when a change/cancellation request came in; the only trace
+  // was the ActivityLog entry above, invisible until someone happened to
+  // look. Both fire-and-forget, same pattern as elsewhere in the app.
+  if (reservation.email) {
+    logEmailAttempt(
+      sendChangeRequestReceived(reservation.email, { firstName: reservation.firstName, rsvpCode: updated.rsvpCode }),
+      { channel: "EMAIL", recipient: reservation.email, subject: "Change Request Received", reservationId: reservation.id }
+    ).catch(() => {})
+  }
+  getAdminEmails().then(emails => {
+    if (emails.length === 0) return
+    const label = type === "cancellation" ? "Cancellation" : "Change"
+    sendAdminNotification(
+      emails, `${label} request — ${reservation.firstName} ${reservation.lastName} (${updated.rsvpCode})`,
+      type === "cancellation"
+        ? `${reservation.firstName} ${reservation.lastName} requested to cancel RSVP ${updated.rsvpCode}. Reason: ${reason ?? "Not specified"}.`
+        : `${reservation.firstName} ${reservation.lastName} requested a change (${changeType ?? "other"}) to RSVP ${updated.rsvpCode}: "${(message ?? "").slice(0, 200)}"`
+    ).catch((err: unknown) => console.error("[RSVP] admin notification failed:", err))
+  }).catch(() => {})
 
   return NextResponse.json({ data: updated })
 }

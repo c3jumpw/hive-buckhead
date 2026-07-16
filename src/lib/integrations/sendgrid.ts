@@ -121,6 +121,71 @@ export async function sendCancellationEmail(
 }
 
 /**
+ * Change-request lifecycle emails — 2026-07-16 addition. Previously a guest
+ * submitting a change/cancellation request via the manage-RSVP page got no
+ * acknowledgment at all, and no email either way once a Manager/Owner
+ * approved or denied it — the only trace was an internal ActivityLog entry
+ * nobody outside the app would see. These three cover that gap:
+ * "we got it" on submission, then the actual outcome once reviewed.
+ */
+export async function sendChangeRequestReceived(
+  to: string,
+  data: { firstName: string; rsvpCode: string }
+): Promise<EmailResult> {
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
+  try {
+    const [res] = await sgMail.send({
+      to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
+      subject: `We received your request — Hive Buckhead`,
+      html: `<p>Hi ${data.firstName}, we've received your request regarding reservation ${data.rsvpCode} and our team will review it shortly. Your reservation stays as originally booked until we confirm the change.</p>`,
+      text: `Hi ${data.firstName}, we've received your request regarding reservation ${data.rsvpCode} and will review it shortly. Your reservation stays as originally booked until confirmed.`,
+    })
+    return { success: true, messageId: res.headers["x-message-id"] as string }
+  } catch (e: any) {
+    console.error("[SendGrid] change-received failed:", e?.response?.body ?? e)
+    return { success: false, error: String(e) }
+  }
+}
+
+export async function sendChangeApproved(
+  to: string,
+  data: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string }
+): Promise<EmailResult> {
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
+  try {
+    const [res] = await sgMail.send({
+      to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
+      subject: `Your requested change is confirmed — Hive Buckhead`,
+      html: `<p>Hi ${data.firstName}, your requested change has been approved. Your reservation is now confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}). See you then!</p>`,
+      text: `Hi ${data.firstName}, your requested change has been approved. Confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}).`,
+    })
+    return { success: true, messageId: res.headers["x-message-id"] as string }
+  } catch (e: any) {
+    console.error("[SendGrid] change-approved failed:", e?.response?.body ?? e)
+    return { success: false, error: String(e) }
+  }
+}
+
+export async function sendChangeDenied(
+  to: string,
+  data: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string }
+): Promise<EmailResult> {
+  if (!(await ensureInitialized())) return { success: false, error: "SendGrid not configured" }
+  try {
+    const [res] = await sgMail.send({
+      to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
+      subject: `About your recent request — Hive Buckhead`,
+      html: `<p>Hi ${data.firstName}, we're unable to accommodate your requested change. Your original reservation remains confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}). If you'd like to discuss options, please give us a call.</p>`,
+      text: `Hi ${data.firstName}, we're unable to accommodate your requested change. Your original reservation remains confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}).`,
+    })
+    return { success: true, messageId: res.headers["x-message-id"] as string }
+  } catch (e: any) {
+    console.error("[SendGrid] change-denied failed:", e?.response?.body ?? e)
+    return { success: false, error: String(e) }
+  }
+}
+
+/**
  * Free-form, staff-composed email to a guest — used by the "Message Guest"
  * panel on a reservation's detail view (any template, or free text).
  * Mirrors sendCustomSms() in quo.ts: same EmailResult shape, same pattern

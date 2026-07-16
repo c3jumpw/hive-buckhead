@@ -5,12 +5,16 @@
 // DELETE /api/reservations/:id (admin only)
 
 import { NextRequest, NextResponse } from "next/server";
-import { sendReservationConfirmation, sendCancellationEmail } from "@/lib/integrations/sendgrid";
+import { sendReservationConfirmation, sendCancellationEmail, sendChangeApproved, sendChangeDenied } from "@/lib/integrations/sendgrid";
 import { sendReservationConfirmationSms, sendCancellationSms } from "@/lib/integrations/quo";
 import { upsertSystemeContact } from "@/lib/integrations/systeme";
 import { SYSTEME_CONFIG } from "@/lib/config";
 import { prisma } from "@/lib/db/prisma";
 import { getSession } from "@/lib/auth/session";
+import { logEmailAttempt } from "@/lib/db/activity-logger";
+import { sendCustomEmail } from "@/lib/integrations/sendgrid";
+import { sendCustomSms } from "@/lib/integrations/quo";
+import { renderTemplate } from "@/lib/utils";
 import {
   updateReservationSchema,
   closeTableSchema,
@@ -99,15 +103,14 @@ async function sendNotification(
   // Requires an email — Systeme.io contacts are keyed by email address,
   // there's no phone-based contact model on their side, so this branch
   // staying gated on r.email is a real external constraint, not a bug.
-  if (r.email) {
-    // Tag depends on the transition:
-    //   confirm -> past-customer (guest now has a confirmed upcoming visit).
-    //              An existing Systeme.io automation removes the "inquirer"
-    //              tag automatically once past-customer is applied — nothing
-    //              further needed on this end for that part.
-    //   cancel  -> inquirer, since the booking did not result in a completed visit
-    const tag = type === "confirm" ? SYSTEME_CONFIG.tags.pastCustomer : SYSTEME_CONFIG.tags.inquirer
-    upsertSystemeContact(r.email, r.firstName, r.lastName, r.phone ?? undefined, [tag]).catch((err: unknown) =>
+  //
+  // REVISION (2026-07-16): confirm no longer tags past-customer — a
+  // confirmed booking isn't a completed visit. That tag now only fires in
+  // sendCompletionFollowUp, gated on seatedAt. Cancel still tags inquirer
+  // (a cancelled booking is exactly the "didn't complete a visit" case
+  // that tag is for).
+  if (r.email && type === "cancel") {
+    upsertSystemeContact(r.email, r.firstName, r.lastName, r.phone ?? undefined, [SYSTEME_CONFIG.tags.inquirer]).catch((err: unknown) =>
       console.error("[Systeme.io] sync failed for reservation", reservationId, err)
     )
   }
@@ -150,6 +153,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     switch (action) {
       case "close_table":
         return handleCloseTable(params.id, body, session);
+      case "no_show":
+        return handleNoShow(params.id, session);
       case "cancel":
         return handleCancel(params.id, body, session);
       case "approve_change":
@@ -288,6 +293,53 @@ async function handleUpdate(
 
 // ── Action: Close table & log order ───────────────────────────────────────
 
+// ── Completion follow-up ────────────────────────────────────────────────
+// 2026-07-16 addition, REVISED same day per correction: past-customer only
+// belongs on someone who actually visited. `seated` distinguishes a real
+// completed visit (Close Table & Log Order, seatedAt is set) from a
+// no-show (Mark No-Show, seatedAt stays null) — different message,
+// different tag, for what are genuinely different outcomes even though
+// both end in status: COMPLETED.
+async function sendCompletionFollowUp(
+  reservationId: string,
+  r: { firstName: string; lastName: string; email: string | null; phone: string | null; date: string; arrivalTime: string; partySize: number; rsvpCode: string },
+  seated: boolean
+) {
+  const templateName = seated ? "Review Request" : "We Missed You"
+  const logSubject = seated ? "Review Request (auto)" : "No-Show Follow-up (auto)"
+
+  if (r.email) {
+    const template = await prisma.messageTemplate.findFirst({ where: { name: templateName, channel: "EMAIL", active: true } })
+    if (template) {
+      const vars = { firstName: r.firstName, date: formatDate(r.date), time: formatTime(r.arrivalTime), partySize: String(r.partySize), rsvpCode: r.rsvpCode }
+      logEmailAttempt(
+        sendCustomEmail(r.email, { subject: renderTemplate(template.subject ?? (seated ? "How was your visit?" : "We missed you!"), vars), body: renderTemplate(template.body, vars) }),
+        { channel: "EMAIL", recipient: r.email, subject: logSubject, reservationId, body: renderTemplate(template.body, vars) }
+      ).catch(() => {})
+    }
+  } else if (r.phone) {
+    // No email on file — fall back to SMS so the guest still gets
+    // something, rather than silently skipping the follow-up entirely.
+    const template = await prisma.messageTemplate.findFirst({ where: { name: templateName, channel: "SMS", active: true } })
+    if (template) {
+      const vars = { firstName: r.firstName, date: formatDate(r.date), time: formatTime(r.arrivalTime), partySize: String(r.partySize), rsvpCode: r.rsvpCode }
+      logEmailAttempt(
+        sendCustomSms(r.phone, renderTemplate(template.body, vars)),
+        { channel: "SMS", recipient: r.phone, subject: logSubject, reservationId, body: renderTemplate(template.body, vars) }
+      ).catch(() => {})
+    }
+  }
+
+  // past-customer only for an actual visit; a no-show reads the same as a
+  // cancellation for CRM purposes — interest without a completed visit.
+  if (r.email) {
+    const tag = seated ? SYSTEME_CONFIG.tags.pastCustomer : SYSTEME_CONFIG.tags.inquirer
+    upsertSystemeContact(r.email, r.firstName, r.lastName, r.phone ?? undefined, [tag]).catch((err: unknown) =>
+      console.error("[Reservations] completion tag failed:", err)
+    )
+  }
+}
+
 async function handleCloseTable(
   id: string,
   body: unknown,
@@ -343,6 +395,58 @@ async function handleCloseTable(
 
     return updated;
   });
+
+  sendCompletionFollowUp(id, {
+    firstName: reservation.firstName, lastName: reservation.lastName,
+    email: reservation.email, phone: reservation.phone,
+    date: reservation.date.toISOString(), arrivalTime: reservation.arrivalTime,
+    partySize: reservation.partySize, rsvpCode: reservation.rsvpCode,
+  }, !!reservation.seatedAt).catch((err: unknown) => console.error("[Reservations] completion follow-up failed:", err));
+
+  return NextResponse.json({ data: reservation });
+}
+
+// ── Action: Mark No-Show ────────────────────────────────────────────────
+// 2026-07-16 addition — for a CONFIRMED reservation whose guest never
+// arrived (missed RSVP, no-show). Distinct from Close Table & Log Order:
+// no order total to log, and tables assigned ahead of time go back to
+// AVAILABLE rather than DIRTY (nothing happened at them to bus). Ends in
+// the same COMPLETED status as a real visit — seatedAt staying null is
+// what actually distinguishes the two, which is what
+// sendCompletionFollowUp branches on for the message + Systeme.io tag.
+async function handleNoShow(id: string, session: { id: string; name: string }) {
+  const reservation = await prisma.$transaction(async (tx: any) => {
+    const updated = await tx.reservation.update({
+      where: { id },
+      data: { status: "COMPLETED", completedAt: new Date(), closedById: session.id },
+      include: {
+        server: { select: { id: true, name: true, color: true } },
+        tables: { include: { table: true } },
+        activity: { orderBy: { createdAt: "desc" }, take: 10 },
+      },
+    });
+
+    const tableIds = updated.tables.map((rt: { tableId: string }) => rt.tableId);
+    if (tableIds.length > 0) {
+      await tx.table.updateMany({ where: { id: { in: tableIds } }, data: { state: "AVAILABLE" } });
+    }
+
+    await tx.activityLog.create({
+      data: {
+        reservationId: id, staffId: session.id, type: "marked_no_show",
+        description: `Marked as no-show by ${session.name}`,
+      },
+    });
+
+    return updated;
+  });
+
+  sendCompletionFollowUp(id, {
+    firstName: reservation.firstName, lastName: reservation.lastName,
+    email: reservation.email, phone: reservation.phone,
+    date: reservation.date.toISOString(), arrivalTime: reservation.arrivalTime,
+    partySize: reservation.partySize, rsvpCode: reservation.rsvpCode,
+  }, false).catch((err: unknown) => console.error("[Reservations] no-show follow-up failed:", err));
 
   return NextResponse.json({ data: reservation });
 }
@@ -450,6 +554,20 @@ async function handleApproveChange(
     return updated;
   });
 
+  // 2026-07-16 addition — previously the guest heard nothing either way
+  // once their change request was reviewed; the only record was the
+  // ActivityLog entry above. Fire-and-forget, consistent with confirm/
+  // cancel notifications elsewhere in this file.
+  if (reservation.email) {
+    logEmailAttempt(
+      sendChangeApproved(reservation.email, {
+        firstName: reservation.firstName, date: formatDate(reservation.date.toISOString()),
+        time: formatTime(reservation.arrivalTime), partySize: reservation.partySize, rsvpCode: reservation.rsvpCode,
+      }),
+      { channel: "EMAIL", recipient: reservation.email, subject: "Change Approved", reservationId: id }
+    ).catch(() => {})
+  }
+
   return NextResponse.json({ data: reservation });
 }
 
@@ -482,6 +600,16 @@ async function handleDenyChange(
 
     return updated;
   });
+
+  if (reservation.email) {
+    logEmailAttempt(
+      sendChangeDenied(reservation.email, {
+        firstName: reservation.firstName, date: formatDate(reservation.date.toISOString()),
+        time: formatTime(reservation.arrivalTime), partySize: reservation.partySize, rsvpCode: reservation.rsvpCode,
+      }),
+      { channel: "EMAIL", recipient: reservation.email, subject: "Change Denied", reservationId: id }
+    ).catch(() => {})
+  }
 
   return NextResponse.json({ data: reservation });
 }

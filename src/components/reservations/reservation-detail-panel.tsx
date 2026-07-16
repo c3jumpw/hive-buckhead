@@ -169,6 +169,13 @@ export function ReservationDetailPanel({ reservation: r, onClose, onAction, read
                 <ActionButton color="teal" icon={<Edit3 className="h-4 w-4" />} onClick={() => onAction("edit", r)}>
                   Edit Reservation
                 </ActionButton>
+                <ActionButton color="amber" icon={<XCircle className="h-4 w-4" />} onClick={() => {
+                  if (confirm(`Mark ${r.firstName} ${r.lastName} as a no-show? This closes the reservation and sends a "we missed you" follow-up instead of a review request.`)) {
+                    onAction("no_show", r)
+                  }
+                }}>
+                  Mark No-Show
+                </ActionButton>
                 <ActionButton color="red" icon={<XCircle className="h-4 w-4" />} onClick={() => onAction("cancel", r)}>
                   Cancel
                 </ActionButton>

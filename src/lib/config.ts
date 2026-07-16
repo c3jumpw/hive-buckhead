@@ -27,11 +27,15 @@ export const APP_CONFIG = {
   legalName: "Hive Restaurant Buckhead, LLC",
   // Primary domain for the restaurant
   domain: "thehivebuckhead.com",
-  // Staff portal subdomain
-  staffPortalUrl: "https://staffportal.thehivebuckhead.com",
-  // Onboarding portal subdomain
-  onboardingUrl: "https://onboarding.thehivebuckhead.com",
-  // Public RSVP subdomain
+  // 2026-07-16: staff/onboarding subdomains now carry a random suffix per
+  // request — these are internal tools, not meant to be guessed or
+  // crawled, unlike the public RSVP subdomain below which stays plain.
+  // NOTE: these strings must exactly match whatever's actually set up in
+  // Vercel + DNS — see the domain setup guidance for the two values used.
+  staffPortalUrl: "https://staffportal-xy9jfxf2.thehivebuckhead.com",
+  onboardingUrl: "https://onboarding-miviwuzp.thehivebuckhead.com",
+  // Public RSVP subdomain — deliberately NOT randomized, guests need to
+  // find/use this one.
   rsvpUrl: "https://reservations.thehivebuckhead.com",
 } as const
 

@@ -56,6 +56,13 @@ export function ReservationsClient({ initialReservations, staff, tables, session
   const [dateFilter, setDateFilter] = useState("today")
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "">("")
   const [serverFilter, setServerFilter] = useState("")
+  // 2026-07-16 addition — completed reservations default to hidden in list
+  // view (they're done, not part of the active working queue) but stay
+  // visible in kanban (it's a defined column there, hiding it would look
+  // like the board is missing a status rather than filtering it).
+  // Only applies when not already explicitly filtering FOR "Completed" via
+  // the status sidebar — that'd be contradictory otherwise.
+  const [showCompleted, setShowCompleted] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [newOpen, setNewOpen] = useState(false)
   const [editRsv, setEditRsv] = useState<Reservation | null>(null)
@@ -97,6 +104,7 @@ export function ReservationsClient({ initialReservations, staff, tables, session
       if (dateFilter === "today" && d !== TODAY) return false
       if (dateFilter === "upcoming" && d <= TODAY) return false
       if (dateFilter === "past" && d >= TODAY) return false
+      if (view === "list" && !showCompleted && statusFilter !== "COMPLETED" && r.status === "COMPLETED") return false
       return true
     }).sort((a, b) => {
       const da = a.date?.split("T")[0] ?? ""
@@ -104,7 +112,7 @@ export function ReservationsClient({ initialReservations, staff, tables, session
       if (da !== db) return da.localeCompare(db)
       return (a.arrivalTime ?? "").localeCompare(b.arrivalTime ?? "")
     })
-  }, [reservations, search, statusFilter, serverFilter, dateFilter])
+  }, [reservations, search, statusFilter, serverFilter, dateFilter, view, showCompleted])
 
   const todayRsvs = reservations.filter(r => (r.date?.split("T")[0] ?? r.date) === TODAY)
   const stats = {
@@ -144,6 +152,9 @@ export function ReservationsClient({ initialReservations, staff, tables, session
         setEditRsv(r); setNewOpen(true)
       } else if (action === "close") {
         setCloseRsv(r)
+      } else if (action === "no_show") {
+        updateLocal(await apiPatch(r.id, { action: "no_show" }))
+        toast({ title: `${r.firstName} marked as no-show`, description: "Follow-up message sent." })
       } else if (action === "cancel") {
         setCancelRsv(r)
       } else if (action === "message") {
@@ -301,6 +312,12 @@ export function ReservationsClient({ initialReservations, staff, tables, session
             </SelectContent>
           </Select>
           <span className="text-xs text-muted-foreground ml-auto">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</span>
+          {view === "list" && (
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+              <input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="rounded" />
+              Show completed
+            </label>
+          )}
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.refresh()}><RefreshCw className="h-3.5 w-3.5" /></Button>
           {!isReadOnly && (
             <Button size="sm" className="h-8 text-xs" onClick={() => { setEditRsv(null); setNewOpen(true) }}><Plus className="h-3.5 w-3.5 mr-1" /> New</Button>

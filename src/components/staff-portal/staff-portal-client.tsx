@@ -6,7 +6,8 @@
  * every access level (see login-form.tsx). Same five tabs for everyone:
  *   Home       — quick links (filtered by access level) + announcements
  *   My Schedule — this person's own shifts
- *   Resources  — guide hub, filtered by access level (see guides.ts)
+ *   Resources  — guide hub, filtered by access level, DB-backed via
+ *                /api/guides (see that route for the access-filter logic)
  *   Feedback   — message to management
  *   My Profile — contact info / PIN
  *
@@ -16,7 +17,7 @@
  * which Quick Links render on Home, not the page/tab structure itself.
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   Calendar, MessageSquare, User, LayoutList, MapPin,
@@ -24,7 +25,6 @@ import {
 } from "lucide-react"
 import { cn, formatTime, hasAccess } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
-import { GUIDES } from "@/lib/resources/guides"
 import type { SessionStaff } from "@/lib/auth/session"
 
 // Day names for recurring schedule display
@@ -60,6 +60,18 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
   const [feedbackCategory, setFeedbackCategory] = useState("general")
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [expandedGuideId, setExpandedGuideId] = useState<string | null>(null)
+  const [guides, setGuides] = useState<any[]>([])
+  const [guidesLoading, setGuidesLoading] = useState(true)
+  const [managingGuides, setManagingGuides] = useState(false)
+  const [addingGuide, setAddingGuide] = useState(false)
+  const [editingGuideId, setEditingGuideId] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch("/api/guides")
+      .then(res => res.ok ? res.json() : null)
+      .then(json => { if (json?.data) setGuides(json.data) })
+      .finally(() => setGuidesLoading(false))
+  }, [])
 
   /**
    * BUG HISTORY (2026-07-15): the sign-out control here was a plain
@@ -239,38 +251,105 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
         )}
 
         {/* ── RESOURCES TAB ────────────────────────────────────────────
-             Added 2026-07-16. Guide content lives in src/lib/resources/
-             guides.ts, not here — this component only handles filtering
-             by access level and the expand/collapse display. ── */}
+             REVISION (2026-07-16): now database-backed via /api/guides
+             instead of the static src/lib/resources/guides.ts file —
+             adding, editing, or removing a guide no longer needs a code
+             change/redeploy. MANAGER+ gets inline Add/Edit/Delete;
+             everyone else just sees the filtered read-only list. ── */}
         {tab === "resources" && (
           <div className="space-y-3">
-            <div>
-              <h2 className="font-medium">Resources</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Guides on how to use the system.</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-medium">Resources</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Guides on how to use the system.</p>
+              </div>
+              {hasAccess(session.accessLevel, "MANAGER") && (
+                <button onClick={() => { setManagingGuides(m => !m); setAddingGuide(false); setEditingGuideId(null) }}
+                  className="text-xs text-gold-400 hover:text-gold-300">
+                  {managingGuides ? "Done" : "Manage"}
+                </button>
+              )}
             </div>
-            {GUIDES.filter(g => hasAccess(session.accessLevel, g.minAccessLevel)).map(g => {
-              const isOpen = expandedGuideId === g.id
-              return (
-                <div key={g.id} className="bg-hive-surface border border-border rounded-xl overflow-hidden">
-                  <button onClick={() => setExpandedGuideId(isOpen ? null : g.id)}
-                    className="w-full flex items-center justify-between gap-3 p-4 text-left">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-wider text-gold-400 font-semibold">{g.category}</span>
+
+            {managingGuides && !addingGuide && (
+              <button onClick={() => setAddingGuide(true)}
+                className="w-full border border-dashed border-border rounded-xl p-3 text-xs text-muted-foreground hover:text-foreground hover:border-gold-500/40 transition-colors">
+                + Add Guide
+              </button>
+            )}
+            {addingGuide && (
+              <GuideForm
+                onCancel={() => setAddingGuide(false)}
+                onSave={async (data) => {
+                  const res = await fetch("/api/guides", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+                  const json = await res.json()
+                  if (!res.ok) { toast({ title: json.error || "Failed to add guide", variant: "destructive" }); return }
+                  setGuides(g => [...g, json.data])
+                  setAddingGuide(false)
+                  toast({ title: "Guide added" })
+                }}
+              />
+            )}
+
+            {guidesLoading ? (
+              <p className="text-xs text-muted-foreground">Loading…</p>
+            ) : guides.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No guides yet.</p>
+            ) : (
+              guides.map(g => {
+                const isOpen = expandedGuideId === g.id
+                const isEditing = editingGuideId === g.id
+                if (isEditing) {
+                  return (
+                    <GuideForm
+                      key={g.id}
+                      initial={g}
+                      onCancel={() => setEditingGuideId(null)}
+                      onSave={async (data) => {
+                        const res = await fetch(`/api/guides/${g.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+                        const json = await res.json()
+                        if (!res.ok) { toast({ title: json.error || "Failed to save", variant: "destructive" }); return }
+                        setGuides(gs => gs.map(x => x.id === g.id ? json.data : x))
+                        setEditingGuideId(null)
+                        toast({ title: "Guide updated" })
+                      }}
+                    />
+                  )
+                }
+                return (
+                  <div key={g.id} className="bg-hive-surface border border-border rounded-xl overflow-hidden">
+                    <div className="w-full flex items-center justify-between gap-3 p-4">
+                      <button onClick={() => setExpandedGuideId(isOpen ? null : g.id)} className="flex-1 min-w-0 text-left flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            {g.pinned && <span className="text-[10px] text-gold-400">📌</span>}
+                            <span className="text-[10px] uppercase tracking-wider text-gold-400 font-semibold">{g.category}</span>
+                            <span className="text-[10px] text-muted-foreground">{g.minAccessLevel !== "STAFF" ? `${g.minAccessLevel}+` : ""}</span>
+                          </div>
+                          <h3 className="font-medium text-sm mt-0.5">{g.title}</h3>
+                        </div>
+                        {isOpen ? <ChevronDown size={16} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={16} className="shrink-0 text-muted-foreground" />}
+                      </button>
+                      {managingGuides && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => setEditingGuideId(g.id)} className="text-[11px] text-muted-foreground hover:text-foreground">Edit</button>
+                          <button onClick={async () => {
+                            if (!confirm(`Delete "${g.title}"?`)) return
+                            const res = await fetch(`/api/guides/${g.id}`, { method: "DELETE" })
+                            if (res.ok) { setGuides(gs => gs.filter(x => x.id !== g.id)); toast({ title: "Guide deleted" }) }
+                          }} className="text-[11px] text-muted-foreground hover:text-red-300">Delete</button>
+                        </div>
+                      )}
+                    </div>
+                    {isOpen && (
+                      <div className="px-4 pb-4 pt-1 border-t border-border">
+                        <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{g.body}</p>
                       </div>
-                      <h3 className="font-medium text-sm mt-0.5">{g.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{g.summary}</p>
-                    </div>
-                    {isOpen ? <ChevronDown size={16} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={16} className="shrink-0 text-muted-foreground" />}
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 pb-4 pt-1 border-t border-border">
-                      <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{g.body}</p>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
         )}
 
@@ -378,6 +457,65 @@ function ProfileEditor({ session }: { session: SessionStaff }) {
         <button onClick={saveProfile} disabled={saving}
           className="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold py-2 rounded-lg text-sm disabled:opacity-50 transition-colors">
           {saving ? "Saving…" : "Save Changes"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * GuideForm — 2026-07-16 addition. Shared by both "Add Guide" and "Edit
+ * Guide" in the Resources tab above (same fields either way, just a
+ * different save handler passed in by the caller).
+ */
+function GuideForm({ initial, onSave, onCancel }: {
+  initial?: { title: string; body: string; category: string; minAccessLevel: string; pinned: boolean }
+  onSave: (data: { title: string; body: string; category: string; minAccessLevel: string; pinned: boolean }) => Promise<void>
+  onCancel: () => void
+}) {
+  const [title, setTitle] = useState(initial?.title ?? "")
+  const [body, setBody] = useState(initial?.body ?? "")
+  const [category, setCategory] = useState(initial?.category ?? "General")
+  const [minAccessLevel, setMinAccessLevel] = useState(initial?.minAccessLevel ?? "STAFF")
+  const [pinned, setPinned] = useState(initial?.pinned ?? false)
+  const [saving, setSaving] = useState(false)
+
+  return (
+    <div className="bg-hive-surface border border-gold-500/30 rounded-xl p-4 space-y-2.5">
+      <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Guide title"
+        className="w-full bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gold-400" />
+      <div className="grid grid-cols-2 gap-2.5">
+        <input value={category} onChange={e => setCategory(e.target.value)} placeholder="Category (e.g. Front of House)"
+          className="bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gold-400" />
+        <select value={minAccessLevel} onChange={e => setMinAccessLevel(e.target.value)}
+          className="bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-gold-400">
+          <option value="STAFF">Visible to: Everyone</option>
+          <option value="MANAGER">Visible to: Manager+</option>
+          <option value="OWNER">Visible to: Owner only</option>
+        </select>
+      </div>
+      <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Guide content — plain text, blank lines become paragraph breaks"
+        rows={8} className="w-full bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gold-400 resize-y" />
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+        <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} className="rounded" />
+        Pin to top of list
+      </label>
+      <div className="flex gap-2">
+        <button
+          onClick={async () => {
+            if (!title || !body) { toast({ title: "Title and content are required", variant: "destructive" }); return }
+            setSaving(true)
+            await onSave({ title, body, category, minAccessLevel, pinned })
+            setSaving(false)
+          }}
+          disabled={saving}
+          className="flex-1 py-1.5 rounded-md text-xs font-medium bg-gold-500 hover:bg-gold-600 text-black transition-colors disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save Guide"}
+        </button>
+        <button onClick={onCancel} disabled={saving}
+          className="flex-1 py-1.5 rounded-md text-xs font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
+          Cancel
         </button>
       </div>
     </div>

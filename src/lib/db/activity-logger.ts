@@ -26,6 +26,16 @@ export async function getAdminEmails(): Promise<string[]> {
  * log (Settings → Admin Activity Log) added 2026-07-16 — every call site
  * below funnels through here so the log has one consistent shape instead
  * of each route hand-rolling its own prisma.activityLog.create().
+ *
+ * BUG HISTORY (2026-07-16, caught by Vercel's build — not something my
+ * own sandbox could catch, since it never had network access to Prisma's
+ * real engine binaries, only a generic stub client with permissive types):
+ * `metadata` was typed as a plain Record<string, unknown>, which looks
+ * like it should satisfy a Json? column but doesn't — Prisma's generated
+ * input type for Json fields is Prisma.InputJsonValue, a more specific
+ * recursive union that a plain Record type isn't structurally assignable
+ * to. Cast explicitly below rather than loosening the param type, so
+ * callers still get real autocomplete/checking on what they pass in.
  */
 export async function logAdminAction(params: {
   staffId: string
