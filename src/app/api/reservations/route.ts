@@ -222,10 +222,25 @@ export async function POST(request: NextRequest) {
           { channel: "EMAIL", recipient: reservation.email, subject: "Reservation Request Received", reservationId: reservation.id }
         ).catch(() => {});
 
-        upsertSystemeContact(
-          reservation.email, reservation.firstName, reservation.lastName,
-          reservation.phone ?? undefined, [SYSTEME_CONFIG.tags.inquirer]
-        ).catch((err: unknown) => console.error("[Reservations] Systeme.io inquirer tag failed:", err));
+        // 2026-07-16 addition — a returning guest who already completed a
+        // past visit (real past-customer) submitting a NEW request that
+        // needs review would otherwise get "inquirer" stacked on top of
+        // their existing "past-customer" tag, with nothing to remove it
+        // afterward (the Systeme.io automation that clears "inquirer"
+        // only fires when "past-customer" is newly ADDED — it doesn't
+        // re-fire for someone who already has it). Checking our own
+        // history first avoids ever creating that contradictory state,
+        // rather than trying to clean it up after the fact.
+        const hasPriorVisit = await prisma.reservation.findFirst({
+          where: { email: reservation.email, seatedAt: { not: null }, id: { not: reservation.id } },
+          select: { id: true },
+        })
+        if (!hasPriorVisit) {
+          upsertSystemeContact(
+            reservation.email, reservation.firstName, reservation.lastName,
+            reservation.phone ?? undefined, [SYSTEME_CONFIG.tags.inquirer]
+          ).catch((err: unknown) => console.error("[Reservations] Systeme.io inquirer tag failed:", err));
+        }
       }
     }
 

@@ -69,7 +69,7 @@ export async function sendReservationReceived(
   try {
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
-      subject: `We received your reservation request — Hive Buckhead`,
+      subject: `We Have Received Your Reservation Request — Hive Buckhead`,
       html: receivedHtml(data),
       text: `HIVE BUCKHEAD — We received your request for ${data.date} at ${data.time}, party of ${data.partySize}. Ref: ${data.rsvpCode}. Our team will confirm within 2 hours during business hours.`,
     })
@@ -110,7 +110,13 @@ export async function sendCancellationEmail(
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
       subject: `Reservation cancelled — Hive Buckhead`,
-      html: `<p>Hi ${data.firstName}, your reservation on ${data.date} (Ref: ${data.rsvpCode}) has been cancelled. We hope to see you soon.</p>`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">
+        ${emailHeader()}
+        <div style="padding:28px;border:1px solid #e0d5c0;border-top:none;">
+          <p>Hi ${data.firstName}, your reservation on ${data.date} (Ref: ${data.rsvpCode}) has been cancelled. We hope to see you soon.</p>
+        </div>
+        ${emailFooter()}
+      </div>`,
       text: `Hi ${data.firstName}, your reservation on ${data.date} (Ref: ${data.rsvpCode}) has been cancelled.`,
     })
     return { success: true, messageId: res.headers["x-message-id"] as string }
@@ -137,7 +143,13 @@ export async function sendChangeRequestReceived(
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
       subject: `We received your request — Hive Buckhead`,
-      html: `<p>Hi ${data.firstName}, we've received your request regarding reservation ${data.rsvpCode} and our team will review it shortly. Your reservation stays as originally booked until we confirm the change.</p>`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">
+        ${emailHeader()}
+        <div style="padding:28px;border:1px solid #e0d5c0;border-top:none;">
+          <p>Hi ${data.firstName}, we've received your request regarding reservation ${data.rsvpCode} and our team will review it shortly. Your reservation stays as originally booked until we confirm the change.</p>
+        </div>
+        ${emailFooter()}
+      </div>`,
       text: `Hi ${data.firstName}, we've received your request regarding reservation ${data.rsvpCode} and will review it shortly. Your reservation stays as originally booked until confirmed.`,
     })
     return { success: true, messageId: res.headers["x-message-id"] as string }
@@ -156,7 +168,14 @@ export async function sendChangeApproved(
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
       subject: `Your requested change is confirmed — Hive Buckhead`,
-      html: `<p>Hi ${data.firstName}, your requested change has been approved. Your reservation is now confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}). See you then!</p>`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">
+        ${emailHeader()}
+        <div style="padding:28px;border:1px solid #e0d5c0;border-top:none;">
+          <p>Hi ${data.firstName}, your requested change has been approved. Your reservation is now confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}). See you then!</p>
+          <p style="font-size:12px;color:#888;">Need to make another change? <a href="${manageLink(data.rsvpCode)}" style="color:#C9A96E;">Manage your reservation</a></p>
+        </div>
+        ${emailFooter()}
+      </div>`,
       text: `Hi ${data.firstName}, your requested change has been approved. Confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}).`,
     })
     return { success: true, messageId: res.headers["x-message-id"] as string }
@@ -175,7 +194,13 @@ export async function sendChangeDenied(
     const [res] = await sgMail.send({
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
       subject: `About your recent request — Hive Buckhead`,
-      html: `<p>Hi ${data.firstName}, we're unable to accommodate your requested change. Your original reservation remains confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}). If you'd like to discuss options, please give us a call.</p>`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">
+        ${emailHeader()}
+        <div style="padding:28px;border:1px solid #e0d5c0;border-top:none;">
+          <p>Hi ${data.firstName}, we're unable to accommodate your requested change. Your original reservation remains confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}). If you'd like to discuss options, please give us a call.</p>
+        </div>
+        ${emailFooter()}
+      </div>`,
       text: `Hi ${data.firstName}, we're unable to accommodate your requested change. Your original reservation remains confirmed for ${data.date} at ${data.time}, party of ${data.partySize} (Ref: ${data.rsvpCode}).`,
     })
     return { success: true, messageId: res.headers["x-message-id"] as string }
@@ -203,7 +228,7 @@ export async function sendCustomEmail(
       to, from: { email: SENDGRID_CONFIG.fromEmail, name: SENDGRID_CONFIG.fromName },
       subject: data.subject,
       text: data.body,
-      html: `<div style="font-family:Georgia,serif;white-space:pre-line;">${data.body}</div>`,
+      html: `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">${emailHeader()}<div style="padding:28px;border:1px solid #e0d5c0;border-top:none;white-space:pre-line;">${data.body}</div>${emailFooter()}</div>`,
     })
     return { success: true, messageId: res.headers["x-message-id"] as string }
   } catch (e: any) {
@@ -433,31 +458,76 @@ export async function sendStaffBlast(
 // HTML TEMPLATES
 // =============================================================================
 
+// =============================================================================
+// SHARED EMAIL CHROME
+// =============================================================================
+// 2026-07-16 addition. Was duplicated per-function before (each with its
+// own header markup), and the "manage your reservation" link every guest
+// email showed was broken — reservations.thehivebuckhead.com/change isn't
+// a real route (the actual page is /rsvp/manage), and it never included
+// the guest's actual RSVP code, so even a guest who clicked through would
+// have had to re-enter it by hand. Centralizing this fixes both, once,
+// everywhere it's used, rather than in N places some of which would
+// inevitably get missed.
+//
+// One image per email (the icon) — more than one image risks Gmail
+// routing the message into Promotions instead of Primary.
+
+const EMAIL_ICON_URL = "https://reservations.thehivebuckhead.com/branding/icon.png"
+
+function emailHeader(): string {
+  return `<div style="background:#0E0C0A;padding:24px;text-align:center;">
+    <img src="${EMAIL_ICON_URL}" alt="Hive Buckhead" width="44" height="44" style="display:block;margin:0 auto 10px;border-radius:8px;" />
+    <h1 style="color:#C9A96E;margin:0;font-size:19px;letter-spacing:2px;font-family:Georgia,serif;">HIVE BUCKHEAD</h1>
+  </div>`
+}
+
+/** includePolicyLink: only the initial "request received" email needs this — by the time a guest is confirmed, cancelling, etc., they've already seen it once. */
+function emailFooter(includePolicyLink = false): string {
+  return `<div style="padding:20px 28px;border-top:1px solid #e0d5c0;font-size:11px;color:#888;line-height:1.6;">
+    ${includePolicyLink ? `<p style="margin:0 0 14px;color:#555;"><strong>Important Reminder:</strong> By making this reservation, you are agreeing to our restaurant policies. <a href="https://hivebuckhead.com/policies/" style="color:#C9A96E;">View our policies here</a>.</p>` : ""}
+    <p style="margin:0;">THE HIVE BUCKHEAD<br/>1845 Peachtree Rd, NW, Atlanta, GA 30309</p>
+    <p style="margin:8px 0 0;">Questions about your reservation? Call us at (678) 539-6865 or reply to this email.</p>
+  </div>`
+}
+
+/** Correct, code-prefilled link to the public manage/cancel page — reservations.thehivebuckhead.com is the intentionally "easy" public domain for this. */
+function manageLink(rsvpCode: string): string {
+  return `https://reservations.thehivebuckhead.com/rsvp/manage?code=${rsvpCode}`
+}
+
 function receivedHtml(d: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string }) {
   return `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">
-    <div style="background:#0E0C0A;padding:20px;text-align:center;"><h1 style="color:#C9A96E;margin:0;">HIVE BUCKHEAD</h1></div>
-    <div style="padding:28px;border:1px solid #e0d5c0;">
-      <p>Hi <strong>${d.firstName}</strong>, we received your reservation request:</p>
-      <table style="width:100%;"><tr><td style="color:#888;">Date</td><td><strong>${d.date}</strong></td></tr>
+    <span style="display:none;font-size:1px;color:#faf9f7;line-height:1px;">So far so good, ${d.firstName} — we've got your request.</span>
+    ${emailHeader()}
+    <div style="padding:28px;border:1px solid #e0d5c0;border-top:none;">
+      <p>Great news, <strong>${d.firstName}</strong> — we've successfully received your reservation request for The Hive Buckhead.</p>
+      <table style="width:100%;margin:16px 0;"><tr><td style="color:#888;">Date</td><td><strong>${d.date}</strong></td></tr>
       <tr><td style="color:#888;">Time</td><td><strong>${d.time}</strong></td></tr>
       <tr><td style="color:#888;">Party</td><td><strong>${d.partySize} guests</strong></td></tr>
       <tr><td style="color:#888;">Ref #</td><td style="color:#C9A96E;font-family:monospace;"><strong>${d.rsvpCode}</strong></td></tr></table>
-      <p style="font-size:13px;">Your request is <strong>pending confirmation</strong> — our team will follow up within 2 hours during business hours.</p>
-      <p style="font-size:12px;color:#888;">Manage your request: <a href="https://reservations.thehivebuckhead.com/change">reservations.thehivebuckhead.com/change</a></p>
+      <p>A team member will be contacting you soon to confirm your reservation details. 🐝🐝🐝</p>
+      <p style="font-weight:bold;margin-bottom:4px;">What happens next?</p>
+      <p style="margin-top:0;">Our reservation team will review your request and reach out within the next few hours to confirm your booking and provide any additional details you may need.</p>
+      <p><strong>Be on the lookout for our messages!</strong> We'll contact you via text message or phone call using the information you provided — please make sure to check your messages and answer calls from our team.</p>
+      <p style="font-size:12px;color:#888;margin-top:20px;">Need to change or cancel in the meantime? <a href="${manageLink(d.rsvpCode)}" style="color:#C9A96E;">Manage your reservation</a></p>
+      <p>Thank you for choosing The Hive Buckhead. We can't wait to see you!</p>
     </div>
+    ${emailFooter(true)}
   </div>`
 }
 
 function confirmHtml(d: { firstName: string; date: string; time: string; partySize: number; rsvpCode: string; section?: string }) {
   return `<div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;">
-    <div style="background:#0E0C0A;padding:20px;text-align:center;"><h1 style="color:#C9A96E;margin:0;">HIVE BUCKHEAD</h1></div>
-    <div style="padding:28px;border:1px solid #e0d5c0;">
+    ${emailHeader()}
+    <div style="padding:28px;border:1px solid #e0d5c0;border-top:none;">
       <p>Hi <strong>${d.firstName}</strong>, your reservation is confirmed:</p>
       <table style="width:100%;"><tr><td style="color:#888;">Date</td><td><strong>${d.date}</strong></td></tr>
       <tr><td style="color:#888;">Time</td><td><strong>${d.time}</strong></td></tr>
       <tr><td style="color:#888;">Party</td><td><strong>${d.partySize} guests</strong></td></tr>
       <tr><td style="color:#888;">Ref #</td><td style="color:#C9A96E;font-family:monospace;"><strong>${d.rsvpCode}</strong></td></tr></table>
-      <p style="font-size:12px;color:#888;">Modify or cancel: <a href="https://reservations.thehivebuckhead.com/change">reservations.thehivebuckhead.com/change</a></p>
+      <p style="font-size:12px;color:#888;">Need to make a change? <a href="${manageLink(d.rsvpCode)}" style="color:#C9A96E;">Manage your reservation</a></p>
     </div>
+    ${emailFooter()}
   </div>`
 }
