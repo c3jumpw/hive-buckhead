@@ -34,14 +34,13 @@ export async function logAdminAction(params: {
   metadata?: Record<string, unknown>
 }): Promise<void> {
   const { prisma } = await import("@/lib/db/prisma")
-  const { Prisma } = await import("@prisma/client")
   await prisma.activityLog.create({
     data: {
       reservationId: null,
       staffId: params.staffId,
       type: params.type,
       description: params.description,
-      metadata: params.metadata ? (params.metadata as Prisma.InputJsonValue) : undefined,
+      metadata: params.metadata ? (params.metadata as any) : undefined,
     },
   }).catch((e: unknown) => console.error(`[logAdminAction] failed to log "${params.type}":`, e))
 }
