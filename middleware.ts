@@ -1,31 +1,45 @@
 /**
  * middleware.ts
  * =============================================================================
- * Domain-aware routing. Currently handles one case: root page.tsx
- * unconditionally redirects "/" to "/reservations" (the staff operations
- * dashboard) — correct for the vercel.app / staffportal domains where
- * that's the intended landing point, but wrong for
- * reservations.thehivebuckhead.com, which is meant to be the public
- * booking link shared with guests. Without this, a guest visiting that
- * domain's root would land on a staff login page.
+ * Domain-aware routing for reservations.thehivebuckhead.com — the one
+ * domain meant to be an "easy public link," per an explicit request that
+ * this and the cancel/manage page be the ONLY things reachable there.
  *
- * Rewrites (not redirects) reservations.thehivebuckhead.com/ to /rsvp
- * internally — the URL bar stays on the clean domain, no visible /rsvp
- * suffix required for the "easy public link" this domain is meant to be.
- * Every other path on that domain (e.g. /rsvp/manage) is untouched.
+ * REVISION (2026-07-16, same day): the original version only handled the
+ * root path ("/") — real gap confirmed by a screenshot of
+ * reservations.thehivebuckhead.com/login showing the staff sign-in
+ * screen. Now allow-listed: only /rsvp* pages (the form and manage/cancel
+ * page) plus what they depend on to function (API routes, /branding for
+ * the logo, Next's own static assets) are reachable on this domain.
+ * Anything else — /login included — redirects to the booking form
+ * instead of exposing staff-only pages on the public domain.
  * =============================================================================
  */
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+const ALLOWED_PREFIXES = ["/rsvp", "/api", "/branding", "/_next", "/favicon.ico"]
+
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
-  if (hostname.startsWith("reservations.") && request.nextUrl.pathname === "/") {
+  const pathname = request.nextUrl.pathname
+
+  if (!hostname.startsWith("reservations.")) {
+    return NextResponse.next()
+  }
+
+  if (pathname === "/") {
     return NextResponse.rewrite(new URL("/rsvp", request.url))
   }
+
+  const isAllowed = ALLOWED_PREFIXES.some(prefix => pathname.startsWith(prefix))
+  if (!isAllowed) {
+    return NextResponse.redirect(new URL("/rsvp", request.url))
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: "/",
+  matcher: ["/((?!_next/static|_next/image).*)"],
 }

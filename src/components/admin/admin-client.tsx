@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { APP_CONFIG } from "@/lib/config"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { StatusBadge } from "@/components/reservations/status-badge"
@@ -836,9 +837,21 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
                     Share this link with guests to let them book online. Reservations appear as "Requested" and need staff confirmation.
                   </p>
                   <div className="flex items-center gap-2">
-                    <Input readOnly value={`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/rsvp`} className="text-xs font-mono h-8" />
+                    {/* REVISION (2026-07-16): was process.env.NEXT_PUBLIC_APP_URL,
+                        which fell back to hive-buckhead.vercel.app and was
+                        never updated after the custom domain went live —
+                        that's a value someone has to remember to keep in
+                        sync. APP_CONFIG.rsvpUrl is the same hardcoded
+                        constant used to build every guest email link, so
+                        this card can't drift out of sync with what's
+                        actually being sent. Copy button had the same
+                        problem via window.location.origin — whichever
+                        domain the admin happened to be viewing from (could
+                        be the staffportal subdomain, vercel.app, etc.),
+                        not necessarily the intended public one. */}
+                    <Input readOnly value={`${APP_CONFIG.rsvpUrl}/rsvp`} className="text-xs font-mono h-8" />
                     <Button size="sm" variant="outline" className="h-8 text-xs shrink-0" onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/rsvp`)
+                      navigator.clipboard.writeText(`${APP_CONFIG.rsvpUrl}/rsvp`)
                       toast({ title: "Link copied!" })
                     }}>Copy</Button>
                   </div>
