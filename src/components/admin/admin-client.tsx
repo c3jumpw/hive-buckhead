@@ -97,6 +97,18 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
   const [templateForm, setTemplateForm] = useState({ name: "", channel: "EMAIL", subject: "", body: "" })
   const [seedLoading, setSeedLoading] = useState(false)
   const [contentSeedLoading, setContentSeedLoading] = useState(false)
+  const [fixingBarShapes, setFixingBarShapes] = useState(false)
+
+  async function fixBarShapes() {
+    setFixingBarShapes(true)
+    try {
+      const res = await fetch("/api/admin/fix-bar-shapes", { method: "POST" })
+      const json = await res.json()
+      if (!res.ok) { toast({ title: json.error || "Fix failed", variant: "destructive" }); return }
+      toast({ title: json.updated > 0 ? `Fixed ${json.updated} bar seat${json.updated === 1 ? "" : "s"}` : "Nothing to fix", description: json.updated > 0 ? "Refresh to see the updated counts." : "All bar seats are already labeled correctly." })
+    } catch { toast({ title: "Fix failed", variant: "destructive" }) }
+    finally { setFixingBarShapes(false) }
+  }
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const [resetConfirmText, setResetConfirmText] = useState("")
   const [resetting, setResetting] = useState(false)
@@ -584,19 +596,23 @@ export function AdminClient({ session, stats, recentReservations, staff: initSta
             {/* Table List */}
             {tablesSubTab === "list" && (
               <div className="max-w-4xl">
-                <div className="mb-4">
-                  {/* BUG HISTORY (2026-07-15): this counted every active
-                      Table row including individual bar stools (20 of them,
-                      each its own row so the floor editor can position/
-                      track them separately) as if each were a "table" — a
-                      20-seat bar showed as "20 tables". Now splits the
-                      count: real tables vs. bar seats, matching the same
-                      distinction made on the Overview stat cards. */}
-                  <h2 className="font-medium">
-                    {tables.filter(t => t.svgShape !== "stool").length} active tables
-                    <span className="text-muted-foreground font-normal"> · {tables.filter(t => t.svgShape === "stool").length} bar seats</span>
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Table layout and capacity overview</p>
+                <div className="mb-4 flex items-start justify-between">
+                  <div>
+                    <h2 className="font-medium">
+                      {tables.filter(t => t.svgShape !== "stool").length} active tables
+                      <span className="text-muted-foreground font-normal"> · {tables.filter(t => t.svgShape === "stool").length} bar seats</span>
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Table layout and capacity overview</p>
+                  </div>
+                  {/* 2026-07-16 addition — one-time data fix. If the counts
+                      above look wrong (bar seats showing 0 while the Bar
+                      section still says "N tables"), the existing bar rows
+                      predate the stool-vs-table distinction and just need
+                      this run once. Safe to click more than once — only
+                      updates rows that still need it. */}
+                  <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={fixBarShapes} disabled={fixingBarShapes}>
+                    {fixingBarShapes ? "Fixing…" : "Fix Bar Seat Labels"}
+                  </Button>
                 </div>
                 {(["FINE_DINING","BAR","DEN","PATIO"] as const).map(section => {
                   const sectionTables = tables.filter(t => t.section === section)

@@ -37,7 +37,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await requireAdmin()
   const body = await request.json()
-  const { title, body: guideBody, category, minAccessLevel, pinned, sortOrder } = body
+  const { title, body: guideBody, category, minAccessLevel, pinned, sortOrder, attachments } = body
 
   if (!title || !guideBody) {
     return NextResponse.json({ error: "title and body are required" }, { status: 400 })
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       minAccessLevel: minAccessLevel || "STAFF",
       pinned: !!pinned,
       sortOrder: typeof sortOrder === "number" ? sortOrder : 0,
+      attachments: Array.isArray(attachments) ? attachments : undefined,
       authorId: session.id, authorName: session.name,
     },
   })

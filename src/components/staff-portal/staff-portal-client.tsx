@@ -17,7 +17,7 @@
  * which Quick Links render on Home, not the page/tab structure itself.
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   Calendar, MessageSquare, User, LayoutList, MapPin,
@@ -343,7 +343,19 @@ export function StaffPortalClient({ session, announcements, shifts, recurringShi
                     </div>
                     {isOpen && (
                       <div className="px-4 pb-4 pt-1 border-t border-border">
-                        <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{g.body}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: renderGuideBody(g.body) }} />
+                        {Array.isArray(g.attachments) && g.attachments.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border space-y-1.5">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Attachments</p>
+                            {g.attachments.map((a: { label: string; url: string }, i: number) => (
+                              <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-2 text-xs text-gold-400 hover:text-gold-300">
+                                <span>{ATTACHMENT_ICONS[attachmentKind(a.url)]}</span>{a.label}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -464,13 +476,40 @@ function ProfileEditor({ session }: { session: SessionStaff }) {
 }
 
 /**
- * GuideForm — 2026-07-16 addition. Shared by both "Add Guide" and "Edit
- * Guide" in the Resources tab above (same fields either way, just a
+ * renderGuideBody — 2026-07-17 addition. Deliberately not a full
+ * WYSIWYG/rich-text system (would mean a new editor dependency and real
+ * mobile contentEditable quirks) — instead, a toolbar over a plain
+ * textarea that inserts lightweight syntax (**bold**, *italic*,
+ * [text](url)), rendered here. Works identically on mobile since it's
+ * just a textarea + buttons, no contentEditable involved. Escapes raw
+ * input first so a stray < or > from pasted text can't break the page.
+ */
+function renderGuideBody(text: string): string {
+  const escaped = text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  return escaped
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#C9A96E;text-decoration:underline;">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+}
+
+const ATTACHMENT_ICONS: Record<string, string> = { image: "🖼️", pdf: "📄", doc: "📎", link: "🔗" }
+function attachmentKind(url: string): keyof typeof ATTACHMENT_ICONS {
+  if (/\.(png|jpe?g|gif|webp)$/i.test(url)) return "image"
+  if (/\.pdf$/i.test(url)) return "pdf"
+  if (url.includes("/storage/v1/object/")) return "doc"
+  return "link"
+}
+
+/**
+ * GuideForm — 2026-07-16, extended 2026-07-17 with attachments (upload or
+ * plain link) and a formatting toolbar. Shared by both "Add Guide" and
+ * "Edit Guide" in the Resources tab above (same fields either way, just a
  * different save handler passed in by the caller).
  */
 function GuideForm({ initial, onSave, onCancel }: {
-  initial?: { title: string; body: string; category: string; minAccessLevel: string; pinned: boolean }
-  onSave: (data: { title: string; body: string; category: string; minAccessLevel: string; pinned: boolean }) => Promise<void>
+  initial?: { title: string; body: string; category: string; minAccessLevel: string; pinned: boolean; attachments?: { label: string; url: string }[] }
+  onSave: (data: { title: string; body: string; category: string; minAccessLevel: string; pinned: boolean; attachments: { label: string; url: string }[] }) => Promise<void>
   onCancel: () => void
 }) {
   const [title, setTitle] = useState(initial?.title ?? "")
@@ -478,7 +517,50 @@ function GuideForm({ initial, onSave, onCancel }: {
   const [category, setCategory] = useState(initial?.category ?? "General")
   const [minAccessLevel, setMinAccessLevel] = useState(initial?.minAccessLevel ?? "STAFF")
   const [pinned, setPinned] = useState(initial?.pinned ?? false)
+  const [attachments, setAttachments] = useState<{ label: string; url: string }[]>(initial?.attachments ?? [])
+  const [linkLabel, setLinkLabel] = useState("")
+  const [linkUrl, setLinkUrl] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Wraps the current selection (or inserts at the cursor if nothing's
+  // selected) with the given markers — same interaction as a typical
+  // simple text-editor toolbar button.
+  function wrapSelection(before: string, after: string = before) {
+    const el = textareaRef.current
+    if (!el) return
+    const { selectionStart: start, selectionEnd: end } = el
+    const selected = body.slice(start, end) || "text"
+    const next = body.slice(0, start) + before + selected + after + body.slice(end)
+    setBody(next)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + before.length, start + before.length + selected.length) })
+  }
+
+  function insertLink() {
+    const el = textareaRef.current
+    if (!el) return
+    const { selectionStart: start, selectionEnd: end } = el
+    const selected = body.slice(start, end) || "link text"
+    const url = prompt("URL:") || ""
+    if (!url) return
+    const next = body.slice(0, start) + `[${selected}](${url})` + body.slice(end)
+    setBody(next)
+  }
+
+  async function uploadFile(file: File) {
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/upload/guide-attachment", { method: "POST", body: fd })
+      const json = await res.json()
+      if (!res.ok) { toast({ title: json.error || "Upload failed", variant: "destructive" }); return }
+      setAttachments(a => [...a, { label: json.name || file.name, url: json.url }])
+    } catch { toast({ title: "Upload failed", variant: "destructive" }) }
+    finally { setUploading(false) }
+  }
 
   return (
     <div className="bg-hive-surface border border-gold-500/30 rounded-xl p-4 space-y-2.5">
@@ -494,8 +576,57 @@ function GuideForm({ initial, onSave, onCancel }: {
           <option value="OWNER">Visible to: Owner only</option>
         </select>
       </div>
-      <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Guide content — plain text, blank lines become paragraph breaks"
-        rows={8} className="w-full bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gold-400 resize-y" />
+
+      {/* Formatting toolbar — plain buttons over a textarea, not
+          contentEditable, so mobile just works: it's a normal text field. */}
+      <div className="flex items-center gap-1 bg-hive-surface2 border border-border rounded-lg px-2 py-1.5">
+        <button type="button" onClick={() => wrapSelection("**")} className="w-7 h-7 rounded hover:bg-hive-surface font-bold text-xs" title="Bold">B</button>
+        <button type="button" onClick={() => wrapSelection("*")} className="w-7 h-7 rounded hover:bg-hive-surface italic text-xs" title="Italic">i</button>
+        <button type="button" onClick={insertLink} className="w-7 h-7 rounded hover:bg-hive-surface text-xs" title="Insert link">🔗</button>
+        <div className="flex-1" />
+        <button type="button" onClick={() => setPreview(p => !p)} className="text-[11px] text-muted-foreground hover:text-foreground px-2">
+          {preview ? "Edit" : "Preview"}
+        </button>
+      </div>
+      {preview ? (
+        <div className="w-full min-h-[176px] bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-sm leading-relaxed whitespace-pre-line"
+          dangerouslySetInnerHTML={{ __html: renderGuideBody(body) || '<span style="color:#888">Nothing to preview yet</span>' }} />
+      ) : (
+        <textarea ref={textareaRef} value={body} onChange={e => setBody(e.target.value)}
+          placeholder="Guide content — use the Bold/Italic/Link buttons above, or type **bold**, *italic*, [text](url) directly"
+          rows={8} className="w-full bg-hive-surface2 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gold-400 resize-y" />
+      )}
+
+      {/* Attachments */}
+      <div className="space-y-1.5">
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Attachments</p>
+        {attachments.map((a, i) => (
+          <div key={i} className="flex items-center gap-2 bg-hive-surface2 border border-border rounded-lg px-2.5 py-1.5 text-xs">
+            <span>{ATTACHMENT_ICONS[attachmentKind(a.url)]}</span>
+            <span className="flex-1 truncate">{a.label}</span>
+            <button type="button" onClick={() => setAttachments(as => as.filter((_, x) => x !== i))} className="text-muted-foreground hover:text-red-300">✕</button>
+          </div>
+        ))}
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-border text-[11px] text-muted-foreground hover:text-foreground cursor-pointer">
+            {uploading ? "Uploading…" : "📎 Upload file"}
+            <input type="file" className="hidden" disabled={uploading}
+              onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = "" }} />
+          </label>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <input value={linkLabel} onChange={e => setLinkLabel(e.target.value)} placeholder="Link label"
+            className="flex-1 bg-hive-surface2 border border-border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-gold-400" />
+          <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://…"
+            className="flex-1 bg-hive-surface2 border border-border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-gold-400" />
+          <button type="button" onClick={() => {
+            if (!linkUrl) return
+            setAttachments(a => [...a, { label: linkLabel || linkUrl, url: linkUrl }])
+            setLinkLabel(""); setLinkUrl("")
+          }} className="px-2.5 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground">+ Add</button>
+        </div>
+      </div>
+
       <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
         <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} className="rounded" />
         Pin to top of list
@@ -505,7 +636,7 @@ function GuideForm({ initial, onSave, onCancel }: {
           onClick={async () => {
             if (!title || !body) { toast({ title: "Title and content are required", variant: "destructive" }); return }
             setSaving(true)
-            await onSave({ title, body, category, minAccessLevel, pinned })
+            await onSave({ title, body, category, minAccessLevel, pinned, attachments })
             setSaving(false)
           }}
           disabled={saving}

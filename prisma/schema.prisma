@@ -655,6 +655,13 @@ model Guide {
   sortOrder      Int         @default(0) @map("sort_order")
   authorId       String?     @map("author_id")
   authorName     String      @map("author_name")
+  // 2026-07-17 addition — array of {label, url} for attached images/docs
+  // and reference links. Files themselves live in Supabase Storage
+  // (hive-guide-attachments bucket); this just stores the resulting
+  // public URLs plus a human label. body supports lightweight formatting
+  // (**bold**, *italic*, [text](url)) rendered client-side — see
+  // renderGuideBody() in the Resources tab component.
+  attachments    Json?       @map("attachments")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
