@@ -23,7 +23,7 @@ const MODES: { value: RsvpMode; label: string; description: string; emoji: strin
   {
     value: "closed",
     label: "Reservations Closed",
-    description: "Guests see a "not currently accepting reservations" message",
+    description: "Guests see a closed message — not currently accepting reservations",
     emoji: "🔒",
     color: "border-red-500 bg-red-500/10",
   },
@@ -118,8 +118,7 @@ export default function ControlPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground pb-6">
-          Changes take effect within 30 seconds · 
-          <a href="/reservations" className="text-gold-500 ml-1">Open Dashboard →</a>
+          Changes take effect within 30 seconds
         </p>
       </div>
 
@@ -146,7 +145,7 @@ export default function ControlPage() {
                 disabled={saving}
                 className="flex-1 bg-gold-500 hover:bg-gold-600 text-hive-bg rounded-xl py-3 text-sm font-semibold transition-colors disabled:opacity-60"
               >
-                {saving ? <Loader2 className="animate-spin mx-auto" size={16} /> : "Confirm"}
+                {saving ? "Saving..." : "Confirm"}
               </button>
             </div>
           </div>
