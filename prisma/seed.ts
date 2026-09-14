@@ -117,84 +117,97 @@ async function main() {
   // ── Tables ─────────────────────────────────────────────────────────────
   // Based on actual Hive Buckhead floor plan (PDF blueprints)
   const tablesData = [
-    // ══ BAR STOOLS (20) — from approved JSON ══
-    { displayId:"B1",  capacity:1, section:Section.BAR, svgX:340, svgY:140, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B2",  capacity:1, section:Section.BAR, svgX:360, svgY:140, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B3",  capacity:1, section:Section.BAR, svgX:380, svgY:140, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B4",  capacity:1, section:Section.BAR, svgX:400, svgY:140, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B5",  capacity:1, section:Section.BAR, svgX:420, svgY:140, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B6",  capacity:1, section:Section.BAR, svgX:440, svgY:140, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B7",  capacity:1, section:Section.BAR, svgX:260, svgY:180, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B8",  capacity:1, section:Section.BAR, svgX:260, svgY:200, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B9",  capacity:1, section:Section.BAR, svgX:260, svgY:220, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B10", capacity:1, section:Section.BAR, svgX:420, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B11", capacity:1, section:Section.BAR, svgX:260, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B12", capacity:1, section:Section.BAR, svgX:280, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B13", capacity:1, section:Section.BAR, svgX:300, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B14", capacity:1, section:Section.BAR, svgX:320, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B15", capacity:1, section:Section.BAR, svgX:340, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B16", capacity:1, section:Section.BAR, svgX:360, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B17", capacity:1, section:Section.BAR, svgX:380, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B18", capacity:1, section:Section.BAR, svgX:400, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B19", capacity:1, section:Section.BAR, svgX:460, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
-    { displayId:"B20", capacity:1, section:Section.BAR, svgX:440, svgY:260, svgShape:"stool", svgW:17, svgH:17 },
+    // ══ BAR STOOLS (20) — around the outside of bar counter (x:250-450, y:148-268) ══
+    // Top row of stools (above the bar, y≈136)
+    { displayId:"B1",  capacity:1, section:Section.BAR, svgX:256, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B2",  capacity:1, section:Section.BAR, svgX:276, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B3",  capacity:1, section:Section.BAR, svgX:296, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B4",  capacity:1, section:Section.BAR, svgX:316, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B5",  capacity:1, section:Section.BAR, svgX:336, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B6",  capacity:1, section:Section.BAR, svgX:356, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B7",  capacity:1, section:Section.BAR, svgX:376, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B8",  capacity:1, section:Section.BAR, svgX:396, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B9",  capacity:1, section:Section.BAR, svgX:416, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B10", capacity:1, section:Section.BAR, svgX:436, svgY:136, svgShape:"stool", svgW:17, svgH:17 },
+    // Left stools (to the left of the bar, x≈238)
+    { displayId:"B11", capacity:1, section:Section.BAR, svgX:236, svgY:160, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B12", capacity:1, section:Section.BAR, svgX:236, svgY:182, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B13", capacity:1, section:Section.BAR, svgX:236, svgY:204, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B14", capacity:1, section:Section.BAR, svgX:236, svgY:226, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B15", capacity:1, section:Section.BAR, svgX:236, svgY:248, svgShape:"stool", svgW:17, svgH:17 },
+    // Bottom stools (below the bar, y≈276)
+    { displayId:"B16", capacity:1, section:Section.BAR, svgX:256, svgY:276, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B17", capacity:1, section:Section.BAR, svgX:276, svgY:276, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B18", capacity:1, section:Section.BAR, svgX:316, svgY:276, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B19", capacity:1, section:Section.BAR, svgX:356, svgY:276, svgShape:"stool", svgW:17, svgH:17 },
+    { displayId:"B20", capacity:1, section:Section.BAR, svgX:436, svgY:276, svgShape:"stool", svgW:17, svgH:17 },
 
-    // ══ FINE DINING — round tables (cx = x + w/2, cy = y + h/2) ══
-    { displayId:"T206", capacity:3, section:Section.FINE_DINING, svgShape:"round", svgX:200, svgY:100, svgW:40, svgH:40 },
-    { displayId:"T207", capacity:3, section:Section.FINE_DINING, svgShape:"round", svgX:520, svgY:80,  w:40, h:40 },
-    // Top wall 2-seat booths
-    { displayId:"T200", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:260, svgY:80,  w:25, h:36 },
-    { displayId:"T201", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:300, svgY:80,  w:25, h:35 },
-    { displayId:"T202", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:340, svgY:80,  w:25, h:35 },
-    { displayId:"T203", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:380, svgY:80,  w:25, h:36 },
-    { displayId:"T204", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:420, svgY:80,  w:25, h:35 },
-    { displayId:"T205", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:460, svgY:80,  w:25, h:35 },
-    // Left wall booths
-    { displayId:"T208", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:180, svgY:180, svgW:25, svgH:35 },
-    { displayId:"T209", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:220, svgY:180, svgW:25, svgH:35 },
-    // Right side 4-seat
-    { displayId:"T210", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:500, svgY:120, svgW:56, svgH:36 },
-    { displayId:"T211", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:500, svgY:180, svgW:56, svgH:36 },
-    // Left lower 4-seat
-    { displayId:"T212", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:180, svgY:240, svgW:56, svgH:36 },
-    { displayId:"T213", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:180, svgY:300, svgW:56, svgH:36 },
-    // Bottom row
-    { displayId:"T214", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:300, svgY:300, svgW:25, svgH:35 },
-    { displayId:"T215", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:340, svgY:300, svgW:25, svgH:35 },
-    { displayId:"T216", capacity:3, section:Section.FINE_DINING, svgShape:"booth", svgX:380, svgY:300, svgW:25, svgH:35 },
-    { displayId:"T217", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:420, svgY:300, svgW:25, svgH:35 },
-    { displayId:"T218", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:460, svgY:300, svgW:25, svgH:35 },
+    // ══ FINE DINING — filling the teal section (168,48)→(580,358), avoiding bar area ══
+    // Top wall 2-seat booths (y≈60, spread across top)
+    { displayId:"T200", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:175, svgY:56, svgW:30, svgH:36 },
+    { displayId:"T201", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:215, svgY:56, svgW:30, svgH:36 },
+    { displayId:"T202", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:468, svgY:56, svgW:30, svgH:36 },
+    { displayId:"T203", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:508, svgY:56, svgW:30, svgH:36 },
+    { displayId:"T204", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:540, svgY:56, svgW:30, svgH:36 },
+    // Top area round tables (3-seat, above bar left)
+    { displayId:"T206", capacity:3, section:Section.FINE_DINING, svgShape:"round", svgX:184, svgY:100, svgW:44, svgH:44 },
+    { displayId:"T207", capacity:3, section:Section.FINE_DINING, svgShape:"round", svgX:536, svgY:100, svgW:44, svgH:44 },
+    // Right of kitchen area (between kitchen right edge and wall)
+    { displayId:"T210", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:494, svgY:100, svgW:30, svgH:36 },
+    { displayId:"T211", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:494, svgY:150, svgW:30, svgH:36 },
+    { displayId:"T212", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:494, svgY:200, svgW:30, svgH:36 },
+    { displayId:"T213", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:494, svgY:250, svgW:30, svgH:36 },
+    { displayId:"T214", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:494, svgY:300, svgW:30, svgH:36 },
+    // Left wall (angled) — 4-seat tables down left side
+    { displayId:"T208", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:168, svgY:160, svgW:56, svgH:36 },
+    { displayId:"T209", capacity:4, section:Section.FINE_DINING, svgShape:"booth", svgX:168, svgY:210, svgW:56, svgH:36 },
+    // Bottom row (between bar bottom and den line at y:358)
+    { displayId:"T215", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:175, svgY:300, svgW:30, svgH:36 },
+    { displayId:"T216", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:215, svgY:300, svgW:30, svgH:36 },
+    { displayId:"T217", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:310, svgY:300, svgW:30, svgH:36 },
+    { displayId:"T218", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:350, svgY:300, svgW:30, svgH:36 },
+    { displayId:"T219", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:390, svgY:300, svgW:30, svgH:36 },
+    { displayId:"T220", capacity:2, section:Section.FINE_DINING, svgShape:"booth", svgX:430, svgY:300, svgW:30, svgH:36 },
 
-    // ══ DEN / LOUNGE ══
-    { displayId:"T11", capacity:4, svgShape:"booth", section:Section.DEN, svgX:160, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T12", capacity:4, svgShape:"booth", section:Section.DEN, svgX:200, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T13", capacity:4, svgShape:"booth", section:Section.DEN, svgX:280, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T14", capacity:4, svgShape:"booth", section:Section.DEN, svgX:320, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T15", capacity:4, svgShape:"booth", section:Section.DEN, svgX:360, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T16", capacity:4, svgShape:"booth", section:Section.DEN, svgX:400, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T17", capacity:4, svgShape:"booth", section:Section.DEN, svgX:440, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T18", capacity:4, svgShape:"booth", section:Section.DEN, svgX:480, svgY:380, svgW:30, svgH:36 },
-    { displayId:"T19", capacity:4, svgShape:"booth", section:Section.DEN, svgX:520, svgY:380, svgW:30, svgH:36 },
-    // Bottom row
-    { displayId:"T20", capacity:4, svgShape:"booth", section:Section.DEN, svgX:160, svgY:480, svgW:30, svgH:36 },
-    { displayId:"T21", capacity:4, svgShape:"booth", section:Section.DEN, svgX:220, svgY:480, svgW:30, svgH:36 },
-    { displayId:"T22", capacity:4, svgShape:"booth", section:Section.DEN, svgX:280, svgY:480, svgW:30, svgH:36 },
-    { displayId:"T23", capacity:4, svgShape:"booth", section:Section.DEN, svgX:360, svgY:480, svgW:30, svgH:36 },
-    { displayId:"T24", capacity:4, svgShape:"booth", section:Section.DEN, svgX:420, svgY:480, svgW:30, svgH:36 },
-    { displayId:"T25", capacity:4, svgShape:"booth", section:Section.DEN, svgX:480, svgY:480, svgW:30, svgH:36 },
-    { displayId:"T26", capacity:3, svgShape:"booth", section:Section.DEN, svgX:540, svgY:480, svgW:30, svgH:32 },
+    // ══ DEN / LOUNGE — in salmon section (153,358)→(580,560) ══
+    // Top row of den booth tables
+    { displayId:"T11", capacity:4, svgShape:"booth", section:Section.DEN, svgX:160, svgY:372, svgW:56, svgH:36 },
+    { displayId:"T12", capacity:4, svgShape:"booth", section:Section.DEN, svgX:228, svgY:372, svgW:56, svgH:36 },
+    { displayId:"T13", capacity:4, svgShape:"booth", section:Section.DEN, svgX:296, svgY:372, svgW:56, svgH:36 },
+    { displayId:"T14", capacity:4, svgShape:"booth", section:Section.DEN, svgX:364, svgY:372, svgW:56, svgH:36 },
+    { displayId:"T15", capacity:4, svgShape:"booth", section:Section.DEN, svgX:432, svgY:372, svgW:56, svgH:36 },
+    { displayId:"T16", capacity:4, svgShape:"booth", section:Section.DEN, svgX:500, svgY:372, svgW:56, svgH:36 },
+    // Bottom row of den booth tables
+    { displayId:"T17", capacity:4, svgShape:"booth", section:Section.DEN, svgX:160, svgY:476, svgW:56, svgH:36 },
+    { displayId:"T18", capacity:4, svgShape:"booth", section:Section.DEN, svgX:228, svgY:476, svgW:56, svgH:36 },
+    { displayId:"T19", capacity:4, svgShape:"booth", section:Section.DEN, svgX:296, svgY:476, svgW:56, svgH:36 },
+    { displayId:"T20", capacity:4, svgShape:"booth", section:Section.DEN, svgX:364, svgY:476, svgW:56, svgH:36 },
+    { displayId:"T21", capacity:4, svgShape:"booth", section:Section.DEN, svgX:432, svgY:476, svgW:56, svgH:36 },
+    { displayId:"T22", capacity:4, svgShape:"booth", section:Section.DEN, svgX:500, svgY:476, svgW:56, svgH:36 },
 
-    // ══ PATIO ══
-    { displayId:"T101", label:"Big Booth B", capacity:6,  svgShape:"booth", section:Section.PATIO, svgX:760, svgY:140, svgW:86, svgH:44 },
-    { displayId:"T102", label:"Big Booth A", capacity:10, svgShape:"booth", section:Section.PATIO, svgX:760, svgY:280, svgW:102, svgH:54 },
-    { displayId:"T103", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:900,  svgY:140, svgW:56, svgH:36 },
-    { displayId:"T104", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:980,  svgY:140, svgW:56, svgH:36 },
-    { displayId:"T105", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1100, svgY:140, svgW:56, svgH:36 },
-    { displayId:"T106", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1180, svgY:140, svgW:56, svgH:36 },
-    { displayId:"T107", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:940,  svgY:240, svgW:56, svgH:36 },
-    { displayId:"T108", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1020, svgY:240, svgW:56, svgH:36 },
-    { displayId:"T109", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1100, svgY:240, svgW:56, svgH:36 },
-    { displayId:"T110", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1180, svgY:240, svgW:56, svgH:36 },
+    // ══ PATIO — upper (752,48→1252,130) and main (752,130→1252,352) sections ══
+    // Big Booth B (6-seat) — upper-left of patio, in dark entry strip
+    { displayId:"T101", label:"Big Booth B", capacity:6,  svgShape:"booth", section:Section.PATIO, svgX:758, svgY:56,  svgW:86, svgH:44 },
+    // Big Booth A (10-seat) — lower-left, in patio main section  
+    { displayId:"T102", label:"Big Booth A", capacity:10, svgShape:"booth", section:Section.PATIO, svgX:758, svgY:200, svgW:102, svgH:54 },
+    // Patio grid row 1 (y≈140, in patio main body)
+    { displayId:"T103", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:868,  svgY:140, svgW:56, svgH:36 },
+    { displayId:"T104", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:942,  svgY:140, svgW:56, svgH:36 },
+    { displayId:"T105", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1016, svgY:140, svgW:56, svgH:36 },
+    { displayId:"T106", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1090, svgY:140, svgW:56, svgH:36 },
+    { displayId:"T107", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1164, svgY:140, svgW:56, svgH:36 },
+    // Patio grid row 2
+    { displayId:"T108", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:868,  svgY:198, svgW:56, svgH:36 },
+    { displayId:"T109", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:942,  svgY:198, svgW:56, svgH:36 },
+    { displayId:"T110", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1016, svgY:198, svgW:56, svgH:36 },
+    { displayId:"T111", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1090, svgY:198, svgW:56, svgH:36 },
+    { displayId:"T112", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1164, svgY:198, svgW:56, svgH:36 },
+    // Patio grid row 3
+    { displayId:"T113", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:868,  svgY:280, svgW:56, svgH:36 },
+    { displayId:"T114", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:942,  svgY:280, svgW:56, svgH:36 },
+    { displayId:"T115", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1016, svgY:280, svgW:56, svgH:36 },
+    { displayId:"T116", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1090, svgY:280, svgW:56, svgH:36 },
+    { displayId:"T117", capacity:4, svgShape:"booth", section:Section.PATIO, svgX:1164, svgY:280, svgW:56, svgH:36 },
   ];
 
   console.log("  Creating tables...");
