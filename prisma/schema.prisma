@@ -678,6 +678,12 @@ model AppSettings {
   restaurantPhone   String  @default("") @map("restaurant_phone")
   restaurantEmail   String  @default("reservations@thehivebuckhead.com") @map("restaurant_email")
   rsvpFormUrl       String  @default("/rsvp") @map("rsvp_form_url")
+  // RSVP Kill Switch — controls what guests see at reservations.thehivebuckhead.com/rsvp
+  // "online"   → show the full RSVP booking form (default)
+  // "fallback" → show text-to-RSVP instructions with phone number
+  // "closed"   → show "not accepting reservations" message
+  rsvpMode              String  @default("online") @map("rsvp_mode")
+  rsvpFallbackMessage   String  @default("To make a reservation, please text us at (678) 539-6865 with your name, date, time, and party size. We\'ll confirm within 2 hours.") @map("rsvp_fallback_message")
 
   // Integration credential overrides — set from Admin → Settings → Integration
   // Settings. Null means "no override, use the env var from Vercel." A
@@ -693,4 +699,54 @@ model AppSettings {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
+}
+
+// =============================================================================
+// MENU MANAGEMENT
+// =============================================================================
+
+// A menu section (e.g. "Brunch", "Dinner", "Happy Hour", "Hookah")
+model MenuSection {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Brunch", "Dinner", "Hookah Flavors"
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+  // Schedule availability — null means always available
+  // Format: comma-separated days "Mon,Tue,Wed" or null for every day
+  availableDays String? @map("available_days")
+  availableFrom String? @map("available_from") // "11:00" 24h
+  availableTo   String? @map("available_to")   // "22:00" 24h
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  items       MenuItem[]
+
+  @@map("menu_sections")
+}
+
+// Individual menu item
+model MenuItem {
+  id          String      @id @default(cuid())
+  sectionId   String      @map("section_id")
+  section     MenuSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Decimal?    @db.Decimal(10, 2)
+  // Dietary/allergen tags — comma-separated: "gf,vegan,nuts"
+  tags        String?
+  // Display order within section
+  sortOrder   Int         @default(0) @map("sort_order")
+  // Visibility toggles
+  active      Boolean     @default(true)      // false = permanently removed
+  available   Boolean     @default(true)      // false = sold out / temp unavailable
+  featured    Boolean     @default(false)     // featured = highlight on menu
+  imageUrl    String?     @map("image_url")
+  
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([sectionId])
+  @@map("menu_items")
 }
