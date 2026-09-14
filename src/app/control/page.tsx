@@ -118,7 +118,8 @@ export default function ControlPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground pb-6">
-          Changes take effect within 30 seconds
+          Changes take effect within 30 seconds ·{" "}
+          <a href="/reservations" className="text-gold-500 hover:underline">Back to Dashboard →</a>
         </p>
       </div>
 
