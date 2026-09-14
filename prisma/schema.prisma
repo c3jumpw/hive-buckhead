@@ -683,7 +683,7 @@ model AppSettings {
   // "fallback" → show text-to-RSVP instructions with phone number
   // "closed"   → show "not accepting reservations" message
   rsvpMode              String  @default("online") @map("rsvp_mode")
-  rsvpFallbackMessage   String  @default("To make a reservation, please text us at (678) 539-6865 with your name, date, time, and party size. We\'ll confirm within 2 hours.") @map("rsvp_fallback_message")
+  rsvpFallbackMessage   String  @default("To make a reservation, text us at (678) 539-6865 with your name, date, time, and party size. We will confirm within 2 hours.") @map("rsvp_fallback_message")
 
   // Integration credential overrides — set from Admin → Settings → Integration
   // Settings. Null means "no override, use the env var from Vercel." A
