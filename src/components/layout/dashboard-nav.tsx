@@ -72,6 +72,9 @@ export function DashboardNav({ session }: DashboardNavProps) {
         {hasAccess(session.accessLevel, "MANAGER") && (
           <NavLink href="/analytics">Analytics</NavLink>
         )}
+        {session.accessLevel === "OWNER" && (
+          <NavLink href="/control">🔴 Kill Switch</NavLink>
+        )}
       </nav>
 
       {/* Right actions */}
