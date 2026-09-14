@@ -45,7 +45,10 @@ export function DashboardSidebar({ session }: Props) {
               <SidebarItem href="/schedule" label="Staff Schedule" icon={<CalendarDays className="h-3.5 w-3.5" />} active={pathname.startsWith("/schedule")} />
             )}
             {hasAccess(level, "MANAGER") && (
-              <SidebarItem href="/menu" label="Menu Manager" icon={<UtensilsCrossed className="h-3.5 w-3.5" />} active={pathname.startsWith("/menu")} />
+              <SidebarItem href="/menu-manager" label="Menu Manager" icon={<UtensilsCrossed className="h-3.5 w-3.5" />} active={pathname.startsWith("/menu-manager")} />
+            )}
+            {hasAccess(level, "OWNER") && (
+              <SidebarItem href="/control" label="RSVP Kill Switch" icon={<span className="h-3.5 w-3.5 flex items-center justify-center text-xs">🔴</span>} active={pathname.startsWith("/control")} />
             )}
           </div>
         </div>
