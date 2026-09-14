@@ -2,23 +2,43 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { getSession } from "@/lib/auth/session"
 
-// Non-secret fields only. AppSettings also holds sendgridApiKeyOverride /
-// quoApiKeyOverride / systemeApiKeyOverride (2026-07-16 addition) — those
-// are deliberately excluded here on both GET and PATCH. GET has no auth
-// check at all, so returning them here would leak API keys to anyone with
-// a session; and PATCH here has no passcode confirmation, so accepting them
-// here would let someone change a credential without the reconfirmation
-// step. Both are only reachable through /api/settings/integrations, which
-// enforces OWNER/MANAGER + current-PIN on every write.
-const SAFE_FIELDS = {
-  id: true, maxPartySize: true, bookingWindowDays: true, autoConfirm: true,
-  restaurantName: true, restaurantPhone: true, restaurantEmail: true, rsvpFormUrl: true,
-  updatedAt: true,
-} as const
-
 export async function GET() {
-  const settings = await prisma.appSettings.findUnique({ where: { id: "singleton" }, select: SAFE_FIELDS })
-  return NextResponse.json({ data: settings ?? {} })
+  // Settings are public-readable for the RSVP form to check mode
+  // But we never expose integration key overrides to clients
+  try {
+    const settings = await prisma.appSettings.findUnique({ 
+      where: { id: "singleton" },
+      select: {
+        maxPartySize: true,
+        bookingWindowDays: true,
+        autoConfirm: true,
+        restaurantName: true,
+        restaurantPhone: true,
+        restaurantEmail: true,
+        rsvpFormUrl: true,
+        rsvpMode: true,
+        rsvpFallbackMessage: true,
+        // Never expose raw keys — send masked versions only
+        sendgridApiKeyOverride: false,
+        quoApiKeyOverride: false,
+        systemeApiKeyOverride: false,
+      }
+    })
+    return NextResponse.json({ data: settings ?? {} })
+  } catch {
+    // rsvpMode columns may not exist yet (pre-migration) — return safe defaults
+    try {
+      const settings = await prisma.appSettings.findUnique({ where: { id: "singleton" } })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const safe = { ...(settings as any) }
+      delete safe.sendgridApiKeyOverride
+      delete safe.quoApiKeyOverride
+      delete safe.systemeApiKeyOverride
+      return NextResponse.json({ data: safe ?? {} })
+    } catch {
+      return NextResponse.json({ data: {} })
+    }
+  }
 }
 
 export async function PATCH(request: NextRequest) {
@@ -27,13 +47,20 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
   const body = await request.json()
-  const allowedKeys = Object.keys(SAFE_FIELDS).filter(k => k !== "id" && k !== "updatedAt")
-  const safeBody = Object.fromEntries(Object.entries(body).filter(([k]) => allowedKeys.includes(k)))
+  // Strip keys that should never be updated via this endpoint
+  // (integration keys go through /api/settings/integrations)
+  const { sendgridApiKeyOverride, quoApiKeyOverride, systemeApiKeyOverride, ...safeBody } = body
+  void sendgridApiKeyOverride; void quoApiKeyOverride; void systemeApiKeyOverride
+
   const settings = await prisma.appSettings.upsert({
     where: { id: "singleton" },
     update: safeBody,
     create: { id: "singleton", ...safeBody },
-    select: SAFE_FIELDS,
   })
-  return NextResponse.json({ data: settings })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const safe = { ...(settings as any) }
+  delete safe.sendgridApiKeyOverride
+  delete safe.quoApiKeyOverride
+  delete safe.systemeApiKeyOverride
+  return NextResponse.json({ data: safe })
 }
