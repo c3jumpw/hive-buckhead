@@ -6,7 +6,7 @@ import {
   LayoutList, MapPin, CalendarDays, BarChart3,
   Users, TableProperties, Clock, Settings,
   ChevronRight, Shield, LayoutDashboard,
-  MessageSquare, Home,
+  MessageSquare, Home, UtensilsCrossed,
 } from "lucide-react";
 import { cn, hasAccess } from "@/lib/utils";
 import type { SessionStaff } from "@/types";
@@ -43,6 +43,9 @@ export function DashboardSidebar({ session }: Props) {
             <SidebarItem href="/floor" label="Floor View" icon={<MapPin className="h-3.5 w-3.5" />} active={pathname.startsWith("/floor")} />
             {hasAccess(level, "STAFF") && (
               <SidebarItem href="/schedule" label="Staff Schedule" icon={<CalendarDays className="h-3.5 w-3.5" />} active={pathname.startsWith("/schedule")} />
+            )}
+            {hasAccess(level, "MANAGER") && (
+              <SidebarItem href="/menu" label="Menu Manager" icon={<UtensilsCrossed className="h-3.5 w-3.5" />} active={pathname.startsWith("/menu")} />
             )}
           </div>
         </div>
