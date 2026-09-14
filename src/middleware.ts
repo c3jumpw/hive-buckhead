@@ -18,7 +18,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const ALLOWED_PREFIXES = ["/rsvp", "/api", "/branding", "/_next", "/favicon.ico"]
+const ALLOWED_PREFIXES = ["/rsvp", "/menu", "/api", "/branding", "/_next", "/favicon.ico"]
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
