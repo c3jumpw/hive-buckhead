@@ -3,8 +3,8 @@
  * =============================================================================
  * Domain-aware routing:
  *
- * menu.hivebuckhead.com            → /menu-standalone.html (full static menu)
- * reservations.thehivebuckhead.com → RSVP booking form + public menu
+ * menu.hivebuckhead.com            → /menu-site (Route Handler serving menu HTML)
+ * reservations.thehivebuckhead.com → RSVP booking form + public /menu page
  * staffportal / onboarding domains → full app (no restrictions)
  * =============================================================================
  */
@@ -17,16 +17,15 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const pathname = request.nextUrl.pathname
 
-  // ── menu.hivebuckhead.com → standalone static menu page ────────────────
+  // ── menu.hivebuckhead.com → Route Handler serving standalone menu HTML ──
   if (hostname.startsWith("menu.")) {
-    // Serve the static HTML file for any path on this domain
-    // (assets like /_next still pass through normally)
-    if (pathname.startsWith("/_next") || pathname.startsWith("/api") || 
+    // Let Next.js assets and API pass through
+    if (pathname.startsWith("/_next") || pathname.startsWith("/api") ||
         pathname === "/favicon.ico") {
       return NextResponse.next()
     }
-    // Rewrite root and all other paths to the static menu file
-    return NextResponse.rewrite(new URL("/menu-standalone.html", request.url))
+    // Rewrite everything else to the Route Handler
+    return NextResponse.rewrite(new URL("/menu-site", request.url))
   }
 
   // ── reservations.thehivebuckhead.com → RSVP + menu only ───────────────
@@ -41,7 +40,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // ── All other domains (staffportal, onboarding) → full access ─────────
+  // ── All other domains → full access ───────────────────────────────────
   return NextResponse.next()
 }
 
