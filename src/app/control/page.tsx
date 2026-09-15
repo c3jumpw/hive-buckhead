@@ -29,6 +29,8 @@ const MODES: { value: RsvpMode; label: string; description: string; emoji: strin
   },
 ]
 
+const SECRET = process.env.NEXT_PUBLIC_KILL_SWITCH_SECRET ?? ""
+
 export default function ControlPage() {
   const [mode, setMode] = useState<RsvpMode>("online")
   const [loading, setLoading] = useState(true)
@@ -38,7 +40,7 @@ export default function ControlPage() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    fetch("/api/settings")
+    fetch("/api/kill-switch")
       .then(r => r.json())
       .then(d => {
         setMode(d.data?.rsvpMode ?? "online")
@@ -50,17 +52,23 @@ export default function ControlPage() {
   async function applyMode(newMode: RsvpMode) {
     setSaving(true); setError(""); setSaved(false)
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetch("/api/kill-switch", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(SECRET ? { "x-kill-switch-secret": SECRET } : {}),
+        },
         body: JSON.stringify({ rsvpMode: newMode }),
       })
-      if (!res.ok) throw new Error("Failed to save")
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? `HTTP ${res.status}`)
+      }
       setMode(newMode)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-    } catch {
-      setError("Failed to save. Try again.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save. Try again.")
     } finally {
       setSaving(false); setConfirming(null)
     }
