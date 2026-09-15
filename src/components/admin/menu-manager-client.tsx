@@ -105,7 +105,7 @@ export function MenuManagerClient({ sections: initSections }: { sections: MenuSe
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl text-gold-500">Menu Management</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{sections.length} sections · {totalItems} items · <a href="/menu" target="_blank" className="text-gold-500 underline underline-offset-2">View public menu ↗</a></p>
+            <p className="text-xs text-muted-foreground mt-0.5">{sections.length} sections · {totalItems} items · <a href="https://menu.hivebuckhead.com" target="_blank" className="text-gold-500 underline underline-offset-2">View public menu ↗</a></p>
           </div>
           <Button size="sm" onClick={() => setAddingSection(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" />Add Section
