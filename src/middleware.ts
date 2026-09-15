@@ -3,9 +3,9 @@
  * =============================================================================
  * Domain-aware routing:
  *
- * reservations.thehivebuckhead.com → RSVP + menu (guest-facing only)
- * menu.hivebuckhead.com            → /menu page (standalone menu site)
- * staffportal-*.thehivebuckhead.com → full staff dashboard (all routes)
+ * menu.hivebuckhead.com            → /menu-standalone.html (full static menu)
+ * reservations.thehivebuckhead.com → RSVP booking form + public menu
+ * staffportal / onboarding domains → full app (no restrictions)
  * =============================================================================
  */
 import { NextResponse } from "next/server"
@@ -17,18 +17,16 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const pathname = request.nextUrl.pathname
 
-  // ── menu.hivebuckhead.com → serve /menu for all paths ──────────────────
+  // ── menu.hivebuckhead.com → standalone static menu page ────────────────
   if (hostname.startsWith("menu.")) {
-    if (pathname === "/" || pathname === "") {
-      return NextResponse.rewrite(new URL("/menu", request.url))
-    }
-    // Allow /menu itself and assets, redirect everything else to /menu
-    if (pathname.startsWith("/menu") || pathname.startsWith("/_next") || 
-        pathname.startsWith("/api") || pathname.startsWith("/branding") ||
+    // Serve the static HTML file for any path on this domain
+    // (assets like /_next still pass through normally)
+    if (pathname.startsWith("/_next") || pathname.startsWith("/api") || 
         pathname === "/favicon.ico") {
       return NextResponse.next()
     }
-    return NextResponse.rewrite(new URL("/menu", request.url))
+    // Rewrite root and all other paths to the static menu file
+    return NextResponse.rewrite(new URL("/menu-standalone.html", request.url))
   }
 
   // ── reservations.thehivebuckhead.com → RSVP + menu only ───────────────
@@ -43,7 +41,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // ── All other domains (staffportal) → pass through ────────────────────
+  // ── All other domains (staffportal, onboarding) → full access ─────────
   return NextResponse.next()
 }
 
