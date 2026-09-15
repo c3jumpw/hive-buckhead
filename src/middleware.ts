@@ -1,45 +1,52 @@
 /**
  * middleware.ts
  * =============================================================================
- * Domain-aware routing for reservations.thehivebuckhead.com — the one
- * domain meant to be an "easy public link," per an explicit request that
- * this and the cancel/manage page be the ONLY things reachable there.
+ * Domain-aware routing:
  *
- * REVISION (2026-07-16, same day): the original version only handled the
- * root path ("/") — real gap confirmed by a screenshot of
- * reservations.thehivebuckhead.com/login showing the staff sign-in
- * screen. Now allow-listed: only /rsvp* pages (the form and manage/cancel
- * page) plus what they depend on to function (API routes, /branding for
- * the logo, Next's own static assets) are reachable on this domain.
- * Anything else — /login included — redirects to the booking form
- * instead of exposing staff-only pages on the public domain.
+ * reservations.thehivebuckhead.com → RSVP + menu (guest-facing only)
+ * menu.hivebuckhead.com            → /menu page (standalone menu site)
+ * staffportal-*.thehivebuckhead.com → full staff dashboard (all routes)
  * =============================================================================
  */
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const ALLOWED_PREFIXES = ["/rsvp", "/menu", "/api", "/branding", "/_next", "/favicon.ico"]
+const RESERVATION_ALLOWED = ["/rsvp", "/menu", "/api", "/branding", "/_next", "/favicon.ico"]
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   const pathname = request.nextUrl.pathname
 
-  if (!hostname.startsWith("reservations.")) {
+  // ── menu.hivebuckhead.com → serve /menu for all paths ──────────────────
+  if (hostname.startsWith("menu.")) {
+    if (pathname === "/" || pathname === "") {
+      return NextResponse.rewrite(new URL("/menu", request.url))
+    }
+    // Allow /menu itself and assets, redirect everything else to /menu
+    if (pathname.startsWith("/menu") || pathname.startsWith("/_next") || 
+        pathname.startsWith("/api") || pathname.startsWith("/branding") ||
+        pathname === "/favicon.ico") {
+      return NextResponse.next()
+    }
+    return NextResponse.rewrite(new URL("/menu", request.url))
+  }
+
+  // ── reservations.thehivebuckhead.com → RSVP + menu only ───────────────
+  if (hostname.startsWith("reservations.")) {
+    if (pathname === "/") {
+      return NextResponse.rewrite(new URL("/rsvp", request.url))
+    }
+    const isAllowed = RESERVATION_ALLOWED.some(prefix => pathname.startsWith(prefix))
+    if (!isAllowed) {
+      return NextResponse.redirect(new URL("/rsvp", request.url))
+    }
     return NextResponse.next()
   }
 
-  if (pathname === "/") {
-    return NextResponse.rewrite(new URL("/rsvp", request.url))
-  }
-
-  const isAllowed = ALLOWED_PREFIXES.some(prefix => pathname.startsWith(prefix))
-  if (!isAllowed) {
-    return NextResponse.redirect(new URL("/rsvp", request.url))
-  }
-
+  // ── All other domains (staffportal) → pass through ────────────────────
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 }
