@@ -16,7 +16,7 @@ const MODES: { value: RsvpMode; label: string; description: string; emoji: strin
   {
     value: "fallback",
     label: "Text-to-RSVP Fallback",
-    description: "Guests are directed to text (678) 539-6865 to make a reservation",
+    description: "Guests are redirected to the text-to-RSVP page at pages.hivebuckhead.com",
     emoji: "📱",
     color: "border-amber-500 bg-amber-500/10",
   },
