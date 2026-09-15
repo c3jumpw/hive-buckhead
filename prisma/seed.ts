@@ -272,6 +272,214 @@ async function main() {
   console.log("⚠️  IMPORTANT: Change all staff PINs before going live!");
 }
 
+// =============================================================================
+// MENU SEED — Pre-populate with all items from the existing WordPress menu
+// Run with: npm run db:seed
+// =============================================================================
+
+  console.log("Seeding menu sections and items...")
+
+  // Wipe existing menu data to avoid duplicates
+  await prisma.menuItem.deleteMany()
+  await prisma.menuSection.deleteMany()
+
+  const menuData = [
+    {
+      name: "Brunch",
+      description: "All day, every day · Substituted sides on fixed entrées may have an upcharge",
+      sortOrder: 0,
+      items: [
+        { name: "Chicken Burger", price: 18.5, desc: "Fried chicken breast, american cheese, lettuce, tomato, onions, hive house aioli. Flavors: BBQ, Buffalo, Plain. Choice of fries or sweet fries (+$4)" },
+        { name: "Catfish Burger", price: 18.5, desc: "Fried catfish filet, lettuce, tomato, onions, hive house aioli, tartar sauce, coleslaw. Choice of fries or sweet fries (+$4)" },
+        { name: "Smash Burger", price: 23.5, desc: "Smashed ground beef, american cheese, arugula, onions, pickles, house burger sauce. Choice of fries or sweet fries (+$4)" },
+        { name: "Breakfast Cheeseburger", price: 27, desc: "Ground beef patty, lettuce, tomato, hive burger sauce, avocado spread, any egg choice, bacon. Choice of grits, fries, sweet fries (+$4), or breakfast potatoes (+$6)" },
+        { name: "Vegan Burger", price: 30, desc: "Veggie patty, lettuce, tomato, vegan house mayo, choice of vegan mozzarella or vegan cheddar. Choice of fries, sweet fries (+$4), or brussels sprouts (+$9)" },
+        { name: "Wagyu Burger", price: 45, desc: "Ground wagyu beef, american cheese, lettuce, tomato, caramelized onions, mushrooms, house mayo. Temp: medium / medium well" },
+        { name: "Lobster & Crab Grilled Cheese Panini", price: 33, desc: "Lobster and lump crab grilled cheese on french bread, served with fries" },
+        { name: "Catfish & Grits", price: 20.5, desc: "2 fried catfish filets, southern styled grits, creole sauce (contains dairy)" },
+        { name: "Whiting & Grits", price: 20.5, desc: "2 fried whiting filets, southern styled grits, creole sauce (contains dairy)" },
+        { name: "Shrimp & Grits", price: 20.5, desc: "Shrimp sautéed with garlic, lemon juice, and butter, southern styled grits (contains dairy)" },
+        { name: "Salmon & Grits", price: 35, desc: "8oz salmon, southern styled grits, creamy house sauce (contains dairy)" },
+        { name: "Red Snapper & Grits", price: 60, desc: "1 lb whole or filet fried snapper, southern styled grits, creamy house sauce" },
+        { name: "Lobster Tail & Grits", price: 65, desc: "Petite lobster tail, southern styled grits, creamy house sauce" },
+        { name: "Cajun Pasta", price: 25.5, desc: "Creamy red spicy cajun alfredo linguine, onions, bell peppers, topped with chicken or shrimp" },
+        { name: "Fried Shrimp Tacos", price: 14, desc: "Flour tortillas, fried gulf shrimp, veggie blend, house aioli, pico de gallo" },
+        { name: "Avocado Toast", price: 15, desc: "Toasted brioche, avocado spread, any egg choice, topped with micro greens" },
+        { name: "Pecan Banana Foster French Toast", price: 18.5, desc: "4 slices toasted brioche, bananas, strawberries, cream cheese, foster sauce, caramelized pecans" },
+        { name: "Hive Omelet", price: 19.5, desc: "2 eggs, spinach, pico de gallo, bell peppers. Choice of grits, fries, sweet fries (+$4), or breakfast potatoes (+$6)" },
+        { name: "10 Wings & Fries", price: 20, desc: "Deep fried split wings (5 flat/5 drum) with fries. Sauce: hive, lemon pepper, mild, hot, plain, or jerk" },
+        { name: "Chicken & Waffles", price: 27.5, desc: "2 whole wings with waffle: Red Velvet · Banana Nut · Belgian" },
+        { name: "Steak & Eggs", price: 33, desc: "16oz ribeye grilled and seasoned to perfection, 2 eggs. Choice of grits, fries, or sweet fries (+$4)" },
+        { name: "Whole Fried Red Snapper", price: 50, desc: "1 lb whole snapper, lemon butter garlic sauce, kale, choice of grits or rice" },
+        { name: "Chef's Whole Branzino or Branzino Filet", price: 55, desc: "Oven and grilled branzino in hive sauce with onions, capers, and seasonal vegetables", featured: true },
+      ]
+    },
+    {
+      name: "Appetizers & Salads",
+      description: "Small plates and starters",
+      sortOrder: 1,
+      items: [
+        { name: "Salmon Bites", price: 14, desc: "Fresh salmon cubed, seasoned with hive seasoning, fried and served with aioli" },
+        { name: "Chips & Salsa", price: 15, desc: "Housemade hot chips with house seasoning, served with salsa" },
+        { name: "Hummus & Pita", price: 16, desc: "Delicious hummus served with naan bread" },
+        { name: "Calamari", price: 16.5, desc: "Calamari tubes and tentacles, jalapeño and banana peppers, marinara or aioli" },
+        { name: "Wings", price: 20, desc: "Tossed in hive sauce and lemon pepper, served with fries" },
+        { name: "Chicken Egg Rolls", price: 24, desc: "House-made, served with aioli" },
+        { name: "Salmon Egg Rolls", price: 24, desc: "House-made, served with aioli" },
+        { name: "Crab Cakes", price: 25, desc: "Hive lump crab cakes, fried, with house aioli" },
+        { name: "Artichoke & Spinach Dip", price: 25, desc: "House made spinach dip served with hot fresh chips" },
+        { name: "Beet Salad", price: 15, desc: "Arugula, fresh beets, onions, blue cheese, balsamic vinaigrette" },
+        { name: "Cobb Salad", price: 15, desc: "Garden mix, grilled chicken, hard-boiled egg, bacon bits, blue cheese crumbles" },
+        { name: "Caesar Salad", price: 15, desc: "Romaine, croutons, parmesan cheese" },
+        { name: "House Salad", price: 15, desc: "Lettuce, onions, tomatoes, croutons, parmesan cheese" },
+        { name: "Spinach Berry Salad", price: 15, desc: "Spinach, blueberries, strawberries, onions, croutons, parmesan, raspberry vinaigrette" },
+      ]
+    },
+    {
+      name: "Dinner & Entrées",
+      description: "Mon–Thu from 5 PM · Fri–Sun from 6 PM",
+      sortOrder: 2,
+      items: [
+        { name: "Chicken Burger", price: 18.5, desc: "Fried chicken breast, american cheese, lettuce, tomato, onions, hive house aioli — BBQ, Buffalo, or Plain" },
+        { name: "Catfish Burger", price: 18.5, desc: "Fried catfish filet, lettuce, tomato, onions, hive house aioli, tartar sauce, coleslaw" },
+        { name: "Smash Burger", price: 23.5, desc: "Mashed ground beef, american cheese, arugula, onions, pickles, house burger sauce" },
+        { name: "Vegan Burger", price: 30, desc: "Veggie patty, lettuce, tomato, vegan house mayo, choice of vegan mozzarella or vegan cheddar" },
+        { name: "Wagyu Burger", price: 45, desc: "Ground wagyu beef, american cheese, lettuce, tomato, caramelized onions, mushrooms, house mayo. Temp: medium or medium well only" },
+        { name: "Catfish & Grits", price: 25, desc: "2 fried catfish filets, southern styled grits, creole sauce (contains dairy)" },
+        { name: "Whiting & Grits", price: 25, desc: "2 fried whiting filets, southern styled grits, creole sauce (contains dairy)" },
+        { name: "Shrimp & Grits", price: 25, desc: "Shrimp sautéed with garlic, lemon juice, and butter, southern styled grits (contains dairy)" },
+        { name: "Salmon & Grits", price: 35, desc: "8oz salmon, southern styled grits, creamy house sauce" },
+        { name: "Red Snapper & Grits", price: 60, desc: "1 lb whole or filet fried snapper, southern styled grits, creamy house sauce" },
+        { name: "Lobster Tail & Grits", price: 65, desc: "Petite lobster tail, southern styled grits, creamy house sauce" },
+        { name: "Jerk Pasta or Hive Pasta", price: 38, desc: "Creamy alfredo penne, onions, spinach, tomatoes, parmesan — topped with salmon or chicken" },
+        { name: "Lobster & Shrimp Pasta", price: 50, desc: "Choice of hive or jerk creamy alfredo penne, topped with lobster and shrimp" },
+        { name: "Chicken & Waffles", price: 27.5, desc: "2 whole wings with waffle: Red Velvet · Banana Nut · Belgian" },
+        { name: "Hive South", price: 35, desc: "3 whole wings served with hive collard greens and sweet yams" },
+        { name: "Hive Prawns", price: 35, desc: "Succulent prawns in cajun sauce, served with hive fried rice" },
+        { name: "Salmon & Shrimp", price: 40, desc: "Fresh salmon fillet and grilled blackened shrimp, served with choice of side" },
+        { name: "Chilean Seabass", price: 45, desc: "Pan seared and lightly grilled seabass, breadcrumb parmesan crusted, with seasonal vegetables", featured: true },
+        { name: "Whole Fried Red Snapper", price: 50, desc: "1 lb whole snapper, lemon butter garlic sauce, served with choice of side" },
+        { name: "Steak & Shrimp", price: 50, desc: "16oz ribeye grilled to perfection with succulent grilled shrimp, choice of side" },
+        { name: "Short Ribs", price: 55, desc: "Succulent beef short ribs seasoned with a blend of spices, sweet sauce, seasonal vegetables", featured: true },
+        { name: "Lamb Chops & Shrimp", price: 55, desc: "Tender lamb chops and succulent shrimp grilled, topped with hive Jack Daniel's sauce", featured: true },
+        { name: "Chef's Whole Branzino or Branzino Filet", price: 55, desc: "Oven and grilled branzino in hive sauce with onions, capers, and seasonal vegetables" },
+        { name: "Parmesan Mashed Potatoes", price: 8, desc: "Signature side" },
+        { name: "Creole Rice", price: 8, desc: "Signature side" },
+        { name: "Herb Rice", price: 8, desc: "Signature side" },
+        { name: "Side Plantains", price: 8, desc: "Signature side" },
+        { name: "Asparagus", price: 10, desc: "Signature side" },
+        { name: "Parmesan Fries", price: 10, desc: "Signature side" },
+        { name: "Broccoli", price: 12, desc: "Signature side" },
+        { name: "Brussels Sprouts", price: 12, desc: "Signature side" },
+        { name: "Sautéed Spinach & Mushrooms", price: 12, desc: "Signature side" },
+        { name: "Mac & Cheese", price: 15, desc: "Signature side" },
+        { name: "Crab Mac", price: 20, desc: "Signature side" },
+        { name: "Lobster Mac", price: 26, desc: "Signature side" },
+      ]
+    },
+    {
+      name: "Happy Hour",
+      description: "Mon–Fri 4 PM–9 PM · Sunday 6 PM–Midnight · No Saturday Happy Hour",
+      sortOrder: 3,
+      availableDays: "Mon,Tue,Wed,Thu,Fri,Sun",
+      availableFrom: "16:00",
+      availableTo: "21:00",
+      items: [
+        { name: "Tacos", price: 2, desc: "Happy hour special" },
+        { name: "Tostones", price: 5, desc: "Happy hour special" },
+        { name: "Shot Specials", price: 5, desc: "Happy hour special" },
+        { name: "Churros", price: 7, desc: "Happy hour special" },
+        { name: "Chips & Salsa", price: 7, desc: "Happy hour special" },
+        { name: "Mozzarella Cheese Sticks", price: 7, desc: "Happy hour special" },
+        { name: "Fried Mushrooms", price: 7, desc: "Happy hour special" },
+        { name: "Mac Bites", price: 7, desc: "Happy hour special" },
+        { name: "Veggie Spring Rolls", price: 7, desc: "Happy hour special" },
+        { name: "Plantains", price: 8, desc: "Happy hour special" },
+        { name: "Lamb Chops", price: 10, desc: "Happy hour special" },
+        { name: "Steak Frites", price: 10, desc: "Happy hour special" },
+        { name: "Pasta & Chicken", price: 10, desc: "Happy hour special" },
+        { name: "Chicken & Waffle", price: 10, desc: "Happy hour special" },
+        { name: "Roasted Chicken & Rice", price: 10, desc: "Happy hour special" },
+        { name: "Burger & Fries", price: 10, desc: "Happy hour special" },
+        { name: "Daiquiri Specials", price: null, desc: "Ask your server" },
+        { name: "Bottle Specials", price: 75, desc: "Bottle service special" },
+      ]
+    },
+    {
+      name: "Cocktails & Drinks",
+      description: "Full bar available · 21+ to consume alcohol",
+      sortOrder: 4,
+      items: [
+        { name: "Georgia Peach", price: 15, desc: "Peach vodka, peach purée, orange juice", featured: true },
+        { name: "Lemon Drop", price: 15, desc: "Vodka, simple syrup, fresh lemon" },
+        { name: "Tango With Mango", price: 15, desc: "Vodka, mango purée, Grand Marnier, orange juice" },
+        { name: "Sweet Temper", price: 17, desc: "Vodka, strawberry purée, Grand Marnier, cranberry juice" },
+        { name: "Twilight Zone", price: 17, desc: "Vodka, Grand Marnier, cranberry juice, lime squeeze" },
+        { name: "She's A Keeper", price: 18, desc: "Champagne, vodka, strawberry purée, triple sec — on rocks or frozen" },
+        { name: "Love Slide", price: 18, desc: "Vodka, strawberry cream Bailey's" },
+        { name: "Atlanta Weather", price: 18, desc: "Vodka, apple pucker, triple sec, melon liqueur, pineapple juice, sprite" },
+        { name: "Beekeeper", price: 18, desc: "Whiskey, strawberry purée, lemonade, sprite" },
+        { name: "Hive Hummer", price: 18, desc: "Tequila, blue curaçao, sour mix, triple sec — blue margarita style" },
+        { name: "Peach Be Still", price: 18, desc: "Crown Royal Peach, sour mix, triple sec, lime juice, peach schnapps" },
+        { name: "Merry Margarita", price: 18, desc: "Tequila, sour mix, triple sec, lime juice, pomegranate" },
+        { name: "Lust Martini", price: 20, desc: "Vodka lemon drop with watermelon or blueberry liqueur" },
+        { name: "Cupid Shuffle", price: 20, desc: "Tequila, rum, sour mix, cranberry juice, triple sec, splash of sprite" },
+        { name: "Jaded", price: 20, desc: "Jack Daniel's, peach schnapps, sour mix, cranberry, lime squeezed" },
+        { name: "Queen Bee", price: 20, desc: "Tequila, mango purée, orange juice, grenadine" },
+        { name: "Peachtree Traffic", price: 20, desc: "Coconut rum, melon liqueur, peach schnapps, OJ, pineapple juice" },
+        { name: "Buckhead Tea", price: 20, desc: "Peach vodka, rum, gin, triple sec, sour mix, splash of sprite" },
+        { name: "The Festival", price: 20, desc: "Rum, OJ, pineapple juice, lime squeeze, strawberry purée" },
+        { name: "Basic Cocktails", price: 15, desc: "Sex On The Beach · Long Island · Blue Motorcycle/BMF · Long Beach · Tokyo Tea · Bahama Mama · Mojito · Margarita · Hennessy Margarita · Tequila Sunrise · Old Fashion · Gimlet · Mai Tai · Cosmopolitan · Moscow Mule · Tom Collins" },
+        { name: "Manhattan", price: 17, desc: "Classic cocktail" },
+        { name: "Lemon Drop Flight", price: 60, desc: "4 lemon drops: strawberry, regular, blue curaçao, pomegranate. Top shelf: $70" },
+        { name: "Margarita Flight", price: 60, desc: "House $60 · Top Shelf $70" },
+        { name: "Frozen Daiquiris", price: 18, desc: "Bumble Rumble (blue hawaiian-rum) · Lemon Drop (lemon-vodka) · Abeemination (hurricane-rum) · Frosé (sparkling rosé-vodka) · The Drone (margarita-strawberry-tequila)" },
+        { name: "The Hornet", price: 20, desc: "Frozen daiquiri — peach, Hennessy" },
+        { name: "Draft Beer — Pint", price: 6.5, desc: "Sweetwater · Stella Artois · Scofflaw · Blue Moon · Angry Orchard · Yuengling" },
+        { name: "Draft Beer — Pitcher", price: 26, desc: "Sweetwater · Stella Artois · Scofflaw · Blue Moon · Angry Orchard · Yuengling" },
+        { name: "Bottle Beer", price: 8, desc: "Budweiser · Coors Light · Bud Light · Corona · Sweetwater IPA · Guinness · Mich Ultra · Peroni · Dos XX · Heineken · Modelo · Ginger Beer" },
+      ]
+    },
+    {
+      name: "Desserts",
+      description: "Sweet endings",
+      sortOrder: 5,
+      items: [
+        { name: "Tiramisu Cake", price: 20, desc: "House dessert" },
+        { name: "Strawberry Cheesecake", price: 20, desc: "House dessert" },
+        { name: "Chocolate Lava Brownie", price: 20, desc: "House dessert" },
+        { name: "Chocolate Cake", price: 20, desc: "Gluten free", tags: "gf" },
+        { name: "Crème Brûlée Cheesecake", price: 20, desc: "House dessert" },
+        { name: "Tres Leches", price: 20, desc: "House dessert" },
+        { name: "Classic Cheesecake", price: 20, desc: "House dessert" },
+        { name: "Ice Cream", price: 6, desc: "Per scoop: Vanilla · Butter Pecan · Cookies & Cream" },
+        { name: "Churros & Ice Cream", price: 20, desc: "House dessert" },
+      ]
+    },
+  ]
+
+  for (const section of menuData) {
+    const { items, ...sectionData } = section
+    const created = await prisma.menuSection.create({
+      data: {
+        ...sectionData,
+        items: {
+          create: items.map((item, idx) => ({
+            name: item.name,
+            description: item.desc,
+            price: item.price ?? undefined,
+            tags: (item as { tags?: string }).tags ?? undefined,
+            featured: (item as { featured?: boolean }).featured ?? false,
+            sortOrder: idx,
+          }))
+        }
+      }
+    })
+    console.log(`  ✓ ${created.name} (${items.length} items)`)
+  }
+
+  console.log("✓ Menu seeded successfully")
+
 main()
   .catch((e) => {
     console.error(e);
