@@ -9,27 +9,25 @@ const MODES: { value: RsvpMode; label: string; description: string; emoji: strin
   {
     value: "online",
     label: "Online RSVP — Live",
-    description: "Guests can book online at reservations.thehivebuckhead.com",
-    emoji: "✅",
+    description: "Guests book online at reservations.thehivebuckhead.com",
+    emoji: "\u2705",
     color: "border-green-500 bg-green-500/10",
   },
   {
     value: "fallback",
     label: "Text-to-RSVP Fallback",
-    description: "Guests are redirected to the text-to-RSVP page at pages.hivebuckhead.com",
-    emoji: "📱",
+    description: "Guests are redirected to the text-to-RSVP page",
+    emoji: "\ud83d\udcf1",
     color: "border-amber-500 bg-amber-500/10",
   },
   {
     value: "closed",
     label: "Reservations Closed",
-    description: "Guests see a closed message — not currently accepting reservations",
-    emoji: "🔒",
+    description: "Guests see a closed message with phone and text contact info",
+    emoji: "\ud83d\udd12",
     color: "border-red-500 bg-red-500/10",
   },
 ]
-
-const SECRET = process.env.NEXT_PUBLIC_KILL_SWITCH_SECRET ?? ""
 
 export default function ControlPage() {
   const [mode, setMode] = useState<RsvpMode>("online")
@@ -42,10 +40,7 @@ export default function ControlPage() {
   useEffect(() => {
     fetch("/api/kill-switch")
       .then(r => r.json())
-      .then(d => {
-        setMode(d.data?.rsvpMode ?? "online")
-        setLoading(false)
-      })
+      .then(d => { setMode(d.data?.rsvpMode ?? "online"); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
@@ -54,19 +49,14 @@ export default function ControlPage() {
     try {
       const res = await fetch("/api/kill-switch", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(SECRET ? { "x-kill-switch-secret": SECRET } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rsvpMode: newMode }),
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? `HTTP ${res.status}`)
-      }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? `Server error ${res.status}`)
       setMode(newMode)
       setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      setTimeout(() => setSaved(false), 4000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save. Try again.")
     } finally {
@@ -87,7 +77,6 @@ export default function ControlPage() {
   return (
     <div className="min-h-screen bg-hive-bg p-4 flex flex-col items-center">
       <div className="w-full max-w-md pt-8 space-y-6">
-        {/* Header */}
         <div className="text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/branding/icon.png" alt="Hive Buckhead" width={52} height={52} className="mx-auto mb-3" />
@@ -95,30 +84,32 @@ export default function ControlPage() {
           <p className="text-xs text-muted-foreground mt-1">Hive Buckhead · Owner Access</p>
         </div>
 
-        {/* Current status */}
         <div className={`border-2 rounded-2xl p-5 text-center ${currentMode.color}`}>
           <div className="text-4xl mb-2">{currentMode.emoji}</div>
           <div className="font-semibold text-lg">{currentMode.label}</div>
           <div className="text-sm text-muted-foreground mt-1">{currentMode.description}</div>
-          {saved && <div className="text-green-400 text-sm mt-2 font-medium">✓ Saved and live</div>}
-          {error && <div className="text-red-400 text-sm mt-2">{error}</div>}
+          {saved && (
+            <div className="text-green-400 text-sm mt-3 font-medium">
+              Saved — live within 30 seconds
+            </div>
+          )}
+          {error && <div className="text-red-400 text-sm mt-3 font-medium">{error}</div>}
         </div>
 
-        {/* Mode selector */}
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground text-center uppercase tracking-wider">Switch To</p>
+          <p className="text-[11px] text-muted-foreground text-center uppercase tracking-widest">Switch To</p>
           {MODES.filter(m => m.value !== mode).map(m => (
             <button
               key={m.value}
               onClick={() => setConfirming(m.value)}
               disabled={saving}
-              className="w-full border border-border rounded-2xl p-4 text-left hover:border-gold-500/50 hover:bg-gold-500/5 transition-all active:scale-[0.98]"
+              className="w-full border border-border rounded-2xl p-4 text-left hover:border-gold-500/50 hover:bg-gold-500/5 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{m.emoji}</span>
                 <div>
                   <div className="font-medium text-sm">{m.label}</div>
-                  <div className="text-xs text-muted-foreground">{m.description}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{m.description}</div>
                 </div>
               </div>
             </button>
@@ -126,35 +117,37 @@ export default function ControlPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground pb-6">
-          Changes take effect within 30 seconds ·{" "}
-          <a href="/reservations" className="text-gold-500 hover:underline">Back to Dashboard →</a>
+          Changes live within 30 seconds
+          {" · "}
+          <a href="/reservations" className="text-gold-500 hover:underline">Dashboard</a>
         </p>
       </div>
 
-      {/* Confirmation dialog */}
       {confirming && (
-        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center p-4 z-50">
           <div className="bg-hive-surface border border-border rounded-2xl p-6 w-full max-w-sm">
-            <div className="text-center mb-4">
-              <div className="text-3xl mb-2">{MODES.find(m => m.value === confirming)?.emoji}</div>
-              <h2 className="font-serif text-lg text-gold-500">Confirm Switch</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Switch RSVP to: <strong className="text-foreground">{MODES.find(m => m.value === confirming)?.label}</strong>?
+            <div className="text-center mb-5">
+              <div className="text-4xl mb-3">{MODES.find(m => m.value === confirming)?.emoji}</div>
+              <h2 className="font-serif text-xl text-gold-500 mb-1">Confirm Switch</h2>
+              <p className="text-sm text-muted-foreground">
+                Switch to:{" "}
+                <strong className="text-foreground">{MODES.find(m => m.value === confirming)?.label}</strong>?
               </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirming(null)}
-                className="flex-1 border border-border rounded-xl py-3 text-sm font-medium text-muted-foreground hover:bg-white/5 transition-colors"
+                disabled={saving}
+                className="flex-1 border border-border rounded-xl py-3.5 text-sm font-medium text-muted-foreground hover:bg-white/5 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => applyMode(confirming)}
                 disabled={saving}
-                className="flex-1 bg-gold-500 hover:bg-gold-600 text-hive-bg rounded-xl py-3 text-sm font-semibold transition-colors disabled:opacity-60"
+                className="flex-1 bg-gold-500 hover:bg-gold-600 text-hive-bg rounded-xl py-3.5 text-sm font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {saving ? "Saving..." : "Confirm"}
+                {saving ? <><Loader2 size={14} className="animate-spin" />Saving...</> : "Confirm"}
               </button>
             </div>
           </div>
