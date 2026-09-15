@@ -1,6 +1,6 @@
+import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db/prisma"
 import { RsvpForm } from "@/components/rsvp/rsvp-form"
-import { RsvpFallback } from "@/components/rsvp/rsvp-fallback"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -8,23 +8,28 @@ export const metadata: Metadata = {
   description: "Reserve your table at Hive Buckhead",
 }
 
-export const revalidate = 30 // re-check mode every 30 seconds
+export const revalidate = 30 // re-check kill switch mode every 30 seconds
+
+// The text-to-RSVP landing page (Systeme.io)
+const FALLBACK_URL = "https://pages.hivebuckhead.com/0e2827ef"
 
 export default async function RsvpPage() {
-  // Read RSVP mode from AppSettings — gracefully fallback to "online" if
-  // the table doesn't exist yet (pre-migration) so the public page never breaks.
   let rsvpMode = "online"
-  let fallbackMessage = "To make a reservation, please text us at (678) 539-6865 with your name, date, time, and party size."
-  
+
   try {
-    const settings = await prisma.appSettings.findUnique({ where: { id: "singleton" } })
-    if (settings) {
-      rsvpMode = (settings as Record<string, unknown>).rsvpMode as string ?? "online"
-      fallbackMessage = (settings as Record<string, unknown>).rsvpFallbackMessage as string ?? fallbackMessage
-    }
+    const settings = await prisma.appSettings.findUnique({
+      where: { id: "singleton" },
+      select: { rsvpMode: true },
+    })
+    rsvpMode = settings?.rsvpMode ?? "online"
   } catch {
-    // DB unreachable or column not yet migrated — show the form as default
+    // DB not yet migrated — default to online so the form still works
     rsvpMode = "online"
+  }
+
+  // Fallback mode: redirect guests to the Systeme.io text-to-RSVP page immediately
+  if (rsvpMode === "fallback") {
+    redirect(FALLBACK_URL)
   }
 
   return (
@@ -40,10 +45,24 @@ export default async function RsvpPage() {
             {rsvpMode === "closed" ? "RESERVATIONS" : "RESERVE A TABLE"}
           </p>
         </div>
-        
+
         {rsvpMode === "online" && <RsvpForm />}
-        {rsvpMode === "fallback" && <RsvpFallback message={fallbackMessage} mode="fallback" />}
-        {rsvpMode === "closed" && <RsvpFallback message="We are not currently accepting reservations online. Please check back soon or call us directly." mode="closed" />}
+
+        {rsvpMode === "closed" && (
+          <div className="bg-hive-surface border border-border rounded-2xl p-8 text-center space-y-6">
+            <div className="text-5xl">🔒</div>
+            <div>
+              <h2 className="font-serif text-2xl text-gold-500 mb-2">Reservations Closed</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                We are not currently accepting reservations online. Please check back soon or contact us directly.
+              </p>
+            </div>
+            <div className="text-xs text-muted-foreground pt-2 border-t border-border space-y-1">
+              <p>Call us: <a href="tel:+14704516419" className="text-gold-500">(470) 451-6419</a></p>
+              <p>Text us: <a href="sms:+16785396865" className="text-gold-500">(678) 539-6865</a></p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
